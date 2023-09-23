@@ -122,3 +122,7 @@ void samure_destroy_context(struct samure_context *ctx) {
   free(ctx->error_string);
   free(ctx);
 }
+
+void samure_context_frame_start(struct samure_context *ctx) {
+  wl_display_roundtrip(ctx->display);
+}

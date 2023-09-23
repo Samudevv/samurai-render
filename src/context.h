@@ -34,3 +34,4 @@ struct samure_context {
 extern struct samure_context *
 samure_create_context(struct samure_context_config *config);
 extern void samure_destroy_context(struct samure_context *ctx);
+extern void samure_context_frame_start(struct samure_context *ctx);
