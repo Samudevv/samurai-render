@@ -14,9 +14,10 @@ target("samurai-render")
     add_headerfiles("src/*.h", "src/wayland/*.h")
     add_files("src/*.c", "src/wayland/*.c")
 
-if get_config("build_examples") then
-    target("blank")
-        set_kind("binary")
-        add_deps("samurai-render")
-        add_files("examples/blank.c")
+    if get_config("build_examples") then
+        target("blank")
+            set_kind("binary")
+            add_includedirs("src")
+            add_deps("samurai-render")
+            add_files("examples/blank.c")
 end
