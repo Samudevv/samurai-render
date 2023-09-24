@@ -3,14 +3,10 @@
 #include <linux/input-event-codes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <unistd.h>
 
 struct blank_data {
-  clock_t start_time;
-  double delta_time;
-
   struct samure_output *current_output;
+  FILE *log_out;
 };
 
 static void event_callback(struct samure_event *e, struct samure_context *ctx,
@@ -33,7 +29,8 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
 }
 
 static void render_callback(struct samure_output *output,
-                            struct samure_context *ctx, void *data) {
+                            struct samure_context *ctx, double delta_time,
+                            void *data) {
   struct blank_data *d = (struct blank_data *)data;
 
   struct samure_backend_raw *r = samure_get_backend_raw(ctx);
@@ -60,19 +57,18 @@ static void render_callback(struct samure_output *output,
   }
 }
 
-static void update_callback(struct samure_context *ctx, void *data) {
+static void update_callback(struct samure_context *ctx, double delta_time,
+                            void *data) {
   struct blank_data *d = (struct blank_data *)data;
 
-  const clock_t start_time = d->start_time;
-  const clock_t end_time = clock();
-  d->start_time = clock();
-  d->delta_time =
-      ((double)end_time - (double)start_time) / (double)CLOCKS_PER_SEC;
-  printf("FPS: %.3f \n", 1.0 / d->delta_time);
+  fprintf(d->log_out, "update: delta_time=%.3f fps=%u\n", delta_time,
+          ctx->frame_timer.fps);
 }
 
 int main(void) {
   struct blank_data d = {0};
+
+  d.log_out = fopen("/tmp/samure-render.out", "w");
 
   struct samure_context_config context_config = samure_create_context_config(
       event_callback, render_callback, update_callback, &d);
@@ -85,13 +81,13 @@ int main(void) {
 
   puts("Successfully initialized samurai-render context");
 
-  d.start_time = clock();
-
   samure_context_run(ctx);
 
   samure_destroy_context(ctx);
 
   puts("Successfully destroyed samurai-render context");
+
+  fclose(d.log_out);
 
   return EXIT_SUCCESS;
 }

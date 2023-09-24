@@ -27,6 +27,7 @@
 
 struct samure_context_config samure_default_context_config() {
   struct samure_context_config c = {0};
+  c.max_fps = SAMURE_MAX_FPS;
   return c;
 }
 
@@ -124,6 +125,8 @@ samure_create_context(struct samure_context_config *config) {
   }
   wl_display_roundtrip(ctx->display);
 
+  ctx->frame_timer = samure_init_frame_timer(ctx->config.max_fps);
+
   switch (ctx->config.backend) {
   case SAMURE_BACKEND_NONE:
     break;
@@ -171,34 +174,33 @@ void samure_destroy_context(struct samure_context *ctx) {
   free(ctx);
 }
 
-void samure_context_frame_start(struct samure_context *ctx) {
-  wl_display_roundtrip(ctx->display);
-
-  // Process events
-  for (; ctx->event_index < ctx->num_events; ctx->event_index++) {
-    struct samure_event *e = &ctx->events[ctx->event_index];
-
-    switch (e->type) {
-    case SAMURE_EVENT_LAYER_SURFACE_CONFIGURE:
-      if (ctx->backend && ctx->backend->on_layer_surface_configure) {
-        ctx->backend->on_layer_surface_configure(ctx->backend, ctx, e->output,
-                                                 e->width, e->height);
-      }
-      break;
-    default:
-      if (ctx->config.event_callback) {
-        ctx->config.event_callback(e, ctx, ctx->config.user_data);
-      }
-      break;
-    }
-  }
-}
-
 void samure_context_run(struct samure_context *ctx) {
   ctx->running = 1;
   while (ctx->running) {
-    samure_context_frame_start(ctx);
+    samure_frame_timer_start_frame(&ctx->frame_timer);
 
+    wl_display_roundtrip(ctx->display);
+
+    // Process events
+    for (; ctx->event_index < ctx->num_events; ctx->event_index++) {
+      struct samure_event *e = &ctx->events[ctx->event_index];
+
+      switch (e->type) {
+      case SAMURE_EVENT_LAYER_SURFACE_CONFIGURE:
+        if (ctx->backend && ctx->backend->on_layer_surface_configure) {
+          ctx->backend->on_layer_surface_configure(ctx->backend, ctx, e->output,
+                                                   e->width, e->height);
+        }
+        break;
+      default:
+        if (ctx->config.event_callback) {
+          ctx->config.event_callback(e, ctx, ctx->config.user_data);
+        }
+        break;
+      }
+    }
+
+    // Make outputs ready for rendering
     for (size_t i = 0; i < ctx->num_outputs; i++) {
       if (!ctx->outputs[i].surface_ready) {
         ctx->outputs[i].frame_callback =
@@ -210,6 +212,7 @@ void samure_context_run(struct samure_context *ctx) {
       } else {
         if (ctx->config.render_callback) {
           ctx->config.render_callback(&ctx->outputs[i], ctx,
+                                      ctx->frame_timer.delta_time,
                                       ctx->config.user_data);
         }
         ctx->outputs[i].surface_ready = 0;
@@ -220,7 +223,10 @@ void samure_context_run(struct samure_context *ctx) {
     }
 
     if (ctx->config.update_callback) {
-      ctx->config.update_callback(ctx, ctx->config.user_data);
+      ctx->config.update_callback(ctx, ctx->frame_timer.delta_time,
+                                  ctx->config.user_data);
     }
+
+    samure_frame_timer_end_frame(&ctx->frame_timer);
   }
 }

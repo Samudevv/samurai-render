@@ -6,10 +6,12 @@
 
 #include "backend.h"
 #include "events.h"
+#include "frame_timer.h"
 #include "output.h"
 #include "seat.h"
 
 #define SAMURE_NO_CONTEXT_CONFIG NULL
+#define SAMURE_MAX_FPS 60
 
 struct samure_context;
 
@@ -23,12 +25,14 @@ typedef void (*samure_event_callback)(struct samure_event *event,
                                       void *user_data);
 typedef void (*samure_render_callback)(struct samure_output *output,
                                        struct samure_context *ctx,
-                                       void *user_data);
+                                       double delta_time, void *user_data);
 typedef void (*samure_update_callback)(struct samure_context *ctx,
-                                       void *user_data);
+                                       double delta_time, void *user_data);
 
 struct samure_context_config {
   enum samure_backend_type backend;
+
+  uint32_t max_fps;
 
   samure_event_callback event_callback;
   samure_render_callback render_callback;
@@ -67,10 +71,11 @@ struct samure_context {
   struct samure_backend *backend;
 
   struct samure_context_config config;
+
+  struct samure_frame_timer frame_timer;
 };
 
 extern struct samure_context *
 samure_create_context(struct samure_context_config *config);
 extern void samure_destroy_context(struct samure_context *ctx);
-extern void samure_context_frame_start(struct samure_context *ctx);
 extern void samure_context_run(struct samure_context *ctx);
