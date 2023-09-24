@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "backends/raw.h"
+
 #define CTX_ERR(msg)                                                           \
   if (ctx->error_string)                                                       \
     free(ctx->error_string);                                                   \
@@ -23,13 +25,20 @@
   }
 
 struct samure_context_config samure_default_context_config() {
-  struct samure_context_config c = {};
+  struct samure_context_config c = {0};
   return c;
 }
 
 struct samure_context *
 samure_create_context(struct samure_context_config *config) {
   struct samure_context *ctx = malloc(sizeof(struct samure_context));
+  memset(ctx, 0, sizeof(*ctx));
+
+  if (config) {
+    ctx->config = *config;
+  } else {
+    ctx->config = samure_default_context_config();
+  }
 
   ctx->display = wl_display_connect(NULL);
   if (ctx->display == NULL) {
@@ -101,10 +110,28 @@ samure_create_context(struct samure_context_config *config) {
   }
   wl_display_roundtrip(ctx->display);
 
+  switch (ctx->config.backend) {
+  default: // SAMURE_BACKEND_RAW
+  {
+    struct samure_backend_raw *r = samure_init_backend_raw(ctx);
+    if (r->error_string) {
+      CTX_ERR_F("failed to initialize raw backend: %s", r->error_string);
+      free(r->error_string);
+      free(r);
+      return ctx;
+    }
+    ctx->backend = &r->base;
+  } break;
+  }
+
   return ctx;
 }
 
 void samure_destroy_context(struct samure_context *ctx) {
+  if (ctx->backend && ctx->backend->destroy) {
+    ctx->backend->destroy(ctx, ctx->backend);
+  }
+
   wl_shm_destroy(ctx->shm);
   wl_compositor_destroy(ctx->compositor);
   zwlr_layer_shell_v1_destroy(ctx->layer_shell);
@@ -148,5 +175,11 @@ void samure_context_frame_start(struct samure_context *ctx) {
       }
       break;
     }
+  }
+}
+
+void samure_context_frame_end(struct samure_context *ctx) {
+  if (ctx->backend && ctx->backend->frame_end) {
+    ctx->backend->frame_end(ctx, ctx->backend);
   }
 }

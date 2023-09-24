@@ -6,7 +6,10 @@ struct samure_context;
 struct samure_output;
 
 struct samure_backend {
-  void (*on_layer_surface_configure)(void *backend, struct samure_context *ctx,
+  void (*on_layer_surface_configure)(struct samure_backend *backend,
+                                     struct samure_context *ctx,
                                      struct samure_output *output,
                                      int32_t width, int32_t height);
+  void (*frame_end)(struct samure_context *ctx, struct samure_backend *backend);
+  void (*destroy)(struct samure_context *ctx, struct samure_backend *backend);
 };

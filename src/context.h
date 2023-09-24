@@ -11,8 +11,12 @@
 
 #define SAMURE_NO_CONTEXT_CONFIG NULL
 
+enum samure_backend_type {
+  SAMURE_BACKEND_RAW,
+};
+
 struct samure_context_config {
-  // TODO: Fill out different options for creating the context
+  enum samure_backend_type backend;
 };
 
 extern struct samure_context_config samure_default_context_config();
@@ -46,9 +50,14 @@ struct samure_context {
   void *event_user_data;
 
   struct samure_backend *backend;
+
+  struct samure_context_config config;
 };
 
 extern struct samure_context *
 samure_create_context(struct samure_context_config *config);
 extern void samure_destroy_context(struct samure_context *ctx);
 extern void samure_context_frame_start(struct samure_context *ctx);
+extern void samure_context_frame_end(struct samure_context *ctx);
+extern struct samure_backend_raw *
+samure_get_backend_raw(struct samure_context *ctx);
