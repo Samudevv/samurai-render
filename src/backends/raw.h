@@ -22,7 +22,8 @@ extern struct samure_backend_raw *
 samure_init_backend_raw(struct samure_context *ctx);
 extern void samure_destroy_backend_raw(struct samure_context *ctx,
                                        struct samure_backend *raw);
-extern void samure_backend_raw_frame_end(struct samure_context *ctx,
-                                         struct samure_backend *raw);
+extern void samure_backend_raw_render_end(struct samure_output *output,
+                                          struct samure_context *ctx,
+                                          struct samure_backend *raw);
 extern struct samure_backend_raw *
 samure_get_backend_raw(struct samure_context *ctx);

@@ -10,6 +10,7 @@ struct samure_backend {
                                      struct samure_context *ctx,
                                      struct samure_output *output,
                                      int32_t width, int32_t height);
-  void (*frame_end)(struct samure_context *ctx, struct samure_backend *backend);
+  void (*render_end)(struct samure_output *output, struct samure_context *ctx,
+                     struct samure_backend *backend);
   void (*destroy)(struct samure_context *ctx, struct samure_backend *backend);
 };

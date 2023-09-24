@@ -36,15 +36,6 @@ static void render_callback(struct samure_output *output,
                             struct samure_context *ctx, void *data) {
   struct blank_data *d = (struct blank_data *)data;
 
-  const clock_t start_time = d->start_time;
-  const clock_t end_time = clock();
-  d->start_time = clock();
-
-  d->delta_time =
-      ((double)end_time - (double)start_time) / (double)CLOCKS_PER_SEC;
-
-  printf("FPS: %.3f \n", 1.0 / d->delta_time);
-
   struct samure_backend_raw *r = samure_get_backend_raw(ctx);
   const uintptr_t i = OUTPUT_INDEX(output);
 
@@ -69,12 +60,22 @@ static void render_callback(struct samure_output *output,
   }
 }
 
+static void update_callback(struct samure_context *ctx, void *data) {
+  struct blank_data *d = (struct blank_data *)data;
+
+  const clock_t start_time = d->start_time;
+  const clock_t end_time = clock();
+  d->start_time = clock();
+  d->delta_time =
+      ((double)end_time - (double)start_time) / (double)CLOCKS_PER_SEC;
+  printf("FPS: %.3f \n", 1.0 / d->delta_time);
+}
+
 int main(void) {
   struct blank_data d = {0};
 
-  struct samure_context_config context_config =
-      samure_create_context_config(event_callback, render_callback, &d);
-  context_config.backend = SAMURE_BACKEND_RAW;
+  struct samure_context_config context_config = samure_create_context_config(
+      event_callback, render_callback, update_callback, &d);
 
   struct samure_context *ctx = samure_create_context(&context_config);
   if (ctx->error_string) {

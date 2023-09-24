@@ -24,12 +24,15 @@ typedef void (*samure_event_callback)(struct samure_event *event,
 typedef void (*samure_render_callback)(struct samure_output *output,
                                        struct samure_context *ctx,
                                        void *user_data);
+typedef void (*samure_update_callback)(struct samure_context *ctx,
+                                       void *user_data);
 
 struct samure_context_config {
   enum samure_backend_type backend;
 
   samure_event_callback event_callback;
   samure_render_callback render_callback;
+  samure_update_callback update_callback;
 
   void *user_data;
 };
@@ -38,6 +41,7 @@ extern struct samure_context_config samure_default_context_config();
 extern struct samure_context_config
 samure_create_context_config(samure_event_callback event_callback,
                              samure_render_callback render_callback,
+                             samure_update_callback update_callback,
                              void *user_data);
 
 struct samure_context {
@@ -69,5 +73,4 @@ extern struct samure_context *
 samure_create_context(struct samure_context_config *config);
 extern void samure_destroy_context(struct samure_context *ctx);
 extern void samure_context_frame_start(struct samure_context *ctx);
-extern void samure_context_frame_end(struct samure_context *ctx);
 extern void samure_context_run(struct samure_context *ctx);

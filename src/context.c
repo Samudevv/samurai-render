@@ -33,10 +33,12 @@ struct samure_context_config samure_default_context_config() {
 struct samure_context_config
 samure_create_context_config(samure_event_callback event_callback,
                              samure_render_callback render_callback,
+                             samure_update_callback update_callback,
                              void *user_data) {
   struct samure_context_config c = samure_default_context_config();
   c.event_callback = event_callback;
   c.render_callback = render_callback;
+  c.update_callback = update_callback;
   c.user_data = user_data;
   return c;
 }
@@ -192,12 +194,6 @@ void samure_context_frame_start(struct samure_context *ctx) {
   }
 }
 
-void samure_context_frame_end(struct samure_context *ctx) {
-  if (ctx->backend && ctx->backend->frame_end) {
-    ctx->backend->frame_end(ctx, ctx->backend);
-  }
-}
-
 void samure_context_run(struct samure_context *ctx) {
   ctx->running = 1;
   while (ctx->running) {
@@ -216,9 +212,15 @@ void samure_context_run(struct samure_context *ctx) {
           ctx->config.render_callback(&ctx->outputs[i], ctx,
                                       ctx->config.user_data);
         }
+        ctx->outputs[i].surface_ready = 0;
+        if (ctx->backend && ctx->backend->render_end) {
+          ctx->backend->render_end(&ctx->outputs[i], ctx, ctx->backend);
+        }
       }
     }
 
-    samure_context_frame_end(ctx);
+    if (ctx->config.update_callback) {
+      ctx->config.update_callback(ctx, ctx->config.user_data);
+    }
   }
 }
