@@ -74,7 +74,19 @@ void pointer_motion(void *data, struct wl_pointer *pointer, uint32_t time,
                     wl_fixed_t surface_x, wl_fixed_t surface_y) {}
 
 void pointer_button(void *data, struct wl_pointer *pointer, uint32_t serial,
-                    uint32_t time, uint32_t button, uint32_t state) {}
+                    uint32_t time, uint32_t button, uint32_t state) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+
+  ctx->num_events++;
+  ctx->events =
+      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+
+  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_POINTER_BUTTON;
+  ctx->events[ctx->num_events - 1].seat = (struct samure_seat *)d->data;
+  ctx->events[ctx->num_events - 1].button = button;
+  ctx->events[ctx->num_events - 1].state = state;
+}
 
 void pointer_axis(void *data, struct wl_pointer *wl_pointer, uint32_t time,
                   uint32_t axis, wl_fixed_t value) {}
@@ -82,6 +94,18 @@ void pointer_axis(void *data, struct wl_pointer *wl_pointer, uint32_t time,
 void layer_surface_configure(void *data,
                              struct zwlr_layer_surface_v1 *layer_surface,
                              uint32_t serial, uint32_t width, uint32_t height) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+
+  ctx->num_events++;
+  ctx->events =
+      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+
+  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_LAYER_SURFACE_CONFIGURE;
+  ctx->events[ctx->num_events - 1].output = (struct samure_output *)d->data;
+  ctx->events[ctx->num_events - 1].width = width;
+  ctx->events[ctx->num_events - 1].height = height;
+
   zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
 }
 
@@ -113,3 +137,14 @@ void xdg_output_name(void *data, struct zxdg_output_v1 *zxdg_output_v1,
 
 void xdg_output_description(void *data, struct zxdg_output_v1 *zxdg_output_v1,
                             const char *description) {}
+
+struct samure_callback_data *
+samure_create_callback_data(struct samure_context *ctx, void *data) {
+  struct samure_callback_data *d = (struct samure_callback_data *)malloc(
+      sizeof(struct samure_callback_data));
+
+  d->ctx = ctx;
+  d->data = data;
+
+  return d;
+}

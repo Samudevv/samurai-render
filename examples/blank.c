@@ -1,8 +1,21 @@
 #include <backends/raw.h>
 #include <context.h>
+#include <linux/input-event-codes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+static void event_callback(struct samure_event *e, struct samure_context *ctx,
+                           void *data) {
+  int *running = (int *)data;
+  switch (e->type) {
+  case SAMURE_EVENT_POINTER_BUTTON:
+    if (e->button == BTN_LEFT && e->state == WL_POINTER_BUTTON_STATE_RELEASED) {
+      *running = 0;
+    }
+    break;
+  }
+}
 
 int main(void) {
   struct samure_context *ctx = samure_create_context(SAMURE_NO_CONTEXT_CONFIG);
@@ -10,6 +23,8 @@ int main(void) {
     fprintf(stderr, "%s\n", ctx->error_string);
     return EXIT_FAILURE;
   }
+
+  ctx->event_callback = event_callback;
 
   puts("Successfully initialized samurai-render context");
 
@@ -19,6 +34,8 @@ int main(void) {
     samure_destroy_context(ctx);
     return EXIT_FAILURE;
   }
+
+  ctx->backend = &raw.base;
 
   for (size_t i = 0; i < raw.num_outputs; i++) {
     // Paint a pinkish overlay on the screen
@@ -33,15 +50,14 @@ int main(void) {
     }
   }
 
-  int frame_count = 0;
-  while (frame_count < 600) {
+  int running = 1;
+  ctx->event_user_data = &running;
+  while (running) {
     samure_context_frame_start(ctx);
 
     samure_backend_raw_frame_end(ctx, raw);
 
     usleep(16666);
-    frame_count++;
-    printf("Frame %3d\n", frame_count);
   }
 
   samure_destroy_backend_raw(raw);

@@ -88,3 +88,11 @@ static struct zxdg_output_v1_listener xdg_output_listener = {
     .name = xdg_output_name,
     .description = xdg_output_description,
 };
+
+struct samure_callback_data {
+  struct samure_context *ctx;
+  void *data;
+};
+
+extern struct samure_callback_data *
+samure_create_callback_data(struct samure_context *ctx, void *data);

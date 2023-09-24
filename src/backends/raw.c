@@ -28,6 +28,9 @@ struct samure_backend_raw samure_init_backend_raw(struct samure_context *ctx) {
     }
   }
 
+  r.base.on_layer_surface_configure =
+      samure_backend_raw_on_layer_surface_configure;
+
   return r;
 }
 
@@ -49,4 +52,13 @@ void samure_backend_raw_frame_end(struct samure_context *ctx,
                       ctx->outputs[i].logical_size.height);
     wl_surface_commit(ctx->outputs[i].surface);
   }
+}
+
+void samure_backend_raw_on_layer_surface_configure(void *backend,
+                                                   struct samure_context *ctx,
+                                                   struct samure_output *output,
+                                                   int32_t width,
+                                                   int32_t height) {
+  const uintptr_t output_index = ((uintptr_t)output - (uintptr_t)ctx->outputs) /
+                                 sizeof(struct samure_output);
 }

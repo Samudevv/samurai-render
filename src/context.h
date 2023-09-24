@@ -4,6 +4,8 @@
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
 
+#include "backend.h"
+#include "events.h"
 #include "output.h"
 #include "seat.h"
 
@@ -14,6 +16,12 @@ struct samure_context_config {
 };
 
 extern struct samure_context_config samure_default_context_config();
+
+struct samure_context;
+
+typedef void (*samure_event_callback)(struct samure_event *event,
+                                      struct samure_context *ctx,
+                                      void *user_data);
 
 struct samure_context {
   struct wl_display *display;
@@ -28,7 +36,16 @@ struct samure_context {
   struct samure_output *outputs;
   size_t num_outputs;
 
+  struct samure_event *events;
+  size_t num_events;
+  size_t event_index;
+
   char *error_string;
+
+  samure_event_callback event_callback;
+  void *event_user_data;
+
+  struct samure_backend *backend;
 };
 
 extern struct samure_context *

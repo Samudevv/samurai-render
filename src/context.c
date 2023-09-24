@@ -60,7 +60,9 @@ samure_create_context(struct samure_context_config *config) {
     wl_display_roundtrip(ctx->display);
     for (size_t i = 0; i < ctx->num_seats; i++) {
       if (ctx->seats[i].pointer) {
-        wl_pointer_add_listener(ctx->seats[i].pointer, &pointer_listener, ctx);
+        wl_pointer_add_listener(
+            ctx->seats[i].pointer, &pointer_listener,
+            samure_create_callback_data(ctx, &ctx->seats[i]));
       }
       // TODO: Add keyboard listener
       // if (ctx->seats[i].keyboard) {
@@ -86,7 +88,8 @@ samure_create_context(struct samure_context_config *config) {
         ctx->layer_shell, o->surface, o->output,
         ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, namespace);
     zwlr_layer_surface_v1_add_listener(o->layer_surface,
-                                       &layer_surface_listener, ctx);
+                                       &layer_surface_listener,
+                                       samure_create_callback_data(ctx, o));
     zwlr_layer_surface_v1_set_anchor(o->layer_surface,
                                      ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
@@ -119,10 +122,31 @@ void samure_destroy_context(struct samure_context *ctx) {
 
   wl_display_disconnect(ctx->display);
 
+  free(ctx->events);
+
   free(ctx->error_string);
   free(ctx);
 }
 
 void samure_context_frame_start(struct samure_context *ctx) {
   wl_display_roundtrip(ctx->display);
+
+  // Process events
+  for (; ctx->event_index < ctx->num_events; ctx->event_index++) {
+    struct samure_event *e = &ctx->events[ctx->event_index];
+
+    switch (e->type) {
+    case SAMURE_EVENT_LAYER_SURFACE_CONFIGURE:
+      if (ctx->backend && ctx->backend->on_layer_surface_configure) {
+        ctx->backend->on_layer_surface_configure(ctx->backend, ctx, e->output,
+                                                 e->width, e->height);
+      }
+      break;
+    default:
+      if (ctx->event_callback) {
+        ctx->event_callback(e, ctx, ctx->event_user_data);
+      }
+      break;
+    }
+  }
 }
