@@ -36,7 +36,7 @@ static void render_callback(struct samure_output *output,
   cairo_t *cairo = c->surfaces[i].cairo;
 
   cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
-  cairo_set_source_rgba(cairo, 0.7, 0.0, 0.4, 0.3);
+  cairo_set_source_rgba(cairo, 0.0, 0.0, 0.0, 0.0);
   cairo_paint(cairo);
 
   if (samure_circle_in_output(output, d->qx, d->qy, 100)) {
@@ -70,16 +70,18 @@ static void update_callback(struct samure_context *ctx, double delta_time,
   d->qx += d->dx * delta_time * 300.0;
   d->qy += d->dy * delta_time * 300.0;
 
-  if (d->qx + 100 > ctx->outputs[0].geo.w * 2) {
+  const struct samure_rect r = samure_context_get_output_rect(ctx);
+
+  if (d->qx + 100 > r.w) {
     d->dx *= -1.0;
   }
-  if (d->qx - 100 < 0) {
+  if (d->qx - 100 < r.x) {
     d->dx *= -1.0;
   }
-  if (d->qy + 100 > ctx->outputs[0].geo.h) {
+  if (d->qy + 100 > r.h) {
     d->dy *= -1.0;
   }
-  if (d->qy - 100 < 0) {
+  if (d->qy - 100 < r.y) {
     d->dy *= -1.0;
   }
 }
@@ -97,10 +99,13 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
+  const struct samure_rect r = samure_context_get_output_rect(ctx);
+
+  srand(time(NULL));
   d.dx = 1.0;
   d.dy = 1.0;
-  d.qx = ctx->outputs[0].geo.w / 2.0;
-  d.qy = ctx->outputs[0].geo.h / 2.0;
+  d.qx = rand() % (r.w - 200) + 100;
+  d.qy = rand() % (r.h - 200) + 100;
 
   puts("Successfully initialized samurai-render context");
 

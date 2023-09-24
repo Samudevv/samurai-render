@@ -3,13 +3,14 @@
 #include <linux/input-event-codes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define OLIVEC_IMPLEMENTATION
 #include <olive.c>
 
 struct blank_data {
   Olivec_Canvas *canvas;
-  double cx, cy;
+  double qx, qy;
   double dx, dy;
 };
 
@@ -30,24 +31,16 @@ static void render_callback(struct samure_output *output,
                             struct samure_context *ctx, double delta_time,
                             void *data) {
   struct blank_data *d = (struct blank_data *)data;
-
-  struct samure_backend_raw *r = samure_get_backend_raw(ctx);
   const uintptr_t i = OUT_IDX();
 
-  uint8_t *pixels = r->surfaces[i].shared_buffer.data;
-  const int32_t width = r->surfaces[i].shared_buffer.width;
-  const int32_t height = r->surfaces[i].shared_buffer.height;
-
-  if (samure_circle_in_output(output, d->cx, d->cy, 100)) {
-    olivec_fill(d->canvas[i], 0x0A5A0080);
-    olivec_circle(d->canvas[i], OUT_X(d->cx), OUT_Y(d->cy), 100, 0xFF00FF00);
+  olivec_fill(d->canvas[i], 0x00000000);
+  if (samure_circle_in_output(output, d->qx, d->qy, 100)) {
+    olivec_circle(d->canvas[i], OUT_X(d->qx), OUT_Y(d->qy), 100, 0xFF00FF00);
 
     char buffer[1024];
     snprintf(buffer, 1024, "%d", ctx->frame_timer.fps);
 
     olivec_text(d->canvas[i], buffer, 5, 5, olivec_default_font, 5, 0xFFAAAAAA);
-  } else {
-    olivec_fill(d->canvas[i], 0x0A80005A);
   }
 }
 
@@ -55,19 +48,21 @@ static void update_callback(struct samure_context *ctx, double delta_time,
                             void *data) {
   struct blank_data *d = (struct blank_data *)data;
 
-  d->cx += d->dx * delta_time * 400.0;
-  d->cy += d->dy * delta_time * 400.0;
+  d->qx += d->dx * delta_time * 400.0;
+  d->qy += d->dy * delta_time * 400.0;
 
-  if (d->cx + 100 > ctx->outputs[0].geo.w * 2) {
+  const struct samure_rect r = samure_context_get_output_rect(ctx);
+
+  if (d->qx + 100 > r.w) {
     d->dx *= -1.0;
   }
-  if (d->cx - 100 < 0) {
+  if (d->qx - 100 < r.x) {
     d->dx *= -1.0;
   }
-  if (d->cy + 100 > ctx->outputs[0].geo.h) {
+  if (d->qy + 100 > r.h) {
     d->dy *= -1.0;
   }
-  if (d->cy - 100 < 0) {
+  if (d->qy - 100 < r.y) {
     d->dy *= -1.0;
   }
 }
@@ -94,10 +89,13 @@ int main(void) {
                       ctx->outputs[i].geo.h, ctx->outputs[i].geo.w);
   }
 
+  const struct samure_rect rt = samure_context_get_output_rect(ctx);
+
+  srand(time(NULL));
   d.dx = 1.0;
   d.dy = 1.0;
-  d.cx = (double)ctx->outputs[0].geo.w / 2.0;
-  d.cy = (double)ctx->outputs[0].geo.h / 2.0;
+  d.qx = rand() % (rt.w - 200) + 100;
+  d.qy = rand() % (rt.h - 200) + 100;
 
   samure_context_run(ctx);
 

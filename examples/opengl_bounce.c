@@ -25,10 +25,10 @@ static void render_callback(struct samure_output *output,
                             void *data) {
   struct opengl_data *d = (struct opengl_data *)data;
 
-  if (samure_square_in_output(output, d->qx - 100, d->qy - 100, 200)) {
-    glClearColor(0.7f, 0.0f, 0.4f, 0.1f);
-    glClear(GL_COLOR_BUFFER_BIT);
+  glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+  glClear(GL_COLOR_BUFFER_BIT);
 
+  if (samure_square_in_output(output, d->qx - 100, d->qy - 100, 200)) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0f, output->geo.w, output->geo.h, 0.0f, 0.0f, 1.0f);
@@ -44,9 +44,6 @@ static void render_callback(struct samure_output *output,
     glVertex2f(qx + 100.0f, qy + 100.0f);
     glVertex2f(qx + 100.0f, qy - 100.0f);
     glEnd();
-  } else {
-    glClearColor(0.5f, 0.0f, 0.1f, 0.1f);
-    glClear(GL_COLOR_BUFFER_BIT);
   }
 }
 
@@ -57,16 +54,18 @@ static void update_callback(struct samure_context *ctx, double delta_time,
   d->qx += d->dx * delta_time * 300.0;
   d->qy += d->dy * delta_time * 300.0;
 
-  if (d->qx + 100 > ctx->outputs[0].geo.w * 2) {
+  const struct samure_rect r = samure_context_get_output_rect(ctx);
+
+  if (d->qx + 100 > r.w) {
     d->dx *= -1.0;
   }
-  if (d->qx - 100 < 0) {
+  if (d->qx - 100 < r.x) {
     d->dx *= -1.0;
   }
-  if (d->qy + 100 > ctx->outputs[0].geo.h) {
+  if (d->qy + 100 > r.h) {
     d->dy *= -1.0;
   }
-  if (d->qy - 100 < 0) {
+  if (d->qy - 100 < r.y) {
     d->dy *= -1.0;
   }
 }
@@ -84,10 +83,13 @@ int main(void) {
     return EXIT_FAILURE;
   }
 
+  const struct samure_rect r = samure_context_get_output_rect(ctx);
+
+  srand(time(NULL));
   d.dx = 1.0;
   d.dy = 1.0;
-  d.qx = ctx->outputs[0].geo.w / 2.0;
-  d.qy = ctx->outputs[0].geo.h / 2.0;
+  d.qx = rand() % (r.w - 200) + 100;
+  d.qy = rand() % (r.h - 200) + 100;
 
   puts("Successfully initialized samurai-render context");
 

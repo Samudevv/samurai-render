@@ -251,3 +251,32 @@ void samure_context_run(struct samure_context *ctx) {
     samure_frame_timer_end_frame(&ctx->frame_timer);
   }
 }
+
+struct samure_rect samure_context_get_output_rect(struct samure_context *ctx) {
+  struct samure_rect r = {
+      .x = ctx->outputs[0].geo.x,
+      .y = ctx->outputs[0].geo.y,
+      .w = ctx->outputs[0].geo.x + ctx->outputs[0].geo.w,
+      .h = ctx->outputs[0].geo.y + ctx->outputs[0].geo.h,
+  };
+
+  for (size_t i = 1; i < ctx->num_outputs; i++) {
+    if (ctx->outputs[i].geo.x < r.x) {
+      r.x = ctx->outputs[i].geo.x;
+    }
+    if (ctx->outputs[i].geo.y < r.y) {
+      r.y = ctx->outputs[i].geo.y;
+    }
+    if (ctx->outputs[i].geo.x + ctx->outputs[i].geo.w > r.w) {
+      r.w = ctx->outputs[i].geo.x + ctx->outputs[i].geo.w;
+    }
+    if (ctx->outputs[i].geo.y + ctx->outputs[i].geo.h > r.h) {
+      r.h = ctx->outputs[i].geo.y + ctx->outputs[i].geo.h;
+    }
+  }
+
+  r.w -= r.x;
+  r.h -= r.y;
+
+  return r;
+}

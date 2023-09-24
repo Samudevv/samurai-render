@@ -82,3 +82,5 @@ extern struct samure_context *
 samure_create_context(struct samure_context_config *config);
 extern void samure_destroy_context(struct samure_context *ctx);
 extern void samure_context_run(struct samure_context *ctx);
+extern struct samure_rect
+samure_context_get_output_rect(struct samure_context *ctx);
