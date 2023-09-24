@@ -202,25 +202,14 @@ void samure_context_run(struct samure_context *ctx) {
 
     // Make outputs ready for rendering
     for (size_t i = 0; i < ctx->num_outputs; i++) {
-      if (!ctx->outputs[i].surface_ready) {
-        if (ctx->outputs[i].frame_callback == NULL) {
-          ctx->outputs[i].frame_callback =
-              wl_surface_frame(ctx->outputs[i].surface);
-          wl_callback_add_listener(
-              ctx->outputs[i].frame_callback, &surface_frame_listener,
-              samure_create_callback_data(ctx, &ctx->outputs[i]));
-          wl_surface_commit(ctx->outputs[i].surface);
-        }
-      } else {
-        if (ctx->config.render_callback) {
-          ctx->config.render_callback(&ctx->outputs[i], ctx,
-                                      ctx->frame_timer.delta_time,
-                                      ctx->config.user_data);
-        }
-        ctx->outputs[i].surface_ready = 0;
-        if (ctx->backend && ctx->backend->render_end) {
-          ctx->backend->render_end(&ctx->outputs[i], ctx, ctx->backend);
-        }
+      if (ctx->config.render_callback) {
+        ctx->config.render_callback(&ctx->outputs[i], ctx,
+                                    ctx->frame_timer.delta_time,
+                                    ctx->config.user_data);
+      }
+      ctx->outputs[i].surface_ready = 0;
+      if (ctx->backend && ctx->backend->render_end) {
+        ctx->backend->render_end(&ctx->outputs[i], ctx, ctx->backend);
       }
     }
 
