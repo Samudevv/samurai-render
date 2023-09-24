@@ -22,7 +22,7 @@ struct samure_backend_raw *samure_init_backend_raw(struct samure_context *ctx) {
 
   for (size_t i = 0; i < r->num_outputs; i++) {
     r->surfaces[i].shared_buffer = samure_create_shared_buffer(
-        ctx->shm, ctx->outputs[i].size.w, ctx->outputs[i].size.h);
+        ctx->shm, ctx->outputs[i].geo.w, ctx->outputs[i].geo.h);
     if (r->surfaces[i].shared_buffer.buffer == NULL) {
       RAW_ADD_ERR_F("failed to create shared memory buffer for surface %zu", i);
     } else {
@@ -55,8 +55,8 @@ void samure_backend_raw_render_end(struct samure_output *output,
   const uintptr_t i = OUT_IDX();
   wl_surface_attach(ctx->outputs[i].surface,
                     r->surfaces[i].shared_buffer.buffer, 0, 0);
-  wl_surface_damage(ctx->outputs[i].surface, 0, 0, ctx->outputs[i].size.w,
-                    ctx->outputs[i].size.h);
+  wl_surface_damage(ctx->outputs[i].surface, 0, 0, ctx->outputs[i].geo.w,
+                    ctx->outputs[i].geo.h);
   wl_surface_commit(ctx->outputs[i].surface);
 }
 

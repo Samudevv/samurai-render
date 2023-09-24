@@ -58,13 +58,13 @@ static void update_callback(struct samure_context *ctx, double delta_time,
   d->cx += d->dx * delta_time * 400.0;
   d->cy += d->dy * delta_time * 400.0;
 
-  if (d->cx + 100 > ctx->outputs[0].size.w * 2) {
+  if (d->cx + 100 > ctx->outputs[0].geo.w * 2) {
     d->dx *= -1.0;
   }
   if (d->cx - 100 < 0) {
     d->dx *= -1.0;
   }
-  if (d->cy + 100 > ctx->outputs[0].size.h) {
+  if (d->cy + 100 > ctx->outputs[0].geo.h) {
     d->dy *= -1.0;
   }
   if (d->cy - 100 < 0) {
@@ -90,14 +90,14 @@ int main(void) {
   d.canvas = malloc(r->num_outputs * sizeof(Olivec_Canvas));
   for (size_t i = 0; i < r->num_outputs; i++) {
     d.canvas[i] =
-        olivec_canvas(r->surfaces[i].shared_buffer.data, ctx->outputs[i].size.w,
-                      ctx->outputs[i].size.h, ctx->outputs[i].size.w);
+        olivec_canvas(r->surfaces[i].shared_buffer.data, ctx->outputs[i].geo.w,
+                      ctx->outputs[i].geo.h, ctx->outputs[i].geo.w);
   }
 
   d.dx = 1.0;
   d.dy = 1.0;
-  d.cx = (double)ctx->outputs[0].size.w / 2.0;
-  d.cy = (double)ctx->outputs[0].size.h / 2.0;
+  d.cx = (double)ctx->outputs[0].geo.w / 2.0;
+  d.cy = (double)ctx->outputs[0].geo.h / 2.0;
 
   samure_context_run(ctx);
 

@@ -166,15 +166,15 @@ void xdg_output_logical_position(void *data,
                                  struct zxdg_output_v1 *zxdg_output_v1,
                                  int32_t x, int32_t y) {
   struct samure_output *o = data;
-  o->pos.x = x;
-  o->pos.y = y;
+  o->geo.x = x;
+  o->geo.y = y;
 }
 
 void xdg_output_logical_size(void *data, struct zxdg_output_v1 *zxdg_output_v1,
                              int32_t width, int32_t height) {
   struct samure_output *o = data;
-  o->size.w = width;
-  o->size.h = height;
+  o->geo.w = width;
+  o->geo.h = height;
 }
 
 void xdg_output_done(void *data, struct zxdg_output_v1 *zxdg_output_v1) {}

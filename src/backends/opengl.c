@@ -90,9 +90,8 @@ samure_init_backend_opengl(struct samure_context *ctx) {
       return gl;
     }
 
-    gl->surfaces[i].egl_window =
-        wl_egl_window_create(ctx->outputs[i].surface, ctx->outputs[i].size.w,
-                             ctx->outputs[i].size.h);
+    gl->surfaces[i].egl_window = wl_egl_window_create(
+        ctx->outputs[i].surface, ctx->outputs[i].geo.w, ctx->outputs[i].geo.h);
     if (!gl->surfaces[i].egl_window) {
       gl->error_string = malloc(1024);
       snprintf(gl->error_string, 1024,

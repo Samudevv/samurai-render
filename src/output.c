@@ -21,28 +21,28 @@ void samure_destroy_output(struct samure_output output) {
 int samure_circle_in_output(struct samure_output *o, int32_t x, int32_t y,
                             int32_t r) {
   // Middle of the output
-  const int32_t ox = o->pos.x + o->size.w / 2;
-  const int32_t oy = o->pos.y + o->size.h / 2;
+  const int32_t ox = o->geo.x + o->geo.w / 2;
+  const int32_t oy = o->geo.y + o->geo.h / 2;
 
   // Distance between the middle of the circle and the middle of the output
   const int32_t dx = abs(x - ox);
   const int32_t dy = abs(y - oy);
 
-  if ((dx > (o->size.w / 2 + r)) || (dy > (o->size.h / 2 + r)))
+  if ((dx > (o->geo.w / 2 + r)) || (dy > (o->geo.h / 2 + r)))
     return 0;
 
-  if ((dx <= (o->size.w / 2)) || (dy <= (o->size.h / 2)))
+  if ((dx <= (o->geo.w / 2)) || (dy <= (o->geo.h / 2)))
     return 1;
 
-  return (dx - o->size.w / 2) * (dx - o->size.w / 2) +
-             (dy - o->size.h / 2) * (dy - o->size.h / 2) <=
+  return (dx - o->geo.w / 2) * (dx - o->geo.w / 2) +
+             (dy - o->geo.h / 2) * (dy - o->geo.h / 2) <=
          (r * r);
 }
 
 int samure_rect_in_output(struct samure_output *o, int32_t x, int32_t y,
                           int32_t w, int32_t h) {
-  return (x < (o->pos.x + o->size.w)) && ((x + w) > o->pos.x) &&
-         (y < (o->pos.y + o->size.h)) && ((y + h) > o->pos.y);
+  return (x < (o->geo.x + o->geo.w)) && ((x + w) > o->geo.x) &&
+         (y < (o->geo.y + o->geo.h)) && ((y + h) > o->geo.y);
 }
 
 int samure_square_in_output(struct samure_output *output, int32_t square_x,
@@ -52,8 +52,8 @@ int samure_square_in_output(struct samure_output *output, int32_t square_x,
 }
 
 int samure_point_in_output(struct samure_output *o, int32_t x, int32_t y) {
-  return (x > o->pos.x) && (x < (o->pos.x + o->size.w)) && (y > o->pos.y) &&
-         (y < o->pos.y + o->size.h);
+  return (x > o->geo.x) && (x < (o->geo.x + o->geo.w)) && (y > o->geo.y) &&
+         (y < o->geo.y + o->geo.h);
 }
 
 int samure_triangle_in_output(struct samure_output *o, int32_t x1, int32_t y1,

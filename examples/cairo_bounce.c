@@ -70,13 +70,13 @@ static void update_callback(struct samure_context *ctx, double delta_time,
   d->qx += d->dx * delta_time * 300.0;
   d->qy += d->dy * delta_time * 300.0;
 
-  if (d->qx + 100 > ctx->outputs[0].size.w * 2) {
+  if (d->qx + 100 > ctx->outputs[0].geo.w * 2) {
     d->dx *= -1.0;
   }
   if (d->qx - 100 < 0) {
     d->dx *= -1.0;
   }
-  if (d->qy + 100 > ctx->outputs[0].size.h) {
+  if (d->qy + 100 > ctx->outputs[0].geo.h) {
     d->dy *= -1.0;
   }
   if (d->qy - 100 < 0) {
@@ -99,8 +99,8 @@ int main(void) {
 
   d.dx = 1.0;
   d.dy = 1.0;
-  d.qx = ctx->outputs[0].size.w / 2.0;
-  d.qy = ctx->outputs[0].size.h / 2.0;
+  d.qx = ctx->outputs[0].geo.w / 2.0;
+  d.qy = ctx->outputs[0].geo.h / 2.0;
 
   puts("Successfully initialized samurai-render context");
 

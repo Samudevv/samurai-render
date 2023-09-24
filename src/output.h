@@ -7,10 +7,17 @@
 #define OUT_IDX2(output)                                                       \
   (((uintptr_t)output - (uintptr_t)ctx->outputs) / sizeof(struct samure_output))
 #define OUT_IDX() OUT_IDX2(output)
-#define OUT_X2(output, val) (val - output->pos.x)
+#define OUT_X2(output, val) (val - output->geo.x)
 #define OUT_X(val) OUT_X2(output, val)
-#define OUT_Y2(output, val) (val - output->pos.y)
+#define OUT_Y2(output, val) (val - output->geo.y)
 #define OUT_Y(val) OUT_Y2(output, val)
+
+struct samure_rect {
+  int32_t x;
+  int32_t y;
+  int32_t w;
+  int32_t h;
+};
 
 struct samure_output {
   struct wl_output *output;
@@ -19,15 +26,7 @@ struct samure_output {
   struct wl_callback *frame_callback;
   struct zwlr_layer_surface_v1 *layer_surface;
 
-  struct {
-    int32_t x;
-    int32_t y;
-  } pos;
-
-  struct {
-    int32_t w;
-    int32_t h;
-  } size;
+  struct samure_rect geo;
 
   char *name;
 
