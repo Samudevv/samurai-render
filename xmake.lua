@@ -1,6 +1,6 @@
 set_project("samurai-render")
 
-add_requires("wayland")
+add_requires("wayland", "cairo")
 
 option("build_examples")
     set_default(false)
@@ -10,7 +10,7 @@ option_end()
 add_rules("mode.debug", "mode.release")
 target("samurai-render")
     set_kind("static")
-    add_packages("wayland")
+    add_packages("wayland", "cairo")
     add_links("EGL")
     add_headerfiles(
         "src/*.h",
@@ -39,4 +39,10 @@ if get_config("build_examples") then
         add_links("GL")
         add_deps("samurai-render")
         add_files("examples/opengl_bounce.c")
+    target("cairo_bounce")
+        set_kind("binary")
+        add_packages("wayland", "cairo")
+        add_includedirs("src")
+        add_deps("samurai-render")
+        add_files("examples/cairo_bounce.c")
 end

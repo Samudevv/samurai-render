@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "backends/cairo.h"
 #include "backends/opengl.h"
 #include "backends/raw.h"
 
@@ -138,6 +139,16 @@ samure_create_context(struct samure_context_config *config) {
       return ctx;
     }
     ctx->backend = &o->base;
+  } break;
+  case SAMURE_BACKEND_CAIRO: {
+    struct samure_backend_cairo *c = samure_init_backend_cairo(ctx);
+    if (c->error_string) {
+      CTX_ERR_F("failed to initialize cairo backend: %s", c->error_string);
+      free(c->error_string);
+      free(c);
+      return ctx;
+    }
+    ctx->backend = &c->base;
   } break;
   case SAMURE_BACKEND_NONE:
     break;
