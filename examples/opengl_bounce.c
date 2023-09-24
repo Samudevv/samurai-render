@@ -25,7 +25,7 @@ static void render_callback(struct samure_output *output,
                             void *data) {
   struct opengl_data *d = (struct opengl_data *)data;
 
-  if (samure_circle_in_output(output, d->qx, d->qy, 100)) {
+  if (samure_square_in_output(output, d->qx - 100, d->qy - 100, 200)) {
     glClearColor(0.7f, 0.0f, 0.4f, 0.1f);
     glClear(GL_COLOR_BUFFER_BIT);
 

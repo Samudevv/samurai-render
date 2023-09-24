@@ -38,3 +38,26 @@ int samure_circle_in_output(struct samure_output *o, int32_t x, int32_t y,
              (dy - o->size.h / 2) * (dy - o->size.h / 2) <=
          (r * r);
 }
+
+int samure_rect_in_output(struct samure_output *o, int32_t x, int32_t y,
+                          int32_t w, int32_t h) {
+  return (x < (o->pos.x + o->size.w)) && ((x + w) > o->pos.x) &&
+         (y < (o->pos.y + o->size.h)) && ((y + h) > o->pos.y);
+}
+
+int samure_square_in_output(struct samure_output *output, int32_t square_x,
+                            int32_t square_y, int32_t square_size) {
+  return samure_rect_in_output(output, square_x, square_y, square_size,
+                               square_size);
+}
+
+int samure_point_in_output(struct samure_output *o, int32_t x, int32_t y) {
+  return (x > o->pos.x) && (x < (o->pos.x + o->size.w)) && (y > o->pos.y) &&
+         (y < o->pos.y + o->size.h);
+}
+
+int samure_triangle_in_output(struct samure_output *o, int32_t x1, int32_t y1,
+                              int32_t x2, int32_t y2, int32_t x3, int32_t y3) {
+  return samure_point_in_output(o, x1, y1) &&
+         samure_point_in_output(o, x2, y2) && samure_point_in_output(o, x3, y3);
+}
