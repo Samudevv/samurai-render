@@ -203,12 +203,14 @@ void samure_context_run(struct samure_context *ctx) {
     // Make outputs ready for rendering
     for (size_t i = 0; i < ctx->num_outputs; i++) {
       if (!ctx->outputs[i].surface_ready) {
-        ctx->outputs[i].frame_callback =
-            wl_surface_frame(ctx->outputs[i].surface);
-        wl_callback_add_listener(
-            ctx->outputs[i].frame_callback, &surface_frame_listener,
-            samure_create_callback_data(ctx, &ctx->outputs[i]));
-        wl_surface_commit(ctx->outputs[i].surface);
+        if (ctx->outputs[i].frame_callback == NULL) {
+          ctx->outputs[i].frame_callback =
+              wl_surface_frame(ctx->outputs[i].surface);
+          wl_callback_add_listener(
+              ctx->outputs[i].frame_callback, &surface_frame_listener,
+              samure_create_callback_data(ctx, &ctx->outputs[i]));
+          wl_surface_commit(ctx->outputs[i].surface);
+        }
       } else {
         if (ctx->config.render_callback) {
           ctx->config.render_callback(&ctx->outputs[i], ctx,

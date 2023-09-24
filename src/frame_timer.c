@@ -1,9 +1,8 @@
 #include "frame_timer.h"
+#include <stdio.h>
 #include <time.h>
 #include <unistd.h>
 
-#define CLOCKS2DT(start, end)                                                  \
-  (((double)end - (double)start) / (double)CLOCKS_PER_SEC)
 #define SWAP(type, a, b)                                                       \
   {                                                                            \
     const type temp = a;                                                       \
@@ -20,41 +19,30 @@ struct samure_frame_timer samure_init_frame_timer(uint32_t max_fps) {
 }
 
 void samure_frame_timer_start_frame(struct samure_frame_timer *f) {
-  f->start_time = clock();
+  f->start_time = samure_get_time();
 }
 
 void samure_frame_timer_end_frame(struct samure_frame_timer *f) {
-  const clock_t end_time = clock();
-  f->raw_delta_time = CLOCKS2DT(f->start_time, end_time);
-  f->raw_delta_time += f->additional_time;
+  const double end_time = samure_get_time();
+  f->raw_delta_time = end_time - f->start_time;
 
   // Limit FPS
   const double max_delta_time = 1.0 / (double)f->max_fps;
   if (f->raw_delta_time < max_delta_time) {
     const double max_sleep_time = max_delta_time - f->raw_delta_time;
 
-    struct timespec sleep_start_time;
-    const int sleep_start_time_result =
-        clock_gettime(CLOCK_REALTIME, &sleep_start_time);
+    const double sleep_start_time = samure_get_time();
 
     const useconds_t sleep_time =
         (useconds_t)(max_sleep_time * 1000.0 * 1000.0);
     usleep(sleep_time);
 
-    struct timespec sleep_end_time;
-    const int sleep_end_time_result =
-        clock_gettime(CLOCK_REALTIME, &sleep_end_time);
+    const double sleep_end_time = samure_get_time();
 
-    if (sleep_start_time_result == 0 && sleep_end_time_result == 0) {
-      const double slept_time =
-          ((double)sleep_end_time.tv_nsec - (double)sleep_start_time.tv_nsec) /
-          (1000.0 * 1000.0 * 1000.0);
+    const double slept_time = sleep_end_time - sleep_start_time;
 
-      f->raw_delta_time += slept_time;
-    }
+    f->raw_delta_time += slept_time;
   }
-
-  const clock_t calc_time_start = clock();
 
   // Store raw delta time
   f->raw_delta_times[f->current_raw_delta_times_index] = f->raw_delta_time;
@@ -113,7 +101,11 @@ void samure_frame_timer_end_frame(struct samure_frame_timer *f) {
 
   f->delta_time = f->mean_delta_time;
   f->fps = (uint32_t)(1.0 / f->delta_time);
+}
 
-  const clock_t calc_time_end = clock();
-  f->additional_time = CLOCKS2DT(calc_time_start, calc_time_end);
+double samure_get_time() {
+  struct timespec tp;
+  clock_gettime(CLOCK_REALTIME, &tp);
+  return (double)(tp.tv_sec * (1000 * 1000 * 1000) + tp.tv_nsec) /
+         (1000.0 * 1000.0 * 1000.0);
 }
