@@ -11,6 +11,7 @@ add_rules("mode.debug", "mode.release")
 target("samurai-render")
     set_kind("static")
     add_packages("wayland")
+    add_links("EGL")
     add_headerfiles(
         "src/*.h",
         "src/wayland/*.h",
@@ -31,4 +32,11 @@ if get_config("build_examples") then
         add_includedirs("src")
         add_deps("samurai-render")
         add_files("examples/blank.c")
+    target("opengl")
+        set_kind("binary")
+        add_packages("wayland")
+        add_includedirs("src")
+        add_links("GL")
+        add_deps("samurai-render")
+        add_files("examples/opengl.c")
 end

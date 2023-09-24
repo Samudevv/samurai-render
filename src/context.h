@@ -17,6 +17,7 @@ struct samure_context;
 
 enum samure_backend_type {
   SAMURE_BACKEND_RAW,
+  SAMURE_BACKEND_OPENGL,
   SAMURE_BACKEND_NONE,
 };
 

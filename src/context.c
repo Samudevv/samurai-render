@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "backends/opengl.h"
 #include "backends/raw.h"
 
 #define CTX_ERR(msg)                                                           \
@@ -128,6 +129,16 @@ samure_create_context(struct samure_context_config *config) {
   ctx->frame_timer = samure_init_frame_timer(ctx->config.max_fps);
 
   switch (ctx->config.backend) {
+  case SAMURE_BACKEND_OPENGL: {
+    struct samure_backend_opengl *o = samure_init_backend_opengl(ctx);
+    if (o->error_string) {
+      CTX_ERR_F("failed to initialize opengl backend: %s", o->error_string);
+      free(o->error_string);
+      free(o);
+      return ctx;
+    }
+    ctx->backend = &o->base;
+  } break;
   case SAMURE_BACKEND_NONE:
     break;
   default: // SAMURE_BACKEND_RAW
@@ -204,12 +215,18 @@ void samure_context_run(struct samure_context *ctx) {
 
     // Make outputs ready for rendering
     for (size_t i = 0; i < ctx->num_outputs; i++) {
+      if (ctx->backend && ctx->backend->render_start) {
+        ctx->backend->render_start(&ctx->outputs[i], ctx, ctx->backend);
+      }
+
       if (ctx->config.render_callback) {
         ctx->config.render_callback(&ctx->outputs[i], ctx,
                                     ctx->frame_timer.delta_time,
                                     ctx->config.user_data);
       }
+
       ctx->outputs[i].surface_ready = 0;
+
       if (ctx->backend && ctx->backend->render_end) {
         ctx->backend->render_end(&ctx->outputs[i], ctx, ctx->backend);
       }
