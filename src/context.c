@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "backends/raw.h"
 
@@ -31,9 +32,11 @@ struct samure_context_config samure_default_context_config() {
 
 struct samure_context_config
 samure_create_context_config(samure_event_callback event_callback,
+                             samure_render_callback render_callback,
                              void *user_data) {
   struct samure_context_config c = samure_default_context_config();
   c.event_callback = event_callback;
+  c.render_callback = render_callback;
   c.user_data = user_data;
   return c;
 }
@@ -120,6 +123,8 @@ samure_create_context(struct samure_context_config *config) {
   wl_display_roundtrip(ctx->display);
 
   switch (ctx->config.backend) {
+  case SAMURE_BACKEND_NONE:
+    break;
   default: // SAMURE_BACKEND_RAW
   {
     struct samure_backend_raw *r = samure_init_backend_raw(ctx);
@@ -190,5 +195,30 @@ void samure_context_frame_start(struct samure_context *ctx) {
 void samure_context_frame_end(struct samure_context *ctx) {
   if (ctx->backend && ctx->backend->frame_end) {
     ctx->backend->frame_end(ctx, ctx->backend);
+  }
+}
+
+void samure_context_run(struct samure_context *ctx) {
+  ctx->running = 1;
+  while (ctx->running) {
+    samure_context_frame_start(ctx);
+
+    for (size_t i = 0; i < ctx->num_outputs; i++) {
+      if (!ctx->outputs[i].surface_ready) {
+        ctx->outputs[i].frame_callback =
+            wl_surface_frame(ctx->outputs[i].surface);
+        wl_callback_add_listener(
+            ctx->outputs[i].frame_callback, &surface_frame_listener,
+            samure_create_callback_data(ctx, &ctx->outputs[i]));
+        wl_surface_commit(ctx->outputs[i].surface);
+      } else {
+        if (ctx->config.render_callback) {
+          ctx->config.render_callback(&ctx->outputs[i], ctx,
+                                      ctx->config.user_data);
+        }
+      }
+    }
+
+    samure_context_frame_end(ctx);
   }
 }

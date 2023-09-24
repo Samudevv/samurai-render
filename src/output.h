@@ -11,6 +11,7 @@ struct samure_output {
   struct wl_output *output;
   struct zxdg_output_v1 *xdg_output;
   struct wl_surface *surface;
+  struct wl_callback *frame_callback;
   struct zwlr_layer_surface_v1 *layer_surface;
 
   struct {
@@ -24,6 +25,8 @@ struct samure_output {
   } logical_size;
 
   char *name;
+
+  int surface_ready;
 };
 
 extern struct samure_output samure_create_output(struct wl_output *output);

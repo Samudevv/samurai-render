@@ -58,6 +58,9 @@ extern void xdg_output_description(void *data,
                                    struct zxdg_output_v1 *zxdg_output_v1,
                                    const char *description);
 
+extern void surface_frame(void *data, struct wl_callback *wl_callback,
+                          uint32_t callback_data);
+
 static struct wl_registry_listener registry_listener = {
     .global = registry_global,
     .global_remove = registry_global_remove,
@@ -87,6 +90,10 @@ static struct zxdg_output_v1_listener xdg_output_listener = {
     .done = xdg_output_done,
     .name = xdg_output_name,
     .description = xdg_output_description,
+};
+
+static struct wl_callback_listener surface_frame_listener = {
+    .done = surface_frame,
 };
 
 struct samure_callback_data {
