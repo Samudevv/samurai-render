@@ -5,15 +5,19 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+struct blank_data {
+  int running;
+};
+
 static void event_callback(struct samure_event *e, struct samure_context *ctx,
                            void *data) {
   struct samure_backend_raw *r = (struct samure_backend_raw *)ctx->backend;
-  int *running = (int *)data;
+  struct blank_data *d = (struct blank_data *)data;
 
   switch (e->type) {
   case SAMURE_EVENT_POINTER_BUTTON:
     if (e->button == BTN_LEFT && e->state == WL_POINTER_BUTTON_STATE_RELEASED) {
-      *running = 0;
+      d->running = 0;
     }
     break;
   case SAMURE_EVENT_POINTER_ENTER: {
@@ -44,13 +48,17 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
 }
 
 int main(void) {
-  struct samure_context *ctx = samure_create_context(SAMURE_NO_CONTEXT_CONFIG);
+  struct blank_data d = {.running = 1};
+
+  struct samure_context_config context_config = samure_default_context_config();
+  context_config.event_callback = event_callback;
+  context_config.user_data = &d;
+
+  struct samure_context *ctx = samure_create_context(&context_config);
   if (ctx->error_string) {
     fprintf(stderr, "%s\n", ctx->error_string);
     return EXIT_FAILURE;
   }
-
-  ctx->event_callback = event_callback;
 
   puts("Successfully initialized samurai-render context");
 
@@ -69,9 +77,7 @@ int main(void) {
     }
   }
 
-  int running = 1;
-  ctx->event_user_data = &running;
-  while (running) {
+  while (d.running) {
     samure_context_frame_start(ctx);
 
     samure_context_frame_end(ctx);

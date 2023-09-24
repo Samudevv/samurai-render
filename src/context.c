@@ -170,8 +170,8 @@ void samure_context_frame_start(struct samure_context *ctx) {
       }
       break;
     default:
-      if (ctx->event_callback) {
-        ctx->event_callback(e, ctx, ctx->event_user_data);
+      if (ctx->config.event_callback) {
+        ctx->config.event_callback(e, ctx, ctx->config.user_data);
       }
       break;
     }

@@ -11,21 +11,25 @@
 
 #define SAMURE_NO_CONTEXT_CONFIG NULL
 
+struct samure_context;
+
 enum samure_backend_type {
   SAMURE_BACKEND_RAW,
 };
 
-struct samure_context_config {
-  enum samure_backend_type backend;
-};
-
-extern struct samure_context_config samure_default_context_config();
-
-struct samure_context;
-
 typedef void (*samure_event_callback)(struct samure_event *event,
                                       struct samure_context *ctx,
                                       void *user_data);
+
+struct samure_context_config {
+  enum samure_backend_type backend;
+
+  samure_event_callback event_callback;
+
+  void *user_data;
+};
+
+extern struct samure_context_config samure_default_context_config();
 
 struct samure_context {
   struct wl_display *display;
@@ -45,9 +49,6 @@ struct samure_context {
   size_t event_index;
 
   char *error_string;
-
-  samure_event_callback event_callback;
-  void *event_user_data;
 
   struct samure_backend *backend;
 
