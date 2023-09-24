@@ -22,8 +22,7 @@ samure_init_backend_cairo(struct samure_context *ctx) {
   c->surfaces = malloc(c->num_outputs * sizeof(struct samure_cairo_surface));
   for (size_t i = 0; i < c->num_outputs; i++) {
     c->surfaces[i].buffer = samure_create_shared_buffer(
-        ctx->shm, ctx->outputs[i].logical_size.width,
-        ctx->outputs[i].logical_size.height);
+        ctx->shm, ctx->outputs[i].size.w, ctx->outputs[i].size.h);
     if (c->surfaces[i].buffer.buffer == NULL) {
       CAI_ADD_ERR_F("failed to create shared memory buffer for output %zu", i);
     } else {
@@ -62,12 +61,11 @@ void samure_backend_cairo_render_end(struct samure_output *output,
                                      struct samure_context *ctx,
                                      struct samure_backend *backend) {
   struct samure_backend_cairo *c = (struct samure_backend_cairo *)backend;
-  const uintptr_t i = OUTPUT_INDEX(output);
+  const uintptr_t i = OUT_IDX();
   wl_surface_attach(ctx->outputs[i].surface, c->surfaces[i].buffer.buffer, 0,
                     0);
-  wl_surface_damage(ctx->outputs[i].surface, 0, 0,
-                    ctx->outputs[i].logical_size.width,
-                    ctx->outputs[i].logical_size.height);
+  wl_surface_damage(ctx->outputs[i].surface, 0, 0, ctx->outputs[i].size.w,
+                    ctx->outputs[i].size.h);
   wl_surface_commit(ctx->outputs[i].surface);
 }
 

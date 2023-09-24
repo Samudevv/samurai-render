@@ -25,25 +25,29 @@ static void render_callback(struct samure_output *output,
                             void *data) {
   struct opengl_data *d = (struct opengl_data *)data;
 
-  glClearColor(0.7f, 0.0f, 0.4f, 0.1f);
-  glClear(GL_COLOR_BUFFER_BIT);
+  if (samure_circle_in_output(output, d->qx, d->qy, 100)) {
+    glClearColor(0.7f, 0.0f, 0.4f, 0.1f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  glOrtho(0.0f, output->logical_size.width, output->logical_size.height, 0.0f,
-          0.0f, 1.0f);
-  glDisable(GL_DEPTH_TEST);
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0.0f, output->size.w, output->size.h, 0.0f, 0.0f, 1.0f);
+    glDisable(GL_DEPTH_TEST);
 
-  const double qx = d->qx - (double)output->logical_position.x;
-  const double qy = d->qy - (double)output->logical_position.y;
+    const double qx = OUT_X(d->qx);
+    const double qy = OUT_Y(d->qy);
 
-  glBegin(GL_QUADS);
-  glColor3f(0.0f, 1.0f, 0.0f);
-  glVertex2f(qx - 100.0f, qy - 100.0f);
-  glVertex2f(qx - 100.0f, qy + 100.0f);
-  glVertex2f(qx + 100.0f, qy + 100.0f);
-  glVertex2f(qx + 100.0f, qy - 100.0f);
-  glEnd();
+    glBegin(GL_QUADS);
+    glColor3f(0.0f, 1.0f, 0.0f);
+    glVertex2f(qx - 100.0f, qy - 100.0f);
+    glVertex2f(qx - 100.0f, qy + 100.0f);
+    glVertex2f(qx + 100.0f, qy + 100.0f);
+    glVertex2f(qx + 100.0f, qy - 100.0f);
+    glEnd();
+  } else {
+    glClearColor(0.5f, 0.0f, 0.1f, 0.1f);
+    glClear(GL_COLOR_BUFFER_BIT);
+  }
 }
 
 static void update_callback(struct samure_context *ctx, double delta_time,
@@ -53,13 +57,13 @@ static void update_callback(struct samure_context *ctx, double delta_time,
   d->qx += d->dx * delta_time * 300.0;
   d->qy += d->dy * delta_time * 300.0;
 
-  if (d->qx + 100 > ctx->outputs[0].logical_size.width * 2) {
+  if (d->qx + 100 > ctx->outputs[0].size.w * 2) {
     d->dx *= -1.0;
   }
   if (d->qx - 100 < 0) {
     d->dx *= -1.0;
   }
-  if (d->qy + 100 > ctx->outputs[0].logical_size.height) {
+  if (d->qy + 100 > ctx->outputs[0].size.h) {
     d->dy *= -1.0;
   }
   if (d->qy - 100 < 0) {
@@ -82,8 +86,8 @@ int main(void) {
 
   d.dx = 1.0;
   d.dy = 1.0;
-  d.qx = ctx->outputs[0].logical_size.width / 2.0;
-  d.qy = ctx->outputs[0].logical_size.height / 2.0;
+  d.qx = ctx->outputs[0].size.w / 2.0;
+  d.qy = ctx->outputs[0].size.h / 2.0;
 
   puts("Successfully initialized samurai-render context");
 

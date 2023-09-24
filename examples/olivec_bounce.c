@@ -8,7 +8,6 @@
 #include <olive.c>
 
 struct blank_data {
-  struct samure_output *current_output;
   Olivec_Canvas *canvas;
   double cx, cy;
   double dx, dy;
@@ -24,12 +23,6 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
       ctx->running = 0;
     }
     break;
-  case SAMURE_EVENT_POINTER_ENTER: {
-    d->current_output = e->output;
-  } break;
-  case SAMURE_EVENT_POINTER_LEAVE: {
-    d->current_output = NULL;
-  } break;
   }
 }
 
@@ -39,18 +32,15 @@ static void render_callback(struct samure_output *output,
   struct blank_data *d = (struct blank_data *)data;
 
   struct samure_backend_raw *r = samure_get_backend_raw(ctx);
-  const uintptr_t i = OUTPUT_INDEX(output);
+  const uintptr_t i = OUT_IDX();
 
   uint8_t *pixels = r->surfaces[i].shared_buffer.data;
   const int32_t width = r->surfaces[i].shared_buffer.width;
   const int32_t height = r->surfaces[i].shared_buffer.height;
 
-  const int circle_in_output =
-      d->cx + 100 > output->logical_position.x &&
-      d->cx - 100 < output->logical_position.x + output->logical_size.width;
-
-  if (d->current_output == output) {
+  if (samure_circle_in_output(output, d->cx, d->cy, 100)) {
     olivec_fill(d->canvas[i], 0x0A5A0080);
+    olivec_circle(d->canvas[i], OUT_X(d->cx), OUT_Y(d->cy), 100, 0xFF00FF00);
 
     char buffer[1024];
     snprintf(buffer, 1024, "%d", ctx->frame_timer.fps);
@@ -58,13 +48,6 @@ static void render_callback(struct samure_output *output,
     olivec_text(d->canvas[i], buffer, 5, 5, olivec_default_font, 5, 0xFFAAAAAA);
   } else {
     olivec_fill(d->canvas[i], 0x0A80005A);
-  }
-
-  if (circle_in_output) {
-    const double cx = d->cx - (double)output->logical_position.x;
-    const double cy = d->cy - (double)output->logical_position.y;
-
-    olivec_circle(d->canvas[i], cx, cy, 100, 0xFF00FF00);
   }
 }
 
@@ -75,13 +58,13 @@ static void update_callback(struct samure_context *ctx, double delta_time,
   d->cx += d->dx * delta_time * 400.0;
   d->cy += d->dy * delta_time * 400.0;
 
-  if (d->cx + 100 > ctx->outputs[0].logical_size.width * 2) {
+  if (d->cx + 100 > ctx->outputs[0].size.w * 2) {
     d->dx *= -1.0;
   }
   if (d->cx - 100 < 0) {
     d->dx *= -1.0;
   }
-  if (d->cy + 100 > ctx->outputs[0].logical_size.height) {
+  if (d->cy + 100 > ctx->outputs[0].size.h) {
     d->dy *= -1.0;
   }
   if (d->cy - 100 < 0) {
@@ -106,16 +89,15 @@ int main(void) {
   struct samure_backend_raw *r = samure_get_backend_raw(ctx);
   d.canvas = malloc(r->num_outputs * sizeof(Olivec_Canvas));
   for (size_t i = 0; i < r->num_outputs; i++) {
-    d.canvas[i] = olivec_canvas(r->surfaces[i].shared_buffer.data,
-                                ctx->outputs[i].logical_size.width,
-                                ctx->outputs[i].logical_size.height,
-                                ctx->outputs[i].logical_size.width);
+    d.canvas[i] =
+        olivec_canvas(r->surfaces[i].shared_buffer.data, ctx->outputs[i].size.w,
+                      ctx->outputs[i].size.h, ctx->outputs[i].size.w);
   }
 
   d.dx = 1.0;
   d.dy = 1.0;
-  d.cx = (double)ctx->outputs[0].logical_size.width / 2.0;
-  d.cy = (double)ctx->outputs[0].logical_size.height / 2.0;
+  d.cx = (double)ctx->outputs[0].size.w / 2.0;
+  d.cy = (double)ctx->outputs[0].size.h / 2.0;
 
   samure_context_run(ctx);
 

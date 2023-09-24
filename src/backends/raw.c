@@ -22,8 +22,7 @@ struct samure_backend_raw *samure_init_backend_raw(struct samure_context *ctx) {
 
   for (size_t i = 0; i < r->num_outputs; i++) {
     r->surfaces[i].shared_buffer = samure_create_shared_buffer(
-        ctx->shm, ctx->outputs[i].logical_size.width,
-        ctx->outputs[i].logical_size.height);
+        ctx->shm, ctx->outputs[i].size.w, ctx->outputs[i].size.h);
     if (r->surfaces[i].shared_buffer.buffer == NULL) {
       RAW_ADD_ERR_F("failed to create shared memory buffer for surface %zu", i);
     } else {
@@ -53,12 +52,11 @@ void samure_backend_raw_render_end(struct samure_output *output,
                                    struct samure_context *ctx,
                                    struct samure_backend *b) {
   struct samure_backend_raw *r = (struct samure_backend_raw *)b;
-  const uintptr_t i = OUTPUT_INDEX(output);
+  const uintptr_t i = OUT_IDX();
   wl_surface_attach(ctx->outputs[i].surface,
                     r->surfaces[i].shared_buffer.buffer, 0, 0);
-  wl_surface_damage(ctx->outputs[i].surface, 0, 0,
-                    ctx->outputs[i].logical_size.width,
-                    ctx->outputs[i].logical_size.height);
+  wl_surface_damage(ctx->outputs[i].surface, 0, 0, ctx->outputs[i].size.w,
+                    ctx->outputs[i].size.h);
   wl_surface_commit(ctx->outputs[i].surface);
 }
 
