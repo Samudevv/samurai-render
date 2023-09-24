@@ -59,6 +59,5 @@ void samure_backend_raw_on_layer_surface_configure(void *backend,
                                                    struct samure_output *output,
                                                    int32_t width,
                                                    int32_t height) {
-  const uintptr_t output_index = ((uintptr_t)output - (uintptr_t)ctx->outputs) /
-                                 sizeof(struct samure_output);
+  const uintptr_t output_index = OUTPUT_INDEX(output);
 }

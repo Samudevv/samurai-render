@@ -4,6 +4,9 @@
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
 
+#define OUTPUT_INDEX(output)                                                   \
+  (((uintptr_t)output - (uintptr_t)ctx->outputs) / sizeof(struct samure_output))
+
 struct samure_output {
   struct wl_output *output;
   struct zxdg_output_v1 *xdg_output;

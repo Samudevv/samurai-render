@@ -65,13 +65,63 @@ void seat_name(void *data, struct wl_seat *wl_seat, const char *name) {
 
 void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
                    struct wl_surface *surface, wl_fixed_t surface_x,
-                   wl_fixed_t surface_y) {}
+                   wl_fixed_t surface_y) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+
+  ctx->num_events++;
+  ctx->events =
+      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+
+  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_POINTER_ENTER;
+  ctx->events[ctx->num_events - 1].seat = (struct samure_seat *)d->data;
+  ctx->events[ctx->num_events - 1].x = wl_fixed_to_double(surface_x);
+  ctx->events[ctx->num_events - 1].y = wl_fixed_to_double(surface_y);
+  ctx->events[ctx->num_events - 1].output = NULL;
+
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    if (ctx->outputs[i].surface == surface) {
+      ctx->events[ctx->num_events - 1].output = &ctx->outputs[i];
+      break;
+    }
+  }
+}
 
 void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
-                   struct wl_surface *surface) {}
+                   struct wl_surface *surface) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+
+  ctx->num_events++;
+  ctx->events =
+      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+
+  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_POINTER_LEAVE;
+  ctx->events[ctx->num_events - 1].seat = (struct samure_seat *)d->data;
+  ctx->events[ctx->num_events - 1].output = NULL;
+
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    if (ctx->outputs[i].surface == surface) {
+      ctx->events[ctx->num_events - 1].output = &ctx->outputs[i];
+      break;
+    }
+  }
+}
 
 void pointer_motion(void *data, struct wl_pointer *pointer, uint32_t time,
-                    wl_fixed_t surface_x, wl_fixed_t surface_y) {}
+                    wl_fixed_t surface_x, wl_fixed_t surface_y) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+
+  ctx->num_events++;
+  ctx->events =
+      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+
+  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_POINTER_MOTION;
+  ctx->events[ctx->num_events - 1].seat = (struct samure_seat *)d->data;
+  ctx->events[ctx->num_events - 1].x = wl_fixed_to_double(surface_x);
+  ctx->events[ctx->num_events - 1].y = wl_fixed_to_double(surface_y);
+}
 
 void pointer_button(void *data, struct wl_pointer *pointer, uint32_t serial,
                     uint32_t time, uint32_t button, uint32_t state) {

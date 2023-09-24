@@ -7,13 +7,39 @@
 
 static void event_callback(struct samure_event *e, struct samure_context *ctx,
                            void *data) {
+  struct samure_backend_raw *r = (struct samure_backend_raw *)ctx->backend;
   int *running = (int *)data;
+
   switch (e->type) {
   case SAMURE_EVENT_POINTER_BUTTON:
     if (e->button == BTN_LEFT && e->state == WL_POINTER_BUTTON_STATE_RELEASED) {
       *running = 0;
     }
     break;
+  case SAMURE_EVENT_POINTER_ENTER: {
+    const uintptr_t i = OUTPUT_INDEX(e->output);
+    uint8_t *pixels = (uint8_t *)r->surfaces[i].shared_buffer.data;
+    for (size_t j = 0; j < ctx->outputs[i].logical_size.width *
+                               ctx->outputs[i].logical_size.height * 4;
+         j += 4) {
+      pixels[j + 0] = 90;
+      pixels[j + 1] = 0;
+      pixels[j + 2] = 128;
+      pixels[j + 3] = 10;
+    }
+  } break;
+  case SAMURE_EVENT_POINTER_LEAVE: {
+    const uintptr_t i = OUTPUT_INDEX(e->output);
+    uint8_t *pixels = (uint8_t *)r->surfaces[i].shared_buffer.data;
+    for (size_t j = 0; j < ctx->outputs[i].logical_size.width *
+                               ctx->outputs[i].logical_size.height * 4;
+         j += 4) {
+      pixels[j + 0] = 128;
+      pixels[j + 1] = 0;
+      pixels[j + 2] = 90;
+      pixels[j + 3] = 10;
+    }
+  } break;
   }
 }
 
@@ -43,9 +69,9 @@ int main(void) {
     for (size_t j = 0; j < ctx->outputs[i].logical_size.width *
                                ctx->outputs[i].logical_size.height * 4;
          j += 4) {
-      pixels[j + 0] = 90;
+      pixels[j + 0] = 128;
       pixels[j + 1] = 0;
-      pixels[j + 2] = 128;
+      pixels[j + 2] = 90;
       pixels[j + 3] = 10;
     }
   }
