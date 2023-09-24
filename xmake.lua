@@ -21,10 +21,13 @@ target("samurai-render")
         "src/wayland/*.c",
         "src/backends/*.c"
     )
+target_end()
 
 if get_config("build_examples") then
+    add_requires("olive.c")
     target("blank")
         set_kind("binary")
+        add_packages("wayland", "olive.c")
         add_includedirs("src")
         add_deps("samurai-render")
         add_files("examples/blank.c")
