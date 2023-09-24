@@ -199,6 +199,8 @@ void samure_context_run(struct samure_context *ctx) {
         break;
       }
     }
+    ctx->event_index = 0;
+    ctx->num_events = 0;
 
     // Make outputs ready for rendering
     for (size_t i = 0; i < ctx->num_outputs; i++) {

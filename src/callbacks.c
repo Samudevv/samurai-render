@@ -4,6 +4,16 @@
 #include "callbacks.h"
 #include "context.h"
 
+#define NEW_EVENT()                                                            \
+  ctx->num_events++;                                                           \
+  if (ctx->num_events > ctx->cap_events) {                                     \
+    ctx->cap_events = ctx->num_events;                                         \
+    ctx->events =                                                              \
+        realloc(ctx->events, ctx->cap_events * sizeof(struct samure_event));   \
+  }
+
+#define LAST_EVENT ctx->events[ctx->num_events - 1]
+
 void registry_global(void *data, struct wl_registry *registry, uint32_t name,
                      const char *interface, uint32_t version) {
   struct samure_context *ctx = (struct samure_context *)data;
@@ -69,19 +79,17 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
 
-  ctx->num_events++;
-  ctx->events =
-      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+  NEW_EVENT();
 
-  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_POINTER_ENTER;
-  ctx->events[ctx->num_events - 1].seat = (struct samure_seat *)d->data;
-  ctx->events[ctx->num_events - 1].x = wl_fixed_to_double(surface_x);
-  ctx->events[ctx->num_events - 1].y = wl_fixed_to_double(surface_y);
-  ctx->events[ctx->num_events - 1].output = NULL;
+  LAST_EVENT.type = SAMURE_EVENT_POINTER_ENTER;
+  LAST_EVENT.seat = (struct samure_seat *)d->data;
+  LAST_EVENT.x = wl_fixed_to_double(surface_x);
+  LAST_EVENT.y = wl_fixed_to_double(surface_y);
+  LAST_EVENT.output = NULL;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     if (ctx->outputs[i].surface == surface) {
-      ctx->events[ctx->num_events - 1].output = &ctx->outputs[i];
+      LAST_EVENT.output = &ctx->outputs[i];
       break;
     }
   }
@@ -92,17 +100,15 @@ void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
 
-  ctx->num_events++;
-  ctx->events =
-      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+  NEW_EVENT();
 
-  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_POINTER_LEAVE;
-  ctx->events[ctx->num_events - 1].seat = (struct samure_seat *)d->data;
-  ctx->events[ctx->num_events - 1].output = NULL;
+  LAST_EVENT.type = SAMURE_EVENT_POINTER_LEAVE;
+  LAST_EVENT.seat = (struct samure_seat *)d->data;
+  LAST_EVENT.output = NULL;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     if (ctx->outputs[i].surface == surface) {
-      ctx->events[ctx->num_events - 1].output = &ctx->outputs[i];
+      LAST_EVENT.output = &ctx->outputs[i];
       break;
     }
   }
@@ -113,14 +119,12 @@ void pointer_motion(void *data, struct wl_pointer *pointer, uint32_t time,
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
 
-  ctx->num_events++;
-  ctx->events =
-      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+  NEW_EVENT();
 
-  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_POINTER_MOTION;
-  ctx->events[ctx->num_events - 1].seat = (struct samure_seat *)d->data;
-  ctx->events[ctx->num_events - 1].x = wl_fixed_to_double(surface_x);
-  ctx->events[ctx->num_events - 1].y = wl_fixed_to_double(surface_y);
+  LAST_EVENT.type = SAMURE_EVENT_POINTER_MOTION;
+  LAST_EVENT.seat = (struct samure_seat *)d->data;
+  LAST_EVENT.x = wl_fixed_to_double(surface_x);
+  LAST_EVENT.y = wl_fixed_to_double(surface_y);
 }
 
 void pointer_button(void *data, struct wl_pointer *pointer, uint32_t serial,
@@ -128,14 +132,12 @@ void pointer_button(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
 
-  ctx->num_events++;
-  ctx->events =
-      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+  NEW_EVENT();
 
-  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_POINTER_BUTTON;
-  ctx->events[ctx->num_events - 1].seat = (struct samure_seat *)d->data;
-  ctx->events[ctx->num_events - 1].button = button;
-  ctx->events[ctx->num_events - 1].state = state;
+  LAST_EVENT.type = SAMURE_EVENT_POINTER_BUTTON;
+  LAST_EVENT.seat = (struct samure_seat *)d->data;
+  LAST_EVENT.button = button;
+  LAST_EVENT.state = state;
 }
 
 void pointer_axis(void *data, struct wl_pointer *wl_pointer, uint32_t time,
@@ -147,14 +149,12 @@ void layer_surface_configure(void *data,
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
 
-  ctx->num_events++;
-  ctx->events =
-      realloc(ctx->events, ctx->num_events * sizeof(struct samure_event));
+  NEW_EVENT();
 
-  ctx->events[ctx->num_events - 1].type = SAMURE_EVENT_LAYER_SURFACE_CONFIGURE;
-  ctx->events[ctx->num_events - 1].output = (struct samure_output *)d->data;
-  ctx->events[ctx->num_events - 1].width = width;
-  ctx->events[ctx->num_events - 1].height = height;
+  LAST_EVENT.type = SAMURE_EVENT_LAYER_SURFACE_CONFIGURE;
+  LAST_EVENT.output = (struct samure_output *)d->data;
+  LAST_EVENT.width = width;
+  LAST_EVENT.height = height;
 
   zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
 }

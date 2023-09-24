@@ -63,6 +63,7 @@ struct samure_context {
 
   struct samure_event *events;
   size_t num_events;
+  size_t cap_events;
   size_t event_index;
   int running;
 
