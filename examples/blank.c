@@ -49,22 +49,22 @@ static void render_callback(struct samure_output *output,
       d->cx + 100 > output->logical_position.x &&
       d->cx - 100 < output->logical_position.x + output->logical_size.width;
 
-  if (circle_in_output) {
-    if (d->current_output == output) {
-      olivec_fill(d->canvas[i], 0x0A5A0080);
-    } else {
-      olivec_fill(d->canvas[i], 0x0A80005A);
-    }
-
-    const double cx = d->cx - (double)output->logical_position.x;
-    const double cy = d->cy - (double)output->logical_position.y;
-
-    olivec_circle(d->canvas[i], cx, cy, 100, 0xFF00FF00);
+  if (d->current_output == output) {
+    olivec_fill(d->canvas[i], 0x0A5A0080);
 
     char buffer[1024];
     snprintf(buffer, 1024, "%d", ctx->frame_timer.fps);
 
     olivec_text(d->canvas[i], buffer, 5, 5, olivec_default_font, 5, 0xFFAAAAAA);
+  } else {
+    olivec_fill(d->canvas[i], 0x0A80005A);
+  }
+
+  if (circle_in_output) {
+    const double cx = d->cx - (double)output->logical_position.x;
+    const double cy = d->cy - (double)output->logical_position.y;
+
+    olivec_circle(d->canvas[i], cx, cy, 100, 0xFF00FF00);
   }
 }
 
