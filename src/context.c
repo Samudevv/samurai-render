@@ -29,6 +29,15 @@ struct samure_context_config samure_default_context_config() {
   return c;
 }
 
+struct samure_context_config
+samure_create_context_config(samure_event_callback event_callback,
+                             void *user_data) {
+  struct samure_context_config c = samure_default_context_config();
+  c.event_callback = event_callback;
+  c.user_data = user_data;
+  return c;
+}
+
 struct samure_context *
 samure_create_context(struct samure_context_config *config) {
   struct samure_context *ctx = malloc(sizeof(struct samure_context));

@@ -50,9 +50,8 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
 int main(void) {
   struct blank_data d = {.running = 1};
 
-  struct samure_context_config context_config = samure_default_context_config();
-  context_config.event_callback = event_callback;
-  context_config.user_data = &d;
+  struct samure_context_config context_config =
+      samure_create_context_config(event_callback, &d);
 
   struct samure_context *ctx = samure_create_context(&context_config);
   if (ctx->error_string) {

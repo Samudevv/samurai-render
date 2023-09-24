@@ -30,6 +30,9 @@ struct samure_context_config {
 };
 
 extern struct samure_context_config samure_default_context_config();
+extern struct samure_context_config
+samure_create_context_config(samure_event_callback event_callback,
+                             void *user_data);
 
 struct samure_context {
   struct wl_display *display;
