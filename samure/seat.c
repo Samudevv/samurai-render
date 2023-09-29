@@ -5,6 +5,7 @@
 struct samure_seat samure_create_seat(struct wl_seat *seat) {
   struct samure_seat s = {0};
   s.seat = seat;
+  s.cursor_shape = WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT;
   return s;
 }
 
@@ -22,5 +23,5 @@ void samure_destroy_seat(struct samure_seat seat) {
 }
 
 void samure_seat_set_pointer_shape(struct samure_seat *seat, uint32_t shape) {
-  seat->pending_cursor_shape = shape;
+  seat->cursor_shape = shape;
 }

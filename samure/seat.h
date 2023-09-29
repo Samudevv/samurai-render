@@ -20,7 +20,7 @@ struct samure_seat {
   struct samure_focus pointer_focus;
   struct samure_focus keyboard_focus;
   char *name;
-  uint32_t pending_cursor_shape;
+  uint32_t cursor_shape;
 };
 
 extern struct samure_seat samure_create_seat(struct wl_seat *seat);

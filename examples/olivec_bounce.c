@@ -14,6 +14,8 @@ struct blank_data {
   Olivec_Canvas *canvas;
   double qx, qy;
   double dx, dy;
+  uint32_t current_cursor;
+  double elapsed_time;
 };
 
 static void event_callback(struct samure_event *e, struct samure_context *ctx,
@@ -86,6 +88,19 @@ static void update_callback(struct samure_context *ctx, double delta_time,
   }
   if (d->qy - 100 < r.y) {
     d->dy *= -1.0;
+  }
+
+  d->elapsed_time += delta_time;
+  if (d->elapsed_time > 0.5) {
+    d->elapsed_time = 0.0;
+    d->current_cursor++;
+    if (d->current_cursor == WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_OUT + 1) {
+      d->current_cursor = WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT;
+    }
+
+    for (size_t i = 0; i < ctx->num_seats; i++) {
+      samure_seat_set_pointer_shape(&ctx->seats[i], d->current_cursor);
+    }
   }
 }
 

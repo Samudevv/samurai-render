@@ -88,10 +88,10 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_seat *seat = (struct samure_seat *)d->data;
   struct samure_context *ctx = d->ctx;
 
-  if (seat->pending_cursor_shape != 0) {
+  if (seat->cursor_shape != 0) {
     wp_cursor_shape_device_v1_set_shape(seat->cursor_shape_device, serial,
-                                        seat->pending_cursor_shape);
-    seat->pending_cursor_shape = 0;
+                                        seat->cursor_shape);
+    seat->cursor_shape = 0;
   }
 
   NEW_EVENT();
@@ -157,10 +157,9 @@ void pointer_button(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_context *ctx = d->ctx;
   struct samure_seat *seat = (struct samure_seat *)d->data;
 
-  if (seat->pending_cursor_shape != 0) {
+  if (seat->cursor_shape != 0) {
     wp_cursor_shape_device_v1_set_shape(seat->cursor_shape_device, serial,
-                                        seat->pending_cursor_shape);
-    seat->pending_cursor_shape = 0;
+                                        seat->cursor_shape);
   }
 
   NEW_EVENT();
