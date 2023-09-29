@@ -161,23 +161,8 @@ samure_create_context(struct samure_context_config *config) {
 
   ctx->frame_timer = samure_init_frame_timer(ctx->config.max_fps);
 
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    struct samure_output *o = &ctx->outputs[i];
-
-    struct samure_layer_surface *layer_surface = samure_create_layer_surface(
-        ctx, o, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
-        SAMURE_LAYER_SURFACE_ANCHOR_FILL,
-        (uint32_t)ctx->config.keyboard_interaction,
-        ctx->config.pointer_interaction || ctx->config.touch_interaction, 1);
-    if (layer_surface->error_string) {
-      CTX_ADD_ERR_F("failed to create layer surface for output %zu: %s", i,
-                    layer_surface->error_string);
-      free(layer_surface->error_string);
-      free(layer_surface);
-      continue;
-    }
-
-    samure_output_attach_layer_surface(o, layer_surface);
+  if (!ctx->config.not_create_output_layer_surfaces) {
+    samure_context_create_output_layer_surfaces(ctx);
   }
 
   return ctx;
@@ -361,5 +346,25 @@ void samure_context_update(struct samure_context *ctx,
                            double delta_time) {
   if (update_callback) {
     update_callback(ctx, delta_time, ctx->config.user_data);
+  }
+}
+
+void samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    struct samure_output *o = &ctx->outputs[i];
+
+    struct samure_layer_surface *layer_surface = samure_create_layer_surface(
+        ctx, o, SAMURE_LAYER_OVERLAY, SAMURE_LAYER_SURFACE_ANCHOR_FILL,
+        (uint32_t)ctx->config.keyboard_interaction,
+        ctx->config.pointer_interaction || ctx->config.touch_interaction, 1);
+    if (layer_surface->error_string) {
+      CTX_ADD_ERR_F("failed to create layer surface for output %zu: %s", i,
+                    layer_surface->error_string);
+      free(layer_surface->error_string);
+      free(layer_surface);
+      continue;
+    }
+
+    samure_output_attach_layer_surface(o, layer_surface);
   }
 }

@@ -45,6 +45,7 @@ struct samure_context_config {
   int touch_interaction;
   uint32_t max_fps;
   struct samure_opengl_config *gl;
+  int not_create_output_layer_surfaces;
 
   samure_event_callback event_callback;
   samure_render_callback render_callback;
@@ -115,3 +116,6 @@ extern void samure_context_render_output(struct samure_context *ctx,
 extern void samure_context_update(struct samure_context *ctx,
                                   samure_update_callback update_callback,
                                   double delta_time);
+
+extern void
+samure_context_create_output_layer_surfaces(struct samure_context *ctx);
