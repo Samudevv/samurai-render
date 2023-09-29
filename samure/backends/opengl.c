@@ -216,6 +216,11 @@ samure_get_backend_opengl(struct samure_context *ctx) {
   return (struct samure_backend_opengl *)ctx->backend;
 }
 
+extern struct samure_opengl_surface *
+samure_get_opengl_surface(struct samure_layer_surface *layer_surface) {
+  return (struct samure_opengl_surface *)layer_surface->backend_data;
+}
+
 void samure_backend_opengl_make_context_current(
     struct samure_backend_opengl *gl,
     struct samure_layer_surface *layer_surface) {

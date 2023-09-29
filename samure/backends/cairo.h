@@ -32,3 +32,5 @@ extern void samure_backend_cairo_unassociate_layer_surface(
     struct samure_output *output, struct samure_layer_surface *layer_surface);
 extern struct samure_backend_cairo *
 samure_get_backend_cairo(struct samure_context *ctx);
+extern struct samure_cairo_surface *
+samure_get_cairo_surface(struct samure_layer_surface *layer_surface);

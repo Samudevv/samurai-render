@@ -88,3 +88,8 @@ struct samure_backend_cairo *
 samure_get_backend_cairo(struct samure_context *ctx) {
   return (struct samure_backend_cairo *)ctx->backend;
 }
+
+struct samure_cairo_surface *
+samure_get_cairo_surface(struct samure_layer_surface *layer_surface) {
+  return (struct samure_cairo_surface *)layer_surface->backend_data;
+}

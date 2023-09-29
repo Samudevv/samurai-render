@@ -67,6 +67,8 @@ extern void samure_backend_opengl_unassociate_layer_surface(
     struct samure_output *output, struct samure_layer_surface *layer_surface);
 extern struct samure_backend_opengl *
 samure_get_backend_opengl(struct samure_context *ctx);
+extern struct samure_opengl_surface *
+samure_get_opengl_surface(struct samure_layer_surface *layer_surface);
 
 extern void samure_backend_opengl_make_context_current(
     struct samure_backend_opengl *gl,
