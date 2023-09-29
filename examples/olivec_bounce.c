@@ -55,6 +55,15 @@ static void render_callback(struct samure_output *output,
   }
 }
 
+static void render_callback_clear_outputs_on_exit(struct samure_output *output,
+                                                  struct samure_context *ctx,
+                                                  double delta_time,
+                                                  void *data) {
+  struct blank_data *d = (struct blank_data *)data;
+  const uintptr_t i = OUT_IDX();
+  olivec_fill(d->canvas[i], 0x00000000);
+}
+
 static void update_callback(struct samure_context *ctx, double delta_time,
                             void *data) {
   struct blank_data *d = (struct blank_data *)data;
@@ -110,6 +119,12 @@ int main(void) {
   d.qy = rand() % (rt.h - 200) + 100;
 
   samure_context_run(ctx);
+
+  // Clear screen on exit (to avoid fading animation)
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    samure_context_render_output(ctx, &ctx->outputs[i],
+                                 render_callback_clear_outputs_on_exit, 0.0);
+  }
 
   samure_destroy_context(ctx);
 

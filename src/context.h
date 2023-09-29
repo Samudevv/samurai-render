@@ -94,3 +94,15 @@ extern void samure_context_set_input_regions(struct samure_context *ctx,
 
 extern void samure_context_set_keyboard_interaction(struct samure_context *ctx,
                                                     int enable);
+
+extern void samure_context_process_events(struct samure_context *ctx,
+                                          samure_event_callback event_callback);
+
+extern void samure_context_render_output(struct samure_context *ctx,
+                                         struct samure_output *output,
+                                         samure_render_callback render_callback,
+                                         double delta_time);
+
+extern void samure_context_update(struct samure_context *ctx,
+                                  samure_update_callback update_callback,
+                                  double delta_time);
