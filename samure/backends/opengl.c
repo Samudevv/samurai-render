@@ -73,24 +73,23 @@ samure_init_backend_opengl(struct samure_context *ctx) {
 
   const EGLint context_attributes[] = {EGL_NONE, EGL_NONE};
 
-  for (size_t i = 0; i < gl->num_outputs; i++) {
-    gl->surfaces[i].context = eglCreateContext(
-        gl->display, config, EGL_NO_CONTEXT, context_attributes);
-    if (gl->surfaces[i].context == EGL_NO_CONTEXT) {
-      gl->error_string = malloc(1024);
-      snprintf(gl->error_string, 1024,
-               "failed to create egl context for output %zu", i);
-      eglTerminate(gl->display);
-      return gl;
-    }
+  gl->context =
+      eglCreateContext(gl->display, config, EGL_NO_CONTEXT, context_attributes);
+  if (gl->context == EGL_NO_CONTEXT) {
+    gl->error_string = malloc(1024);
+    snprintf(gl->error_string, 1024, "failed to create egl context");
+    eglTerminate(gl->display);
+    return gl;
+  }
 
+  for (size_t i = 0; i < gl->num_outputs; i++) {
     gl->surfaces[i].egl_window = wl_egl_window_create(
         ctx->outputs[i].surface, ctx->outputs[i].geo.w, ctx->outputs[i].geo.h);
     if (!gl->surfaces[i].egl_window) {
       gl->error_string = malloc(1024);
       snprintf(gl->error_string, 1024,
                "failed to create wl egl window for output %zu", i);
-      eglDestroyContext(gl->display, gl->surfaces[i].context);
+      eglDestroyContext(gl->display, gl->context);
       eglTerminate(gl->display);
       return gl;
     }
@@ -102,7 +101,7 @@ samure_init_backend_opengl(struct samure_context *ctx) {
       gl->error_string = malloc(1024);
       snprintf(gl->error_string, 1024,
                "failed to create egl surface for output %zu", i);
-      eglDestroyContext(gl->display, gl->surfaces[i].context);
+      eglDestroyContext(gl->display, gl->context);
       wl_egl_window_destroy(gl->surfaces[i].egl_window);
       eglTerminate(gl->display);
       return gl;
@@ -119,9 +118,11 @@ samure_init_backend_opengl(struct samure_context *ctx) {
 void samure_destroy_backend_opengl(struct samure_context *ctx,
                                    struct samure_backend *backend) {
   struct samure_backend_opengl *gl = (struct samure_backend_opengl *)backend;
+
+  eglDestroyContext(gl->display, gl->context);
+
   for (size_t i = 0; i < gl->num_outputs; i++) {
     eglDestroySurface(gl->display, gl->surfaces[i].surface);
-    eglDestroyContext(gl->display, gl->surfaces[i].context);
     wl_egl_window_destroy(gl->surfaces[i].egl_window);
   }
   free(gl->surfaces);
@@ -137,7 +138,7 @@ void samure_backend_opengl_render_start(struct samure_output *output,
   struct samure_backend_opengl *gl = (struct samure_backend_opengl *)backend;
   const uintptr_t i = OUT_IDX();
   eglMakeCurrent(gl->display, gl->surfaces[i].surface, gl->surfaces[i].surface,
-                 gl->surfaces[i].context);
+                 gl->context);
 }
 
 void samure_backend_opengl_render_end(struct samure_output *output,

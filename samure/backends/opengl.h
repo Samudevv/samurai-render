@@ -16,7 +16,6 @@ extern eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT;
 extern eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT;
 
 struct samure_opengl_surface {
-  EGLContext context;
   EGLSurface surface;
   struct wl_egl_window *egl_window;
 };
@@ -25,6 +24,7 @@ struct samure_backend_opengl {
   struct samure_backend base;
 
   EGLDisplay display;
+  EGLContext context;
   struct samure_opengl_surface *surfaces;
   size_t num_outputs;
 
