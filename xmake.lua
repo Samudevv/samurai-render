@@ -85,6 +85,17 @@ if get_config("build_examples") then
             add_includedirs(os.scriptdir())
             add_deps("samurai-render")
             add_files("examples/slurpy.c")
+
+        target("image_draw")
+            set_kind("binary")
+            add_packages("wayland", "cairo")
+            add_options(
+                "backend_cairo",
+                "backend_opengl"
+            )
+            add_includedirs(os.scriptdir())
+            add_deps("samurai-render")
+            add_files("examples/image_draw.c")
     end
     if get_config("backend_opengl") then
         target("opengl_bounce")
