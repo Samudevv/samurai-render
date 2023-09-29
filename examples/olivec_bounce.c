@@ -1,5 +1,3 @@
-#include <backends/raw.h>
-#include <context.h>
 #include <linux/input-event-codes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +5,9 @@
 
 #define OLIVEC_IMPLEMENTATION
 #include <olive.c>
+
+#include <samure/backends/raw.h>
+#include <samure/context.h>
 
 struct blank_data {
   Olivec_Canvas *canvas;

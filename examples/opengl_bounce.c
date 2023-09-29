@@ -1,8 +1,9 @@
 #include <GL/gl.h>
-#include <context.h>
 #include <linux/input-event-codes.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <samure/context.h>
 
 struct opengl_data {
   double qx, qy;

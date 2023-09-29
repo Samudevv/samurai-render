@@ -1,10 +1,10 @@
 #include <cairo/cairo.h>
-#include <context.h>
 #include <linux/input-event-codes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <backends/cairo.h>
+#include <samure/backends/cairo.h>
+#include <samure/context.h>
 
 struct cairo_data {
   double qx, qy;

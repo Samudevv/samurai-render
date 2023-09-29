@@ -1,7 +1,8 @@
-#include <backends/cairo.h>
-#include <context.h>
 #include <linux/input-event-codes.h>
 #include <stdio.h>
+
+#include <samure/backends/cairo.h>
+#include <samure/context.h>
 
 enum slurpy_state {
   STATE_NONE,

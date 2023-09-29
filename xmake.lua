@@ -34,20 +34,20 @@ target("samurai-render")
         add_links("EGL", "wayland-egl")
     end
     add_headerfiles(
-        "src/*.h",
-        "src/wayland/*.h",
-        "src/backends/*.h"
+        "samure/*.h",
+        "samure/wayland/*.h",
+        "samure/backends/*.h"
     )
     add_files(
-        "src/*.c",
-        "src/wayland/*.c",
-        "src/backends/*.c"
+        "samure/*.c",
+        "samure/wayland/*.c",
+        "samure/backends/*.c"
     )
     if not get_config("backend_cairo") then
-        remove_files("src/backends/cairo.c")
+        remove_files("samure/backends/cairo.c")
     end
     if not get_config("backend_opengl") then
-        remove_files("src/backends/opengl.c")
+        remove_files("samure/backends/opengl.c")
     end
 target_end()
 
@@ -60,7 +60,7 @@ if get_config("build_examples") then
             "backend_cairo",
             "backend_opengl"
         )
-        add_includedirs("src")
+        add_includedirs(os.scriptdir())
         add_deps("samurai-render")
         add_files("examples/olivec_bounce.c")
     if get_config("backend_cairo") then
@@ -71,7 +71,7 @@ if get_config("build_examples") then
                 "backend_cairo",
                 "backend_opengl"
             )
-            add_includedirs("src")
+            add_includedirs(os.scriptdir())
             add_deps("samurai-render")
             add_files("examples/cairo_bounce.c")
 
@@ -82,7 +82,7 @@ if get_config("build_examples") then
                 "backend_cairo",
                 "backend_opengl"
             )
-            add_includedirs("src")
+            add_includedirs(os.scriptdir())
             add_deps("samurai-render")
             add_files("examples/slurpy.c")
     end
@@ -94,7 +94,7 @@ if get_config("build_examples") then
                 "backend_cairo",
                 "backend_opengl"
             )
-            add_includedirs("src")
+            add_includedirs(os.scriptdir())
             add_links("GL")
             add_deps("samurai-render")
             add_files("examples/opengl_bounce.c")
