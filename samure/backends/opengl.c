@@ -8,16 +8,6 @@
   gl->error_string = malloc(1024);                                             \
   snprintf(gl->error_string, 1024, "%s", format);                              \
   free(cfg);                                                                   \
-  if (gl->surfaces) {                                                          \
-    for (size_t i = 0; i < gl->num_outputs; i++) {                             \
-      if (gl->surfaces[i].surface) {                                           \
-        eglDestroySurface(gl->display, gl->surfaces[i].surface);               \
-      }                                                                        \
-      if (gl->surfaces[i].egl_window) {                                        \
-        wl_egl_window_destroy(gl->surfaces[i].egl_window);                     \
-      }                                                                        \
-    }                                                                          \
-  }                                                                            \
   if (gl->context) {                                                           \
     eglDestroyContext(gl->display, gl->context);                               \
   }                                                                            \
@@ -107,11 +97,6 @@ samure_init_backend_opengl(struct samure_context *ctx,
     EGL_NONE,                        EGL_NONE,
   };
 
-  const EGLint surface_attributes[] = {
-    EGL_GL_COLORSPACE, cfg->color_space,
-    EGL_RENDER_BUFFER, cfg->render_buffer,
-    EGL_NONE,          EGL_NONE,
-  };
   // clang-format on
 
   EGLint num_config;
@@ -131,12 +116,6 @@ samure_init_backend_opengl(struct samure_context *ctx,
     return gl;
   }
 
-  gl->surfaces =
-      malloc(ctx->num_outputs * sizeof(struct samure_opengl_surface));
-  memset(gl->surfaces, 0,
-         ctx->num_outputs * sizeof(struct samure_opengl_surface));
-  gl->num_outputs = ctx->num_outputs;
-
   gl->context =
       eglCreateContext(gl->display, config, EGL_NO_CONTEXT, context_attributes);
   if (gl->context == EGL_NO_CONTEXT) {
@@ -144,28 +123,16 @@ samure_init_backend_opengl(struct samure_context *ctx,
     return gl;
   }
 
-  for (size_t i = 0; i < gl->num_outputs; i++) {
-    gl->surfaces[i].egl_window = wl_egl_window_create(
-        ctx->outputs[i].surface, ctx->outputs[i].geo.w, ctx->outputs[i].geo.h);
-    if (!gl->surfaces[i].egl_window) {
-      GL_ERR_F("failed to create wl egl window for output %zu", i);
-      return gl;
-    }
-
-    gl->surfaces[i].surface = eglCreatePlatformWindowSurfaceEXT(
-        gl->display, config, (EGLNativeWindowType)gl->surfaces[i].egl_window,
-        surface_attributes);
-    if (gl->surfaces[i].surface == EGL_NO_SURFACE) {
-      GL_ERR_F("failed to create egl surface for output %zu", i);
-      return gl;
-    }
-  }
+  gl->config = config;
+  gl->cfg = cfg;
 
   gl->base.destroy = samure_destroy_backend_opengl;
   gl->base.render_start = samure_backend_opengl_render_start;
   gl->base.render_end = samure_backend_opengl_render_end;
-
-  free(cfg);
+  gl->base.associate_layer_surface =
+      samure_backend_opengl_associate_layer_surface;
+  gl->base.unassociate_layer_surface =
+      samure_backend_opengl_unassociate_layer_surface;
 
   return gl;
 }
@@ -176,32 +143,72 @@ void samure_destroy_backend_opengl(struct samure_context *ctx,
 
   eglDestroyContext(gl->display, gl->context);
 
-  for (size_t i = 0; i < gl->num_outputs; i++) {
-    eglDestroySurface(gl->display, gl->surfaces[i].surface);
-    wl_egl_window_destroy(gl->surfaces[i].egl_window);
-  }
-  free(gl->surfaces);
-
   eglTerminate(gl->display);
   free(gl->error_string);
+  free(gl->cfg);
   free(gl);
 }
 
-void samure_backend_opengl_render_start(struct samure_output *output,
-                                        struct samure_context *ctx,
-                                        struct samure_backend *backend) {
-  struct samure_backend_opengl *gl = (struct samure_backend_opengl *)backend;
-  const uintptr_t i = OUT_IDX();
-  eglMakeCurrent(gl->display, gl->surfaces[i].surface, gl->surfaces[i].surface,
-                 gl->context);
+void samure_backend_opengl_render_start(
+    struct samure_output *output, struct samure_layer_surface *layer_surface,
+    struct samure_context *ctx, struct samure_backend *backend) {
+  samure_backend_opengl_make_context_current(
+      (struct samure_backend_opengl *)backend, layer_surface);
 }
 
-void samure_backend_opengl_render_end(struct samure_output *output,
-                                      struct samure_context *ctx,
-                                      struct samure_backend *backend) {
+void samure_backend_opengl_render_end(
+    struct samure_output *output, struct samure_layer_surface *layer_surface,
+    struct samure_context *ctx, struct samure_backend *backend) {
   struct samure_backend_opengl *gl = (struct samure_backend_opengl *)backend;
-  const uintptr_t i = OUT_IDX();
-  eglSwapBuffers(gl->display, gl->surfaces[i].surface);
+  struct samure_opengl_surface *s =
+      (struct samure_opengl_surface *)layer_surface->backend_data;
+  eglSwapBuffers(gl->display, s->surface);
+}
+
+void samure_backend_opengl_associate_layer_surface(
+    struct samure_context *ctx, struct samure_backend *backend,
+    struct samure_output *output, struct samure_layer_surface *sfc) {
+  struct samure_backend_opengl *gl = (struct samure_backend_opengl *)backend;
+  struct samure_opengl_surface *s =
+      malloc(sizeof(struct samure_opengl_surface));
+  memset(s, 0, sizeof(struct samure_opengl_surface));
+
+  sfc->backend_data = s;
+
+  s->egl_window =
+      wl_egl_window_create(sfc->surface, output->geo.w, output->geo.h);
+  if (!s->egl_window) {
+    /* TODO: handle error*/
+    return;
+  }
+
+  // clang-format off
+  const EGLint surface_attributes[] = {
+    EGL_GL_COLORSPACE, gl->cfg->color_space,
+    EGL_RENDER_BUFFER, gl->cfg->render_buffer,
+    EGL_NONE,          EGL_NONE,
+  };
+  // clang-format on
+
+  s->surface = eglCreatePlatformWindowSurfaceEXT(
+      gl->display, gl->config, (EGLNativeWindowType)s->egl_window,
+      surface_attributes);
+  if (s->surface == EGL_NO_SURFACE) {
+    /* TODO: handle error*/
+  }
+}
+
+void samure_backend_opengl_unassociate_layer_surface(
+    struct samure_context *ctx, struct samure_backend *backend,
+    struct samure_output *output, struct samure_layer_surface *layer_surface) {
+  struct samure_backend_opengl *gl = (struct samure_backend_opengl *)backend;
+  struct samure_opengl_surface *s =
+      (struct samure_opengl_surface *)layer_surface->backend_data;
+
+  eglDestroySurface(gl->display, s->surface);
+  wl_egl_window_destroy(s->egl_window);
+  free(s);
+  layer_surface->backend_data = NULL;
 }
 
 struct samure_backend_opengl *
@@ -210,7 +217,13 @@ samure_get_backend_opengl(struct samure_context *ctx) {
 }
 
 void samure_backend_opengl_make_context_current(
-    struct samure_backend_opengl *gl, size_t output_index) {
-  eglMakeCurrent(gl->display, gl->surfaces[output_index].surface,
-                 gl->surfaces[output_index].surface, gl->context);
+    struct samure_backend_opengl *gl,
+    struct samure_layer_surface *layer_surface) {
+  if (layer_surface) {
+    struct samure_opengl_surface *s =
+        (struct samure_opengl_surface *)layer_surface->backend_data;
+    eglMakeCurrent(gl->display, s->surface, s->surface, gl->context);
+  } else {
+    eglMakeCurrent(gl->display, EGL_NO_SURFACE, EGL_NO_SURFACE, gl->context);
+  }
 }

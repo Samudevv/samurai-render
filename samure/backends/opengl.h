@@ -42,8 +42,8 @@ struct samure_backend_opengl {
 
   EGLDisplay display;
   EGLContext context;
-  struct samure_opengl_surface *surfaces;
-  size_t num_outputs;
+  EGLConfig config;
+  struct samure_opengl_config *cfg;
 
   char *error_string;
 };
@@ -53,15 +53,21 @@ samure_init_backend_opengl(struct samure_context *ctx,
                            struct samure_opengl_config *cfg);
 extern void samure_destroy_backend_opengl(struct samure_context *ctx,
                                           struct samure_backend *gl);
-extern void samure_backend_opengl_render_start(struct samure_output *output,
-                                               struct samure_context *ctx,
-                                               struct samure_backend *gl);
-extern void samure_backend_opengl_render_end(struct samure_output *output,
-                                             struct samure_context *ctx,
-                                             struct samure_backend *gl);
+extern void samure_backend_opengl_render_start(
+    struct samure_output *output, struct samure_layer_surface *layer_surface,
+    struct samure_context *ctx, struct samure_backend *gl);
+extern void samure_backend_opengl_render_end(
+    struct samure_output *output, struct samure_layer_surface *layer_surface,
+    struct samure_context *ctx, struct samure_backend *gl);
+extern void samure_backend_opengl_associate_layer_surface(
+    struct samure_context *ctx, struct samure_backend *backend,
+    struct samure_output *output, struct samure_layer_surface *layer_surface);
+extern void samure_backend_opengl_unassociate_layer_surface(
+    struct samure_context *ctx, struct samure_backend *backend,
+    struct samure_output *output, struct samure_layer_surface *layer_surface);
 extern struct samure_backend_opengl *
 samure_get_backend_opengl(struct samure_context *ctx);
 
-extern void
-samure_backend_opengl_make_context_current(struct samure_backend_opengl *gl,
-                                           size_t output_index);
+extern void samure_backend_opengl_make_context_current(
+    struct samure_backend_opengl *gl,
+    struct samure_layer_surface *layer_surface);

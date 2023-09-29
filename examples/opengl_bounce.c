@@ -24,6 +24,7 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
 }
 
 static void render_callback(struct samure_output *output,
+                            struct samure_layer_surface *sfc,
                             struct samure_context *ctx, double delta_time,
                             void *data) {
   struct opengl_data *d = (struct opengl_data *)data;
@@ -91,7 +92,7 @@ int main(void) {
   }
 
   samure_backend_opengl_make_context_current(
-      (struct samure_backend_opengl *)ctx->backend, 0);
+      (struct samure_backend_opengl *)ctx->backend, ctx->outputs[0].sfc[0]);
 
   printf("OpenGL: %s %s\n", glGetString(GL_VENDOR), glGetString(GL_VERSION));
 
