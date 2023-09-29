@@ -4,6 +4,30 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define GL_ERR(format)                                                         \
+  gl->error_string = malloc(1024);                                             \
+  snprintf(gl->error_string, 1024, "%s", format);                              \
+  if (gl->surfaces) {                                                          \
+    for (size_t i = 0; i < gl->num_outputs; i++) {                             \
+      if (gl->surfaces[i].surface) {                                           \
+        eglDestroySurface(gl->display, gl->surfaces[i].surface);               \
+      }                                                                        \
+      if (gl->surfaces[i].egl_window) {                                        \
+        wl_egl_window_destroy(gl->surfaces[i].egl_window);                     \
+      }                                                                        \
+    }                                                                          \
+  }                                                                            \
+  if (gl->context) {                                                           \
+    eglDestroyContext(gl->display, gl->context);                               \
+  }                                                                            \
+  if (gl->display) {                                                           \
+    eglTerminate(gl->display);                                                 \
+  }
+#define GL_ERR_F(format, ...)                                                  \
+  char error_buffer[1024];                                                     \
+  snprintf(error_buffer, 1024, format, __VA_ARGS__);                           \
+  GL_ERR(error_buffer);
+
 eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT = NULL;
 eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT = NULL;
 
@@ -16,8 +40,7 @@ samure_init_backend_opengl(struct samure_context *ctx) {
   eglGetPlatformDisplayEXT =
       (eglGetPlatformDisplayEXT_t)eglGetProcAddress("eglGetPlatformDisplayEXT");
   if (!eglGetPlatformDisplayEXT) {
-    gl->error_string = malloc(1024);
-    snprintf(gl->error_string, 1024, "failed to load eglGetPlatformDisplayEXT");
+    GL_ERR("failed to load eglGetPlatformDisplayEXT");
     return gl;
   }
 
@@ -25,50 +48,42 @@ samure_init_backend_opengl(struct samure_context *ctx) {
       (eglCreatePlatformWindowSurfaceEXT_t)eglGetProcAddress(
           "eglCreatePlatformWindowSurfaceEXT");
   if (!eglCreatePlatformWindowSurfaceEXT) {
-    gl->error_string = malloc(1024);
-    snprintf(gl->error_string, 1024,
-             "failed to load eglCreatePlatformWindowSurfaceEXT");
+    GL_ERR("failed to load eglCreatePlatformWindowSurfaceEXT");
     return gl;
   }
 
   gl->display =
       eglGetPlatformDisplayEXT(EGL_PLATFORM_WAYLAND_KHR, ctx->display, NULL);
   if (gl->display == EGL_NO_DISPLAY) {
-    gl->error_string = malloc(1024);
-    snprintf(gl->error_string, 1024, "failed to get egl display connection");
+    GL_ERR("failed to get egl display connection");
     return gl;
   }
 
   if (eglInitialize(gl->display, NULL, NULL) != EGL_TRUE) {
-    gl->error_string = malloc(1024);
-    snprintf(gl->error_string, 1024, "failed to initialize egl");
+    GL_ERR("failed to initialize egl");
     return gl;
   }
 
   EGLint num_config;
   EGLConfig config;
   if (eglGetConfigs(gl->display, &config, 1, &num_config) != EGL_TRUE) {
-    gl->error_string = malloc(1024);
-    snprintf(gl->error_string, 1024, "failed to get egl config");
-    eglTerminate(gl->display);
+    GL_ERR("failed to get egl config");
     return gl;
   }
   if (num_config == 0) {
-    gl->error_string = malloc(1024);
-    snprintf(gl->error_string, 1024, "did not find any egl configs");
-    eglTerminate(gl->display);
+    GL_ERR("did not find any egl configs");
     return gl;
   }
 
   if (eglBindAPI(EGL_OPENGL_API) != EGL_TRUE) {
-    gl->error_string = malloc(1024);
-    snprintf(gl->error_string, 1024, "failed to bind opengl api");
-    eglTerminate(gl->display);
+    GL_ERR("failed to bind opengl api");
     return gl;
   }
 
   gl->surfaces =
       malloc(ctx->num_outputs * sizeof(struct samure_opengl_surface));
+  memset(gl->surfaces, 0,
+         ctx->num_outputs * sizeof(struct samure_opengl_surface));
   gl->num_outputs = ctx->num_outputs;
 
   const EGLint context_attributes[] = {EGL_NONE, EGL_NONE};
@@ -76,9 +91,7 @@ samure_init_backend_opengl(struct samure_context *ctx) {
   gl->context =
       eglCreateContext(gl->display, config, EGL_NO_CONTEXT, context_attributes);
   if (gl->context == EGL_NO_CONTEXT) {
-    gl->error_string = malloc(1024);
-    snprintf(gl->error_string, 1024, "failed to create egl context");
-    eglTerminate(gl->display);
+    GL_ERR("failed to create egl context");
     return gl;
   }
 
@@ -86,11 +99,7 @@ samure_init_backend_opengl(struct samure_context *ctx) {
     gl->surfaces[i].egl_window = wl_egl_window_create(
         ctx->outputs[i].surface, ctx->outputs[i].geo.w, ctx->outputs[i].geo.h);
     if (!gl->surfaces[i].egl_window) {
-      gl->error_string = malloc(1024);
-      snprintf(gl->error_string, 1024,
-               "failed to create wl egl window for output %zu", i);
-      eglDestroyContext(gl->display, gl->context);
-      eglTerminate(gl->display);
+      GL_ERR_F("failed to create wl egl window for output %zu", i);
       return gl;
     }
 
@@ -98,12 +107,7 @@ samure_init_backend_opengl(struct samure_context *ctx) {
         gl->display, config, (EGLNativeWindowType)gl->surfaces[i].egl_window,
         context_attributes);
     if (gl->surfaces[i].surface == EGL_NO_SURFACE) {
-      gl->error_string = malloc(1024);
-      snprintf(gl->error_string, 1024,
-               "failed to create egl surface for output %zu", i);
-      eglDestroyContext(gl->display, gl->context);
-      wl_egl_window_destroy(gl->surfaces[i].egl_window);
-      eglTerminate(gl->display);
+      GL_ERR_F("failed to create egl surface for output %zu", i);
       return gl;
     }
   }
