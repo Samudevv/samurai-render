@@ -58,9 +58,6 @@ extern void xdg_output_description(void *data,
                                    struct zxdg_output_v1 *zxdg_output_v1,
                                    const char *description);
 
-extern void surface_frame(void *data, struct wl_callback *wl_callback,
-                          uint32_t callback_data);
-
 extern void keyboard_keymap(void *data, struct wl_keyboard *wl_keyboard,
                             uint32_t format, int32_t fd, uint32_t size);
 
@@ -121,10 +118,6 @@ static struct zxdg_output_v1_listener xdg_output_listener = {
     .done = xdg_output_done,
     .name = xdg_output_name,
     .description = xdg_output_description,
-};
-
-static struct wl_callback_listener surface_frame_listener = {
-    .done = surface_frame,
 };
 
 struct samure_callback_data {

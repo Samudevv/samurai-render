@@ -355,8 +355,6 @@ void samure_context_render_output(struct samure_context *ctx,
     render_callback(output, ctx, delta_time, ctx->config.user_data);
   }
 
-  output->surface_ready = 0;
-
   if (ctx->backend && ctx->backend->render_end) {
     ctx->backend->render_end(output, ctx, ctx->backend);
   }

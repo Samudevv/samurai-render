@@ -194,20 +194,6 @@ void xdg_output_name(void *data, struct zxdg_output_v1 *zxdg_output_v1,
 void xdg_output_description(void *data, struct zxdg_output_v1 *zxdg_output_v1,
                             const char *description) {}
 
-void surface_frame(void *data, struct wl_callback *wl_callback,
-                   uint32_t callback_data) {
-  wl_callback_destroy(wl_callback);
-
-  struct samure_callback_data *d = (struct samure_callback_data *)data;
-  struct samure_context *ctx = d->ctx;
-  struct samure_output *o = (struct samure_output *)d->data;
-  o->frame_callback = NULL;
-
-  o->surface_ready = 1;
-
-  free(d);
-}
-
 void keyboard_keymap(void *data, struct wl_keyboard *wl_keyboard,
                      uint32_t format, int32_t fd, uint32_t size) {}
 
