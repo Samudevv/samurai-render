@@ -21,7 +21,7 @@ end
 
 add_rules("mode.debug", "mode.release")
 target("samurai-render")
-    set_kind("static")
+    set_kind("$(kind)")
     add_packages("wayland")
     add_options(
         "backend_cairo",
