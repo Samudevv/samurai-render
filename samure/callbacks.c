@@ -91,8 +91,8 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   if (seat->cursor_shape != 0) {
     wp_cursor_shape_device_v1_set_shape(seat->cursor_shape_device, serial,
                                         seat->cursor_shape);
-    seat->cursor_shape = 0;
   }
+  seat->last_pointer_enter = serial;
 
   NEW_EVENT();
 
@@ -156,11 +156,6 @@ void pointer_button(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
   struct samure_seat *seat = (struct samure_seat *)d->data;
-
-  if (seat->cursor_shape != 0) {
-    wp_cursor_shape_device_v1_set_shape(seat->cursor_shape_device, serial,
-                                        seat->cursor_shape);
-  }
 
   NEW_EVENT();
 

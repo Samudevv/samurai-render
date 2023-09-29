@@ -177,11 +177,6 @@ void samure_destroy_context(struct samure_context *ctx) {
     ctx->backend->destroy(ctx, ctx->backend);
   }
 
-  wl_shm_destroy(ctx->shm);
-  wl_compositor_destroy(ctx->compositor);
-  zwlr_layer_shell_v1_destroy(ctx->layer_shell);
-  zxdg_output_manager_v1_destroy(ctx->output_manager);
-
   for (size_t i = 0; i < ctx->num_seats; i++) {
     samure_destroy_seat(ctx->seats[i]);
   }
@@ -191,6 +186,12 @@ void samure_destroy_context(struct samure_context *ctx) {
     samure_destroy_output(ctx, ctx->outputs[i]);
   }
   free(ctx->outputs);
+
+  wl_shm_destroy(ctx->shm);
+  wl_compositor_destroy(ctx->compositor);
+  zwlr_layer_shell_v1_destroy(ctx->layer_shell);
+  zxdg_output_manager_v1_destroy(ctx->output_manager);
+  wp_cursor_shape_manager_v1_destroy(ctx->cursor_shape_manager);
 
   wl_display_disconnect(ctx->display);
 

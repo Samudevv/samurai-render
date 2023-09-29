@@ -24,4 +24,6 @@ void samure_destroy_seat(struct samure_seat seat) {
 
 void samure_seat_set_pointer_shape(struct samure_seat *seat, uint32_t shape) {
   seat->cursor_shape = shape;
+  wp_cursor_shape_device_v1_set_shape(
+      seat->cursor_shape_device, seat->last_pointer_enter, seat->cursor_shape);
 }
