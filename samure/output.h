@@ -1,5 +1,6 @@
 #pragma once
 
+#include "layer_surface.h"
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
@@ -24,16 +25,15 @@ struct samure_rect {
 struct samure_output {
   struct wl_output *output;
   struct zxdg_output_v1 *xdg_output;
-  struct wl_surface *surface;
-  struct zwlr_layer_surface_v1 *layer_surface;
-
+  struct samure_layer_surface **sfc;
+  size_t num_sfc;
   struct samure_rect geo;
-
   char *name;
 };
 
 extern struct samure_output samure_create_output(struct wl_output *output);
-extern void samure_destroy_output(struct samure_output output);
+extern void samure_destroy_output(struct samure_context *ctx,
+                                  struct samure_output output);
 extern int samure_circle_in_output(struct samure_output *output,
                                    int32_t circle_x, int32_t circle_y,
                                    int32_t radius);
@@ -61,3 +61,7 @@ extern void samure_output_set_input_regions(struct samure_context *ctx,
 
 extern void samure_output_set_keyboard_interaction(struct samure_output *output,
                                                    int enable);
+
+extern void
+samure_output_attach_layer_surface(struct samure_output *output,
+                                   struct samure_layer_surface *layer_surface);

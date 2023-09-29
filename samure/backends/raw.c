@@ -1,5 +1,6 @@
 #include "raw.h"
 #include "../context.h"
+#include "../layer_surface.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,21 +18,11 @@ struct samure_backend_raw *samure_init_backend_raw(struct samure_context *ctx) {
   struct samure_backend_raw *r = malloc(sizeof(struct samure_backend_raw));
   memset(r, 0, sizeof(*r));
 
-  r->num_outputs = ctx->num_outputs;
-  r->surfaces = malloc(r->num_outputs * sizeof(struct samure_raw_surface));
-
-  for (size_t i = 0; i < r->num_outputs; i++) {
-    r->surfaces[i].shared_buffer = samure_create_shared_buffer(
-        ctx->shm, ctx->outputs[i].geo.w, ctx->outputs[i].geo.h);
-    if (r->surfaces[i].shared_buffer.buffer == NULL) {
-      RAW_ADD_ERR_F("failed to create shared memory buffer for surface %zu", i);
-    } else {
-      samure_backend_raw_render_end(&ctx->outputs[i], ctx, &r->base);
-    }
-  }
-
   r->base.render_end = samure_backend_raw_render_end;
   r->base.destroy = samure_destroy_backend_raw;
+  r->base.associate_layer_surface = samure_backend_raw_associate_layer_surface;
+  r->base.unassociate_layer_surface =
+      samure_backend_raw_unassociate_layer_surface;
 
   return r;
 }
@@ -39,25 +30,51 @@ struct samure_backend_raw *samure_init_backend_raw(struct samure_context *ctx) {
 void samure_destroy_backend_raw(struct samure_context *ctx,
                                 struct samure_backend *b) {
   struct samure_backend_raw *r = (struct samure_backend_raw *)b;
-
-  for (size_t i = 0; i < r->num_outputs; i++) {
-    samure_destroy_shared_buffer(r->surfaces[i].shared_buffer);
-  }
-  free(r->surfaces);
   free(r->error_string);
   free(r);
 }
 
 void samure_backend_raw_render_end(struct samure_output *output,
+                                   struct samure_layer_surface *layer_surface,
                                    struct samure_context *ctx,
                                    struct samure_backend *b) {
-  struct samure_backend_raw *r = (struct samure_backend_raw *)b;
-  const uintptr_t i = OUT_IDX();
-  wl_surface_attach(ctx->outputs[i].surface,
-                    r->surfaces[i].shared_buffer.buffer, 0, 0);
-  wl_surface_damage(ctx->outputs[i].surface, 0, 0, ctx->outputs[i].geo.w,
-                    ctx->outputs[i].geo.h);
-  wl_surface_commit(ctx->outputs[i].surface);
+  struct samure_raw_surface *r =
+      (struct samure_raw_surface *)layer_surface->backend_data;
+  wl_surface_attach(layer_surface->surface, r->shared_buffer.buffer, 0, 0);
+  wl_surface_damage(layer_surface->surface, 0, 0, output->geo.w, output->geo.h);
+  wl_surface_commit(layer_surface->surface);
+}
+
+void samure_backend_raw_associate_layer_surface(
+    struct samure_context *ctx, struct samure_backend *raw,
+    struct samure_output *o, struct samure_layer_surface *sfc) {
+  struct samure_backend_raw *r = (struct samure_backend_raw *)raw;
+  sfc->backend_data = malloc(sizeof(struct samure_raw_surface));
+  struct samure_raw_surface *raw_sfc =
+      (struct samure_raw_surface *)sfc->backend_data;
+
+  raw_sfc->shared_buffer =
+      samure_create_shared_buffer(ctx->shm, o->geo.w, o->geo.h);
+  if (raw_sfc->shared_buffer.buffer == NULL) {
+    RAW_ADD_ERR_F("failed to create shared memory buffer for output %s",
+                  o->name ? o->name : "");
+  } else {
+    samure_backend_raw_render_end(o, sfc, ctx, &r->base);
+  }
+}
+
+void samure_backend_raw_unassociate_layer_surface(
+    struct samure_context *ctx, struct samure_backend *raw,
+    struct samure_output *o, struct samure_layer_surface *sfc) {
+  if (!sfc->backend_data) {
+    return;
+  }
+
+  struct samure_raw_surface *r = (struct samure_raw_surface *)sfc->backend_data;
+
+  samure_destroy_shared_buffer(r->shared_buffer);
+  free(r);
+  sfc->backend_data = NULL;
 }
 
 struct samure_backend_raw *samure_get_backend_raw(struct samure_context *ctx) {

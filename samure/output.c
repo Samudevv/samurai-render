@@ -8,10 +8,13 @@ struct samure_output samure_create_output(struct wl_output *output) {
   return o;
 }
 
-void samure_destroy_output(struct samure_output output) {
+void samure_destroy_output(struct samure_context *ctx,
+                           struct samure_output output) {
   free(output.name);
-  zwlr_layer_surface_v1_destroy(output.layer_surface);
-  wl_surface_destroy(output.surface);
+  for (size_t i = 0; i < output.num_sfc; i++) {
+    samure_destroy_layer_surface(ctx, &output, output.sfc[i]);
+  }
+  free(output.sfc);
   zxdg_output_v1_destroy(output.xdg_output);
   wl_output_destroy(output.output);
 }
@@ -61,24 +64,26 @@ int samure_triangle_in_output(struct samure_output *o, int32_t x1, int32_t y1,
 }
 
 void samure_output_set_pointer_interaction(struct samure_context *ctx,
-                                           struct samure_output *output,
+                                           struct samure_output *o,
                                            int enable) {
-  if (enable) {
-    wl_surface_set_input_region(output->surface, NULL);
-  } else {
-    struct wl_region *reg = wl_compositor_create_region(ctx->compositor);
-    if (!reg) {
-      return;
-    }
+  for (size_t i = 0; i < o->num_sfc; i++) {
+    if (enable) {
+      wl_surface_set_input_region(o->sfc[i]->surface, NULL);
+    } else {
+      struct wl_region *reg = wl_compositor_create_region(ctx->compositor);
+      if (!reg) {
+        continue;
+      }
 
-    wl_surface_set_input_region(output->surface, reg);
-    wl_region_destroy(reg);
+      wl_surface_set_input_region(o->sfc[i]->surface, reg);
+      wl_region_destroy(reg);
+    }
+    wl_surface_commit(o->sfc[i]->surface);
   }
-  wl_surface_commit(output->surface);
 }
 
 void samure_output_set_input_regions(struct samure_context *ctx,
-                                     struct samure_output *output,
+                                     struct samure_output *o,
                                      struct samure_rect *r, size_t num_rects) {
   struct wl_region *reg = wl_compositor_create_region(ctx->compositor);
   if (!reg) {
@@ -89,14 +94,25 @@ void samure_output_set_input_regions(struct samure_context *ctx,
     wl_region_add(reg, r[i].x, r[i].y, r[i].w, r[i].h);
   }
 
-  wl_surface_set_input_region(output->surface, reg);
+  for (size_t i = 0; i < o->num_sfc; i++) {
+    wl_surface_set_input_region(o->sfc[i]->surface, reg);
+    wl_surface_commit(o->sfc[i]->surface);
+  }
   wl_region_destroy(reg);
-  wl_surface_commit(output->surface);
 }
 
-void samure_output_set_keyboard_interaction(struct samure_output *output,
+void samure_output_set_keyboard_interaction(struct samure_output *o,
                                             int enable) {
-  zwlr_layer_surface_v1_set_keyboard_interactivity(output->layer_surface,
-                                                   (uint32_t)enable);
-  wl_surface_commit(output->surface);
+  for (size_t i = 0; i < o->num_sfc; i++) {
+    zwlr_layer_surface_v1_set_keyboard_interactivity(o->sfc[i]->layer_surface,
+                                                     (uint32_t)enable);
+    wl_surface_commit(o->sfc[i]->surface);
+  }
+}
+
+void samure_output_attach_layer_surface(struct samure_output *o,
+                                        struct samure_layer_surface *sfc) {
+  o->num_sfc++;
+  o->sfc = realloc(o->sfc, o->num_sfc * sizeof(struct samure_layer_surface *));
+  o->sfc[o->num_sfc - 1] = sfc;
 }

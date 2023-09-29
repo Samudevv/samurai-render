@@ -8,6 +8,7 @@
 
 #include <samure/backends/raw.h>
 #include <samure/context.h>
+#include <samure/layer_surface.h>
 
 struct blank_data {
   Olivec_Canvas *canvas;
@@ -40,6 +41,7 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
 }
 
 static void render_callback(struct samure_output *output,
+                            struct samure_layer_surface *sfc,
                             struct samure_context *ctx, double delta_time,
                             void *data) {
   struct blank_data *d = (struct blank_data *)data;
@@ -56,10 +58,9 @@ static void render_callback(struct samure_output *output,
   }
 }
 
-static void render_callback_clear_outputs_on_exit(struct samure_output *output,
-                                                  struct samure_context *ctx,
-                                                  double delta_time,
-                                                  void *data) {
+static void render_callback_clear_outputs_on_exit(
+    struct samure_output *output, struct samure_layer_surface *sfc,
+    struct samure_context *ctx, double delta_time, void *data) {
   struct blank_data *d = (struct blank_data *)data;
   const uintptr_t i = OUT_IDX();
   olivec_fill(d->canvas[i], 0x00000000);
@@ -103,12 +104,12 @@ int main(void) {
 
   puts("Successfully initialized samurai-render context");
 
-  struct samure_backend_raw *r = samure_get_backend_raw(ctx);
-  d.canvas = malloc(r->num_outputs * sizeof(Olivec_Canvas));
-  for (size_t i = 0; i < r->num_outputs; i++) {
-    d.canvas[i] =
-        olivec_canvas(r->surfaces[i].shared_buffer.data, ctx->outputs[i].geo.w,
-                      ctx->outputs[i].geo.h, ctx->outputs[i].geo.w);
+  d.canvas = malloc(ctx->num_outputs * sizeof(Olivec_Canvas));
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    struct samure_raw_surface *r =
+        (struct samure_raw_surface *)ctx->outputs[i].sfc[0]->backend_data;
+    d.canvas[i] = olivec_canvas(r->shared_buffer.data, ctx->outputs[i].geo.w,
+                                ctx->outputs[i].geo.h, ctx->outputs[i].geo.w);
   }
 
   const struct samure_rect rt = samure_context_get_output_rect(ctx);

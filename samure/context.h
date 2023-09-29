@@ -32,9 +32,9 @@ enum samure_render_state {
 typedef void (*samure_event_callback)(struct samure_event *event,
                                       struct samure_context *ctx,
                                       void *user_data);
-typedef void (*samure_render_callback)(struct samure_output *output,
-                                       struct samure_context *ctx,
-                                       double delta_time, void *user_data);
+typedef void (*samure_render_callback)(
+    struct samure_output *output, struct samure_layer_surface *layer_surface,
+    struct samure_context *ctx, double delta_time, void *user_data);
 typedef void (*samure_update_callback)(struct samure_context *ctx,
                                        double delta_time, void *user_data);
 

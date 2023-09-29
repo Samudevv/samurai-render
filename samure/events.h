@@ -15,11 +15,13 @@ enum samure_event_type {
 
 struct samure_seat;
 struct samure_output;
+struct samure_layer_surface;
 
 struct samure_event {
   int type;
   struct samure_seat *seat;
   struct samure_output *output;
+  struct samure_layer_surface *surface;
   union {
     uint32_t button;
     uint32_t key;

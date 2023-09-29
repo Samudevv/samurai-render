@@ -1,5 +1,6 @@
 #include "context.h"
 #include "callbacks.h"
+#include "layer_surface.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -101,44 +102,6 @@ samure_create_context(struct samure_context_config *config) {
     }
   }
 
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    struct samure_output *o = &ctx->outputs[i];
-
-    char namespace[1024];
-    snprintf(namespace, 1024, "samurai-render-%zu", i);
-
-    o->xdg_output =
-        zxdg_output_manager_v1_get_xdg_output(ctx->output_manager, o->output);
-    zxdg_output_v1_add_listener(o->xdg_output, &xdg_output_listener, o);
-
-    o->surface = wl_compositor_create_surface(ctx->compositor);
-    o->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
-        ctx->layer_shell, o->surface, o->output,
-        ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY, namespace);
-    zwlr_layer_surface_v1_add_listener(o->layer_surface,
-                                       &layer_surface_listener,
-                                       samure_create_callback_data(ctx, o));
-    zwlr_layer_surface_v1_set_anchor(o->layer_surface,
-                                     ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP |
-                                         ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
-                                         ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT |
-                                         ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM);
-    zwlr_layer_surface_v1_set_keyboard_interactivity(
-        o->layer_surface, (uint32_t)ctx->config.keyboard_interaction);
-    zwlr_layer_surface_v1_set_exclusive_zone(o->layer_surface, -1);
-    if (!(ctx->config.pointer_interaction || ctx->config.touch_interaction)) {
-      struct wl_region *reg = wl_compositor_create_region(ctx->compositor);
-      wl_surface_set_input_region(o->surface, reg);
-      wl_region_destroy(reg);
-    } else {
-      wl_surface_set_input_region(o->surface, NULL);
-    }
-    wl_surface_commit(o->surface);
-  }
-  wl_display_roundtrip(ctx->display);
-
-  ctx->frame_timer = samure_init_frame_timer(ctx->config.max_fps);
-
   switch (ctx->config.backend) {
   case SAMURE_BACKEND_OPENGL: {
 #ifdef BACKEND_OPENGL
@@ -187,6 +150,38 @@ samure_create_context(struct samure_context_config *config) {
   } break;
   }
 
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    struct samure_output *o = &ctx->outputs[i];
+
+    o->xdg_output =
+        zxdg_output_manager_v1_get_xdg_output(ctx->output_manager, o->output);
+    zxdg_output_v1_add_listener(o->xdg_output, &xdg_output_listener, o);
+  }
+  wl_display_roundtrip(ctx->display);
+
+  ctx->frame_timer = samure_init_frame_timer(ctx->config.max_fps);
+
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    struct samure_output *o = &ctx->outputs[i];
+
+    struct samure_layer_surface *layer_surface = samure_create_layer_surface(
+        ctx, o, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
+        ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
+            ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT |
+            ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM,
+        (uint32_t)ctx->config.keyboard_interaction,
+        ctx->config.pointer_interaction || ctx->config.touch_interaction, 1);
+    if (layer_surface->error_string) {
+      CTX_ADD_ERR_F("failed to create layer surface for output %zu: %s", i,
+                    layer_surface->error_string);
+      free(layer_surface->error_string);
+      free(layer_surface);
+      continue;
+    }
+
+    samure_output_attach_layer_surface(o, layer_surface);
+  }
+
   return ctx;
 }
 
@@ -208,7 +203,7 @@ void samure_destroy_context(struct samure_context *ctx) {
   free(ctx->seats);
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    samure_destroy_output(ctx->outputs[i]);
+    samure_destroy_output(ctx, ctx->outputs[i]);
   }
   free(ctx->outputs);
 
@@ -328,8 +323,8 @@ void samure_context_process_events(struct samure_context *ctx,
     switch (e->type) {
     case SAMURE_EVENT_LAYER_SURFACE_CONFIGURE:
       if (ctx->backend && ctx->backend->on_layer_surface_configure) {
-        ctx->backend->on_layer_surface_configure(ctx->backend, ctx, e->output,
-                                                 e->width, e->height);
+        ctx->backend->on_layer_surface_configure(
+            ctx->backend, ctx, e->output, e->surface, e->width, e->height);
       }
       break;
     default:
@@ -347,16 +342,19 @@ void samure_context_render_output(struct samure_context *ctx,
                                   struct samure_output *output,
                                   samure_render_callback render_callback,
                                   double delta_time) {
-  if (ctx->backend && ctx->backend->render_start) {
-    ctx->backend->render_start(output, ctx, ctx->backend);
-  }
+  for (size_t i = 0; i < output->num_sfc; i++) {
+    if (ctx->backend && ctx->backend->render_start) {
+      ctx->backend->render_start(output, output->sfc[i], ctx, ctx->backend);
+    }
 
-  if (render_callback) {
-    render_callback(output, ctx, delta_time, ctx->config.user_data);
-  }
+    if (render_callback) {
+      render_callback(output, output->sfc[i], ctx, delta_time,
+                      ctx->config.user_data);
+    }
 
-  if (ctx->backend && ctx->backend->render_end) {
-    ctx->backend->render_end(output, ctx, ctx->backend);
+    if (ctx->backend && ctx->backend->render_end) {
+      ctx->backend->render_end(output, output->sfc[i], ctx, ctx->backend);
+    }
   }
 }
 
