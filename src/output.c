@@ -1,4 +1,5 @@
 #include "output.h"
+#include "context.h"
 #include <stdlib.h>
 
 struct samure_output samure_create_output(struct wl_output *output) {
@@ -60,4 +61,45 @@ int samure_triangle_in_output(struct samure_output *o, int32_t x1, int32_t y1,
                               int32_t x2, int32_t y2, int32_t x3, int32_t y3) {
   return samure_point_in_output(o, x1, y1) &&
          samure_point_in_output(o, x2, y2) && samure_point_in_output(o, x3, y3);
+}
+
+void samure_output_set_pointer_interaction(struct samure_context *ctx,
+                                           struct samure_output *output,
+                                           int enable) {
+  if (enable) {
+    wl_surface_set_input_region(output->surface, NULL);
+  } else {
+    struct wl_region *reg = wl_compositor_create_region(ctx->compositor);
+    if (!reg) {
+      return;
+    }
+
+    wl_surface_set_input_region(output->surface, reg);
+    wl_region_destroy(reg);
+  }
+  wl_surface_commit(output->surface);
+}
+
+void samure_output_set_input_regions(struct samure_context *ctx,
+                                     struct samure_output *output,
+                                     struct samure_rect *r, size_t num_rects) {
+  struct wl_region *reg = wl_compositor_create_region(ctx->compositor);
+  if (!reg) {
+    return;
+  }
+
+  for (size_t i = 0; i < num_rects; i++) {
+    wl_region_add(reg, r[i].x, r[i].y, r[i].w, r[i].h);
+  }
+
+  wl_surface_set_input_region(output->surface, reg);
+  wl_region_destroy(reg);
+  wl_surface_commit(output->surface);
+}
+
+void samure_output_set_keyboard_interaction(struct samure_output *output,
+                                            int enable) {
+  zwlr_layer_surface_v1_set_keyboard_interactivity(output->layer_surface,
+                                                   (uint32_t)enable);
+  wl_surface_commit(output->surface);
 }

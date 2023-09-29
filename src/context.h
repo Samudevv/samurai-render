@@ -33,7 +33,9 @@ typedef void (*samure_update_callback)(struct samure_context *ctx,
 
 struct samure_context_config {
   enum samure_backend_type backend;
-
+  int pointer_interaction;
+  int keyboard_interaction;
+  int touch_interaction;
   uint32_t max_fps;
 
   samure_event_callback event_callback;
@@ -84,3 +86,11 @@ extern void samure_destroy_context(struct samure_context *ctx);
 extern void samure_context_run(struct samure_context *ctx);
 extern struct samure_rect
 samure_context_get_output_rect(struct samure_context *ctx);
+extern void samure_context_set_pointer_interaction(struct samure_context *ctx,
+                                                   int enable);
+extern void samure_context_set_input_regions(struct samure_context *ctx,
+                                             struct samure_rect *rects,
+                                             size_t num_rects);
+
+extern void samure_context_set_keyboard_interaction(struct samure_context *ctx,
+                                                    int enable);

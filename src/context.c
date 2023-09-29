@@ -95,7 +95,9 @@ samure_create_context(struct samure_context_config *config) {
         wl_keyboard_add_listener(ctx->seats[i].keyboard, &keyboard_listener,
                                  cbd);
       }
-      // TODO: Add touch listener
+      if (ctx->seats[i].touch) {
+        // TODO: Add touch listener
+      }
     }
   }
 
@@ -121,8 +123,16 @@ samure_create_context(struct samure_context_config *config) {
                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT |
                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM);
-    zwlr_layer_surface_v1_set_keyboard_interactivity(o->layer_surface, 1);
+    zwlr_layer_surface_v1_set_keyboard_interactivity(
+        o->layer_surface, (uint32_t)ctx->config.keyboard_interaction);
     zwlr_layer_surface_v1_set_exclusive_zone(o->layer_surface, -1);
+    if (!(ctx->config.pointer_interaction || ctx->config.touch_interaction)) {
+      struct wl_region *reg = wl_compositor_create_region(ctx->compositor);
+      wl_surface_set_input_region(o->surface, reg);
+      wl_region_destroy(reg);
+    } else {
+      wl_surface_set_input_region(o->surface, NULL);
+    }
     wl_surface_commit(o->surface);
   }
   wl_display_roundtrip(ctx->display);
@@ -289,4 +299,46 @@ struct samure_rect samure_context_get_output_rect(struct samure_context *ctx) {
   r.h -= r.y;
 
   return r;
+}
+
+void samure_context_set_pointer_interaction(struct samure_context *ctx,
+                                            int enable) {
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    samure_output_set_pointer_interaction(ctx, &ctx->outputs[i], enable);
+  }
+}
+
+void samure_context_set_input_regions(struct samure_context *ctx,
+                                      struct samure_rect *r, size_t num_rects) {
+  for (size_t j = 0; j < ctx->num_outputs; j++) {
+    struct samure_rect *output_rects = NULL;
+    size_t num_output_rects = 0;
+
+    for (size_t i = 0; i < num_rects; i++) {
+      if (samure_rect_in_output(&ctx->outputs[j], r[i].x, r[i].y, r[i].w,
+                                r[i].h)) {
+        num_output_rects++;
+        output_rects = realloc(output_rects,
+                               num_output_rects * sizeof(struct samure_rect));
+
+        output_rects[num_output_rects - 1].x =
+            OUT_X2((&ctx->outputs[i]), r[i].x);
+        output_rects[num_output_rects - 1].y =
+            OUT_Y2((&ctx->outputs[i]), r[i].y);
+        output_rects[num_output_rects - 1].w = r[i].w;
+        output_rects[num_output_rects - 1].h = r[i].h;
+      }
+    }
+
+    samure_output_set_input_regions(ctx, &ctx->outputs[j], output_rects,
+                                    num_output_rects);
+    free(output_rects);
+  }
+}
+
+void samure_context_set_keyboard_interaction(struct samure_context *ctx,
+                                             int enable) {
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    samure_output_set_keyboard_interaction(&ctx->outputs[i], enable);
+  }
 }

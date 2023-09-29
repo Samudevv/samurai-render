@@ -12,6 +12,8 @@
 #define OUT_Y2(output, val) (val - output->geo.y)
 #define OUT_Y(val) OUT_Y2(output, val)
 
+struct samure_context;
+
 struct samure_rect {
   int32_t x;
   int32_t y;
@@ -50,3 +52,15 @@ extern int samure_triangle_in_output(struct samure_output *output,
                                      int32_t tri_x1, int32_t tri_y1,
                                      int32_t tri_x2, int32_t tri_y2,
                                      int32_t tri_x3, int32_t tri_y3);
+
+extern void samure_output_set_pointer_interaction(struct samure_context *ctx,
+                                                  struct samure_output *output,
+                                                  int enable);
+
+extern void samure_output_set_input_regions(struct samure_context *ctx,
+                                            struct samure_output *output,
+                                            struct samure_rect *rects,
+                                            size_t num_rects);
+
+extern void samure_output_set_keyboard_interaction(struct samure_output *output,
+                                                   int enable);
