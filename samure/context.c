@@ -69,11 +69,12 @@ samure_create_context(struct samure_context_config *config) {
   wl_display_roundtrip(ctx->display);
 
   // clang-format off
-  if (ctx->num_outputs == 0)       CTX_ADD_ERR_F("%s", "no outputs");
-  if (ctx->output_manager == NULL) CTX_ADD_ERR_F("%s", "no xdg output manager support");
-  if (ctx->layer_shell == NULL)    CTX_ADD_ERR_F("%s", "no wlr layer shell support");
-  if (ctx->shm == NULL)            CTX_ADD_ERR_F("%s", "no shm support");
-  if (ctx->compositor == NULL)     CTX_ADD_ERR_F("%s", "no compositor support");
+  if (ctx->num_outputs == 0)             CTX_ADD_ERR_F("%s", "no outputs");
+  if (ctx->output_manager == NULL)       CTX_ADD_ERR_F("%s", "no xdg output manager support");
+  if (ctx->layer_shell == NULL)          CTX_ADD_ERR_F("%s", "no wlr layer shell support");
+  if (ctx->shm == NULL)                  CTX_ADD_ERR_F("%s", "no shm support");
+  if (ctx->compositor == NULL)           CTX_ADD_ERR_F("%s", "no compositor support");
+  if (ctx->cursor_shape_manager == NULL) CTX_ADD_ERR_F("%s", "no cursor shape manager support");
   // clang-format on
 
   if (ctx->error_string) {
@@ -82,7 +83,8 @@ samure_create_context(struct samure_context_config *config) {
 
   if (ctx->num_seats != 0) {
     for (size_t i = 0; i < ctx->num_seats; i++) {
-      wl_seat_add_listener(ctx->seats[i].seat, &seat_listener, &ctx->seats[i]);
+      wl_seat_add_listener(ctx->seats[i].seat, &seat_listener,
+                           samure_create_callback_data(ctx, &ctx->seats[i]));
     }
     wl_display_roundtrip(ctx->display);
     for (size_t i = 0; i < ctx->num_seats; i++) {

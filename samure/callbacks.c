@@ -46,6 +46,10 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
   } else if (strcmp(interface, zxdg_output_manager_v1_interface.name) == 0) {
     ctx->output_manager =
         wl_registry_bind(registry, name, &zxdg_output_manager_v1_interface, 2);
+  } else if (strcmp(interface, wp_cursor_shape_manager_v1_interface.name) ==
+             0) {
+    ctx->cursor_shape_manager = wl_registry_bind(
+        registry, name, &wp_cursor_shape_manager_v1_interface, version);
   }
 }
 
@@ -54,10 +58,14 @@ void registry_global_remove(void *data, struct wl_registry *registry,
 
 void seat_capabilities(void *data, struct wl_seat *seat,
                        uint32_t capabilities) {
-  struct samure_seat *s = (struct samure_seat *)data;
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+  struct samure_seat *s = (struct samure_seat *)d->data;
 
   if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
     s->pointer = wl_seat_get_pointer(seat);
+    s->cursor_shape_device = wp_cursor_shape_manager_v1_get_pointer(
+        ctx->cursor_shape_manager, s->pointer);
   }
   if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) {
     s->keyboard = wl_seat_get_keyboard(seat);
@@ -79,6 +87,12 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_seat *seat = (struct samure_seat *)d->data;
   struct samure_context *ctx = d->ctx;
+
+  if (seat->pending_cursor_shape != 0) {
+    wp_cursor_shape_device_v1_set_shape(seat->cursor_shape_device, serial,
+                                        seat->pending_cursor_shape);
+    seat->pending_cursor_shape = 0;
+  }
 
   NEW_EVENT();
 
@@ -141,6 +155,13 @@ void pointer_button(void *data, struct wl_pointer *pointer, uint32_t serial,
                     uint32_t time, uint32_t button, uint32_t state) {
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
+  struct samure_seat *seat = (struct samure_seat *)d->data;
+
+  if (seat->pending_cursor_shape != 0) {
+    wp_cursor_shape_device_v1_set_shape(seat->cursor_shape_device, serial,
+                                        seat->pending_cursor_shape);
+    seat->pending_cursor_shape = 0;
+  }
 
   NEW_EVENT();
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "wayland/cursor-shape-v1-client-protocol.h"
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
@@ -67,6 +68,7 @@ struct samure_context {
   struct wl_compositor *compositor;
   struct zwlr_layer_shell_v1 *layer_shell;
   struct zxdg_output_manager_v1 *output_manager;
+  struct wp_cursor_shape_manager_v1 *cursor_shape_manager;
 
   struct samure_seat *seats;
   size_t num_seats;

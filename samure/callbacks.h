@@ -1,4 +1,5 @@
 #pragma once
+#include "wayland/cursor-shape-v1-client-protocol.h"
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
