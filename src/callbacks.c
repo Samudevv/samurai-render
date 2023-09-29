@@ -202,6 +202,70 @@ void surface_frame(void *data, struct wl_callback *wl_callback,
   free(d);
 }
 
+void keyboard_keymap(void *data, struct wl_keyboard *wl_keyboard,
+                     uint32_t format, int32_t fd, uint32_t size) {}
+
+void keyboard_enter(void *data, struct wl_keyboard *wl_keyboard,
+                    uint32_t serial, struct wl_surface *surface,
+                    struct wl_array *keys) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+  struct samure_seat *seat = (struct samure_seat *)d->data;
+
+  NEW_EVENT();
+
+  LAST_EVENT.type = SAMURE_EVENT_KEYBOARD_ENTER;
+  LAST_EVENT.seat = seat;
+
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    if (ctx->outputs[i].surface == surface) {
+      LAST_EVENT.output = &ctx->outputs[i];
+      break;
+    }
+  }
+}
+
+void keyboard_leave(void *data, struct wl_keyboard *wl_keyboard,
+                    uint32_t serial, struct wl_surface *surface) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+  struct samure_seat *seat = (struct samure_seat *)d->data;
+
+  NEW_EVENT();
+
+  LAST_EVENT.type = SAMURE_EVENT_KEYBOARD_LEAVE;
+  LAST_EVENT.seat = seat;
+
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    if (ctx->outputs[i].surface == surface) {
+      LAST_EVENT.output = &ctx->outputs[i];
+      break;
+    }
+  }
+}
+
+void keyboard_key(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial,
+                  uint32_t time, uint32_t key, uint32_t state) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+  struct samure_seat *seat = (struct samure_seat *)d->data;
+
+  NEW_EVENT();
+
+  LAST_EVENT.type = SAMURE_EVENT_KEYBOARD_KEY;
+  LAST_EVENT.seat = seat;
+  LAST_EVENT.key = key;
+  LAST_EVENT.state = state;
+}
+
+void keyboard_modifiers(void *data, struct wl_keyboard *wl_keyboard,
+                        uint32_t serial, uint32_t mods_depressed,
+                        uint32_t mods_latched, uint32_t mods_locked,
+                        uint32_t group) {}
+
+void keyboard_repeat_info(void *data, struct wl_keyboard *wl_keyboard,
+                          int32_t rate, int32_t delay) {}
+
 struct samure_callback_data *
 samure_create_callback_data(struct samure_context *ctx, void *data) {
   struct samure_callback_data *d = (struct samure_callback_data *)malloc(

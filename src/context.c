@@ -85,16 +85,16 @@ samure_create_context(struct samure_context_config *config) {
     }
     wl_display_roundtrip(ctx->display);
     for (size_t i = 0; i < ctx->num_seats; i++) {
+      struct samure_callback_data *cbd =
+          samure_create_callback_data(ctx, &ctx->seats[i]);
+
       if (ctx->seats[i].pointer) {
-        wl_pointer_add_listener(
-            ctx->seats[i].pointer, &pointer_listener,
-            samure_create_callback_data(ctx, &ctx->seats[i]));
+        wl_pointer_add_listener(ctx->seats[i].pointer, &pointer_listener, cbd);
       }
-      // TODO: Add keyboard listener
-      // if (ctx->seats[i].keyboard) {
-      //    wl_keyboard_add_listener(ctx->seats[i].keyboard, NULL,
-      //    ctx);
-      // }
+      if (ctx->seats[i].keyboard) {
+        wl_keyboard_add_listener(ctx->seats[i].keyboard, &keyboard_listener,
+                                 cbd);
+      }
       // TODO: Add touch listener
     }
   }
@@ -121,7 +121,7 @@ samure_create_context(struct samure_context_config *config) {
                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT |
                                          ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM);
-    zwlr_layer_surface_v1_set_keyboard_interactivity(o->layer_surface, 0);
+    zwlr_layer_surface_v1_set_keyboard_interactivity(o->layer_surface, 1);
     zwlr_layer_surface_v1_set_exclusive_zone(o->layer_surface, -1);
     wl_surface_commit(o->surface);
   }

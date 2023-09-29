@@ -20,10 +20,22 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
 
   switch (e->type) {
   case SAMURE_EVENT_POINTER_BUTTON:
-    if (e->button == BTN_LEFT && e->state == WL_POINTER_BUTTON_STATE_RELEASED) {
+    if (e->button == BTN_RIGHT &&
+        e->state == WL_POINTER_BUTTON_STATE_RELEASED) {
       ctx->running = 0;
     }
     break;
+  case SAMURE_EVENT_KEYBOARD_KEY:
+    if (e->key == KEY_ESC && e->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
+      ctx->running = 0;
+    }
+    break;
+  case SAMURE_EVENT_KEYBOARD_ENTER: {
+    printf("keyboard_enter: output=%lu\n", OUT_IDX2(e->output));
+  } break;
+  case SAMURE_EVENT_KEYBOARD_LEAVE: {
+    printf("keyboard_leave: output=%lu\n", OUT_IDX2(e->output));
+  } break;
   }
 }
 

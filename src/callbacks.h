@@ -61,6 +61,28 @@ extern void xdg_output_description(void *data,
 extern void surface_frame(void *data, struct wl_callback *wl_callback,
                           uint32_t callback_data);
 
+extern void keyboard_keymap(void *data, struct wl_keyboard *wl_keyboard,
+                            uint32_t format, int32_t fd, uint32_t size);
+
+extern void keyboard_enter(void *data, struct wl_keyboard *wl_keyboard,
+                           uint32_t serial, struct wl_surface *surface,
+                           struct wl_array *keys);
+
+extern void keyboard_leave(void *data, struct wl_keyboard *wl_keyboard,
+                           uint32_t serial, struct wl_surface *surface);
+
+extern void keyboard_key(void *data, struct wl_keyboard *wl_keyboard,
+                         uint32_t serial, uint32_t time, uint32_t key,
+                         uint32_t state);
+
+extern void keyboard_modifiers(void *data, struct wl_keyboard *wl_keyboard,
+                               uint32_t serial, uint32_t mods_depressed,
+                               uint32_t mods_latched, uint32_t mods_locked,
+                               uint32_t group);
+
+extern void keyboard_repeat_info(void *data, struct wl_keyboard *wl_keyboard,
+                                 int32_t rate, int32_t delay);
+
 static struct wl_registry_listener registry_listener = {
     .global = registry_global,
     .global_remove = registry_global_remove,
@@ -77,6 +99,15 @@ static struct wl_pointer_listener pointer_listener = {
     .motion = pointer_motion,
     .button = pointer_button,
     .axis = pointer_axis,
+};
+
+static struct wl_keyboard_listener keyboard_listener = {
+    .keymap = keyboard_keymap,
+    .enter = keyboard_enter,
+    .leave = keyboard_leave,
+    .key = keyboard_key,
+    .modifiers = keyboard_modifiers,
+    .repeat_info = keyboard_repeat_info,
 };
 
 static struct zwlr_layer_surface_v1_listener layer_surface_listener = {
