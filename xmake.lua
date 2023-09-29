@@ -11,7 +11,7 @@ add_rules("mode.debug", "mode.release")
 target("samurai-render")
     set_kind("static")
     add_packages("wayland", "cairo")
-    add_links("EGL")
+    add_links("EGL", "wayland-egl")
     add_headerfiles(
         "src/*.h",
         "src/wayland/*.h",

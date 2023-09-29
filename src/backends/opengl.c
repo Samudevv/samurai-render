@@ -13,12 +13,6 @@ samure_init_backend_opengl(struct samure_context *ctx) {
       malloc(sizeof(struct samure_backend_opengl));
   memset(gl, 0, sizeof(struct samure_backend_opengl));
 
-  char *wl_egl_err = open_libwayland_egl();
-  if (wl_egl_err) {
-    gl->error_string = wl_egl_err;
-    return gl;
-  }
-
   eglGetPlatformDisplayEXT =
       (eglGetPlatformDisplayEXT_t)eglGetProcAddress("eglGetPlatformDisplayEXT");
   if (!eglGetPlatformDisplayEXT) {

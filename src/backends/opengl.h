@@ -1,9 +1,11 @@
 #pragma once
 #include <EGL/egl.h>
 #include <wayland-client.h>
+#include <wayland-egl.h>
 
 #include "../backend.h"
-#include "../wayland/wl_egl.h"
+
+#define EGL_PLATFORM_WAYLAND_KHR 0x31D8
 
 typedef EGLDisplay (*eglGetPlatformDisplayEXT_t)(EGLenum, EGLNativeDisplayType,
                                                  const EGLint *);
