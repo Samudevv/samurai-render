@@ -166,9 +166,7 @@ samure_create_context(struct samure_context_config *config) {
 
     struct samure_layer_surface *layer_surface = samure_create_layer_surface(
         ctx, o, ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
-        ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
-            ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT |
-            ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM,
+        SAMURE_LAYER_SURFACE_ANCHOR_FILL,
         (uint32_t)ctx->config.keyboard_interaction,
         ctx->config.pointer_interaction || ctx->config.touch_interaction, 1);
     if (layer_surface->error_string) {

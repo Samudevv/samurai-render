@@ -23,17 +23,17 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
 }
 
 static void render_callback(struct samure_output *output,
+                            struct samure_layer_surface *sfc,
                             struct samure_context *ctx, double delta_time,
                             void *data) {
-  struct samure_backend_cairo *c = samure_get_backend_cairo(ctx);
+  struct samure_cairo_surface *c =
+      (struct samure_cairo_surface *)sfc->backend_data;
   struct cairo_data *d = (struct cairo_data *)data;
 
   const double qx = OUT_X(d->qx);
   const double qy = OUT_Y(d->qy);
 
-  const uintptr_t i = OUT_IDX();
-
-  cairo_t *cairo = c->surfaces[i].cairo;
+  cairo_t *cairo = c->cairo;
 
   cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cairo, 0.0, 0.0, 0.0, 0.0);

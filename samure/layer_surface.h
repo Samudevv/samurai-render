@@ -3,6 +3,10 @@
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include <wayland-client.h>
 
+#define SAMURE_LAYER_SURFACE_ANCHOR_FILL                                       \
+  (ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |      \
+   ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT | ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM)
+
 struct samure_context;
 struct samure_output;
 struct samure_layer_surface_callback_data;

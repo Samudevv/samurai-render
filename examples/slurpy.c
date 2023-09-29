@@ -38,12 +38,12 @@ static void on_event(struct samure_event *e, struct samure_context *ctx,
   case SAMURE_EVENT_POINTER_MOTION:
     switch (d->state) {
     case STATE_NONE:
-      d->start.x = e->x + e->seat->pointer_focus->geo.x;
-      d->start.y = e->y + e->seat->pointer_focus->geo.y;
+      d->start.x = e->x + e->seat->pointer_focus.output->geo.x;
+      d->start.y = e->y + e->seat->pointer_focus.output->geo.y;
       break;
     case STATE_CHANGE:
-      d->end.x = e->x + e->seat->pointer_focus->geo.x;
-      d->end.y = e->y + e->seat->pointer_focus->geo.y;
+      d->end.x = e->x + e->seat->pointer_focus.output->geo.x;
+      d->end.y = e->y + e->seat->pointer_focus.output->geo.y;
       ctx->render_state = SAMURE_RENDER_STATE_ONCE;
       break;
     }
@@ -57,11 +57,14 @@ static void on_event(struct samure_event *e, struct samure_context *ctx,
   }
 }
 
-static void on_render(struct samure_output *output, struct samure_context *ctx,
-                      double delta_time, void *user_data) {
+static void on_render(struct samure_output *output,
+                      struct samure_layer_surface *sfc,
+                      struct samure_context *ctx, double delta_time,
+                      void *user_data) {
   struct slurpy_data *d = (struct slurpy_data *)user_data;
-  struct samure_backend_cairo *c = samure_get_backend_cairo(ctx);
-  cairo_t *cr = c->surfaces[OUT_IDX()].cairo;
+  struct samure_cairo_surface *c =
+      (struct samure_cairo_surface *)sfc->backend_data;
+  cairo_t *cr = c->cairo;
   cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
   cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, (double)(0x40) / 255.0);
   cairo_paint(cr);
