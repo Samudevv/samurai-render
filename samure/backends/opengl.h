@@ -15,6 +15,23 @@ typedef EGLSurface (*eglCreatePlatformWindowSurfaceEXT_t)(EGLDisplay, EGLConfig,
 extern eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT;
 extern eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT;
 
+struct samure_opengl_config {
+  int red_size;
+  int green_size;
+  int blue_size;
+  int alpha_size;
+  int samples;
+  int depth_size;
+  int major_version;
+  int minor_version;
+  int profile_mask;
+  int debug;
+  int color_space;
+  int render_buffer;
+};
+
+extern struct samure_opengl_config *samure_default_opengl_config();
+
 struct samure_opengl_surface {
   EGLSurface surface;
   struct wl_egl_window *egl_window;
@@ -32,7 +49,8 @@ struct samure_backend_opengl {
 };
 
 extern struct samure_backend_opengl *
-samure_init_backend_opengl(struct samure_context *ctx);
+samure_init_backend_opengl(struct samure_context *ctx,
+                           struct samure_opengl_config *cfg);
 extern void samure_destroy_backend_opengl(struct samure_context *ctx,
                                           struct samure_backend *gl);
 extern void samure_backend_opengl_render_start(struct samure_output *output,
@@ -43,3 +61,7 @@ extern void samure_backend_opengl_render_end(struct samure_output *output,
                                              struct samure_backend *gl);
 extern struct samure_backend_opengl *
 samure_get_backend_opengl(struct samure_context *ctx);
+
+extern void
+samure_backend_opengl_make_context_current(struct samure_backend_opengl *gl,
+                                           size_t output_index);

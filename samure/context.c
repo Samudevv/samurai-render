@@ -142,7 +142,9 @@ samure_create_context(struct samure_context_config *config) {
   switch (ctx->config.backend) {
   case SAMURE_BACKEND_OPENGL: {
 #ifdef BACKEND_OPENGL
-    struct samure_backend_opengl *o = samure_init_backend_opengl(ctx);
+    struct samure_backend_opengl *o =
+        samure_init_backend_opengl(ctx, ctx->config.gl);
+    ctx->config.gl = NULL;
     if (o->error_string) {
       CTX_ERR_F("failed to initialize opengl backend: %s", o->error_string);
       free(o->error_string);

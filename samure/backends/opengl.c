@@ -7,6 +7,7 @@
 #define GL_ERR(format)                                                         \
   gl->error_string = malloc(1024);                                             \
   snprintf(gl->error_string, 1024, "%s", format);                              \
+  free(cfg);                                                                   \
   if (gl->surfaces) {                                                          \
     for (size_t i = 0; i < gl->num_outputs; i++) {                             \
       if (gl->surfaces[i].surface) {                                           \
@@ -31,8 +32,30 @@
 eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT = NULL;
 eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT = NULL;
 
+struct samure_opengl_config *samure_default_opengl_config() {
+  struct samure_opengl_config *cfg =
+      malloc(sizeof(struct samure_opengl_config));
+  memset(cfg, 0, sizeof(struct samure_opengl_config));
+
+  cfg->red_size = 8;
+  cfg->green_size = 8;
+  cfg->blue_size = 8;
+  cfg->alpha_size = 8;
+  cfg->major_version = 1;
+  cfg->profile_mask = EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT;
+  cfg->color_space = EGL_GL_COLORSPACE_LINEAR;
+  cfg->render_buffer = EGL_BACK_BUFFER;
+
+  return cfg;
+}
+
 struct samure_backend_opengl *
-samure_init_backend_opengl(struct samure_context *ctx) {
+samure_init_backend_opengl(struct samure_context *ctx,
+                           struct samure_opengl_config *cfg) {
+  if (cfg == NULL) {
+    cfg = samure_default_opengl_config();
+  }
+
   struct samure_backend_opengl *gl =
       malloc(sizeof(struct samure_backend_opengl));
   memset(gl, 0, sizeof(struct samure_backend_opengl));
@@ -64,10 +87,38 @@ samure_init_backend_opengl(struct samure_context *ctx) {
     return gl;
   }
 
+  // clang-format off
+  const EGLint config_attributes[] = {
+      EGL_RED_SIZE,   cfg->red_size,
+      EGL_BLUE_SIZE,  cfg->blue_size,
+      EGL_GREEN_SIZE, cfg->green_size,
+      EGL_ALPHA_SIZE, cfg->alpha_size,
+      EGL_DEPTH_SIZE, cfg->depth_size,
+      EGL_SAMPLES,    cfg->samples,
+      EGL_CONFORMANT, EGL_OPENGL_BIT,
+      EGL_NONE,       EGL_NONE,
+  };
+
+  const EGLint context_attributes[] = {
+    EGL_CONTEXT_MAJOR_VERSION,       cfg->major_version,
+    EGL_CONTEXT_MINOR_VERSION,       cfg->minor_version,
+    EGL_CONTEXT_OPENGL_PROFILE_MASK, cfg->profile_mask,
+    EGL_CONTEXT_OPENGL_DEBUG,        cfg->debug,
+    EGL_NONE,                        EGL_NONE,
+  };
+
+  const EGLint surface_attributes[] = {
+    EGL_GL_COLORSPACE, cfg->color_space,
+    EGL_RENDER_BUFFER, cfg->render_buffer,
+    EGL_NONE,          EGL_NONE,
+  };
+  // clang-format on
+
   EGLint num_config;
   EGLConfig config;
-  if (eglGetConfigs(gl->display, &config, 1, &num_config) != EGL_TRUE) {
-    GL_ERR("failed to get egl config");
+  if (eglChooseConfig(gl->display, config_attributes, &config, 1,
+                      &num_config) != EGL_TRUE) {
+    GL_ERR("failed to choose egl config");
     return gl;
   }
   if (num_config == 0) {
@@ -86,8 +137,6 @@ samure_init_backend_opengl(struct samure_context *ctx) {
          ctx->num_outputs * sizeof(struct samure_opengl_surface));
   gl->num_outputs = ctx->num_outputs;
 
-  const EGLint context_attributes[] = {EGL_NONE, EGL_NONE};
-
   gl->context =
       eglCreateContext(gl->display, config, EGL_NO_CONTEXT, context_attributes);
   if (gl->context == EGL_NO_CONTEXT) {
@@ -105,7 +154,7 @@ samure_init_backend_opengl(struct samure_context *ctx) {
 
     gl->surfaces[i].surface = eglCreatePlatformWindowSurfaceEXT(
         gl->display, config, (EGLNativeWindowType)gl->surfaces[i].egl_window,
-        context_attributes);
+        surface_attributes);
     if (gl->surfaces[i].surface == EGL_NO_SURFACE) {
       GL_ERR_F("failed to create egl surface for output %zu", i);
       return gl;
@@ -115,6 +164,8 @@ samure_init_backend_opengl(struct samure_context *ctx) {
   gl->base.destroy = samure_destroy_backend_opengl;
   gl->base.render_start = samure_backend_opengl_render_start;
   gl->base.render_end = samure_backend_opengl_render_end;
+
+  free(cfg);
 
   return gl;
 }
@@ -156,4 +207,10 @@ void samure_backend_opengl_render_end(struct samure_output *output,
 struct samure_backend_opengl *
 samure_get_backend_opengl(struct samure_context *ctx) {
   return (struct samure_backend_opengl *)ctx->backend;
+}
+
+void samure_backend_opengl_make_context_current(
+    struct samure_backend_opengl *gl, size_t output_index) {
+  eglMakeCurrent(gl->display, gl->surfaces[output_index].surface,
+                 gl->surfaces[output_index].surface, gl->context);
 }

@@ -1,8 +1,10 @@
+#include <EGL/egl.h>
 #include <GL/gl.h>
 #include <linux/input-event-codes.h>
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <samure/backends/opengl.h>
 #include <samure/context.h>
 
 struct opengl_data {
@@ -74,16 +76,24 @@ static void update_callback(struct samure_context *ctx, double delta_time,
 int main(void) {
   struct opengl_data d = {0};
 
-  struct samure_context_config context_config = samure_create_context_config(
+  struct samure_context_config cfg = samure_create_context_config(
       event_callback, render_callback, update_callback, &d);
-  context_config.backend = SAMURE_BACKEND_OPENGL;
-  context_config.pointer_interaction = 1;
+  cfg.backend = SAMURE_BACKEND_OPENGL;
+  cfg.pointer_interaction = 1;
+  cfg.gl = samure_default_opengl_config();
+  cfg.gl->major_version = 1;
+  cfg.gl->minor_version = 0;
 
-  struct samure_context *ctx = samure_create_context(&context_config);
+  struct samure_context *ctx = samure_create_context(&cfg);
   if (ctx->error_string) {
     fprintf(stderr, "%s\n", ctx->error_string);
     return EXIT_FAILURE;
   }
+
+  samure_backend_opengl_make_context_current(
+      (struct samure_backend_opengl *)ctx->backend, 0);
+
+  printf("OpenGL: %s %s\n", glGetString(GL_VENDOR), glGetString(GL_VERSION));
 
   const struct samure_rect r = samure_context_get_output_rect(ctx);
 

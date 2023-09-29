@@ -14,6 +14,7 @@
 #define SAMURE_MAX_FPS 60
 
 struct samure_context;
+struct samure_opengl_config;
 
 enum samure_backend_type {
   SAMURE_BACKEND_RAW,
@@ -43,6 +44,7 @@ struct samure_context_config {
   int keyboard_interaction;
   int touch_interaction;
   uint32_t max_fps;
+  struct samure_opengl_config *gl;
 
   samure_event_callback event_callback;
   samure_render_callback render_callback;
