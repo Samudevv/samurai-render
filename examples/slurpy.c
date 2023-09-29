@@ -18,7 +18,6 @@ struct slurpy_data {
   struct slurpy_point start;
   struct slurpy_point end;
   enum slurpy_state state;
-  int dirty;
 };
 
 static void on_event(struct samure_event *e, struct samure_context *ctx,
@@ -45,7 +44,7 @@ static void on_event(struct samure_event *e, struct samure_context *ctx,
     case STATE_CHANGE:
       d->end.x = e->x + e->seat->pointer_focus->geo.x;
       d->end.y = e->y + e->seat->pointer_focus->geo.y;
-      d->dirty = 1;
+      ctx->render_state = SAMURE_RENDER_STATE_ONCE;
       break;
     }
     break;
@@ -80,7 +79,6 @@ static void on_render(struct samure_output *output, struct samure_context *ctx,
 
 int main(void) {
   struct slurpy_data d = {0};
-  d.dirty = 1;
 
   struct samure_context_config cfg =
       samure_create_context_config(on_event, on_render, NULL, &d);
@@ -94,18 +92,8 @@ int main(void) {
     return 1;
   }
 
-  ctx->running = 1;
-  while (ctx->running) {
-    samure_frame_timer_start_frame(&ctx->frame_timer);
-    samure_context_process_events(ctx, on_event);
-    if (d.dirty) {
-      for (size_t i = 0; i < ctx->num_outputs; i++) {
-        samure_context_render_output(ctx, &ctx->outputs[i], on_render, 0.0);
-      }
-    }
-    samure_frame_timer_end_frame(&ctx->frame_timer);
-  }
-  samure_destroy_context(ctx);
+  ctx->render_state = SAMURE_RENDER_STATE_ONCE;
+  samure_context_run(ctx);
 
   struct slurpy_point start;
   struct slurpy_point end;

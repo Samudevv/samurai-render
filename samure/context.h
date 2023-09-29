@@ -22,6 +22,12 @@ enum samure_backend_type {
   SAMURE_BACKEND_NONE,
 };
 
+enum samure_render_state {
+  SAMURE_RENDER_STATE_ALWAYS,
+  SAMURE_RENDER_STATE_NONE,
+  SAMURE_RENDER_STATE_ONCE,
+};
+
 typedef void (*samure_event_callback)(struct samure_event *event,
                                       struct samure_context *ctx,
                                       void *user_data);
@@ -70,6 +76,7 @@ struct samure_context {
   size_t cap_events;
   size_t event_index;
   int running;
+  enum samure_render_state render_state;
 
   char *error_string;
 
