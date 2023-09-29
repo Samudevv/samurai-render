@@ -131,6 +131,7 @@ samure_create_context(struct samure_context_config *config) {
 
   switch (ctx->config.backend) {
   case SAMURE_BACKEND_OPENGL: {
+#ifdef BACKEND_OPENGL
     struct samure_backend_opengl *o = samure_init_backend_opengl(ctx);
     if (o->error_string) {
       CTX_ERR_F("failed to initialize opengl backend: %s", o->error_string);
@@ -139,8 +140,13 @@ samure_create_context(struct samure_context_config *config) {
       return ctx;
     }
     ctx->backend = &o->base;
+#else
+    CTX_ERR("samurai-render has not been build with opengl support (Build "
+            "using --backend_opengl=y)");
+#endif
   } break;
   case SAMURE_BACKEND_CAIRO: {
+#ifdef BACKEND_CAIRO
     struct samure_backend_cairo *c = samure_init_backend_cairo(ctx);
     if (c->error_string) {
       CTX_ERR_F("failed to initialize cairo backend: %s", c->error_string);
@@ -149,6 +155,10 @@ samure_create_context(struct samure_context_config *config) {
       return ctx;
     }
     ctx->backend = &c->base;
+#else
+    CTX_ERR("samurai-render has not been build with cairo support (Build using "
+            "--backend_cairo=y)");
+#endif
   } break;
   case SAMURE_BACKEND_NONE:
     break;
