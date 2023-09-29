@@ -20,8 +20,7 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
 
   switch (e->type) {
   case SAMURE_EVENT_POINTER_BUTTON:
-    if (e->button == BTN_RIGHT &&
-        e->state == WL_POINTER_BUTTON_STATE_RELEASED) {
+    if (e->button == BTN_LEFT && e->state == WL_POINTER_BUTTON_STATE_RELEASED) {
       ctx->running = 0;
     }
     break;
@@ -84,6 +83,7 @@ int main(void) {
 
   struct samure_context_config context_config = samure_create_context_config(
       event_callback, render_callback, update_callback, &d);
+  context_config.pointer_interaction = 1;
 
   struct samure_context *ctx = samure_create_context(&context_config);
   if (ctx->error_string) {

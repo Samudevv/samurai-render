@@ -92,6 +92,7 @@ int main(void) {
   struct samure_context_config context_config = samure_create_context_config(
       event_callback, render_callback, update_callback, &d);
   context_config.backend = SAMURE_BACKEND_CAIRO;
+  context_config.pointer_interaction = 1;
 
   struct samure_context *ctx = samure_create_context(&context_config);
   if (ctx->error_string) {
