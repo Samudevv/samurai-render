@@ -65,27 +65,38 @@ if get_config("build_examples") then
         add_files("examples/olivec_bounce.c")
     if get_config("backend_cairo") then
         target("cairo_bounce")
-        set_kind("binary")
-        add_packages("wayland", "cairo")
-        add_options(
-            "backend_cairo",
-            "backend_opengl"
-        )
-        add_includedirs("src")
-        add_deps("samurai-render")
-        add_files("examples/cairo_bounce.c")
+            set_kind("binary")
+            add_packages("wayland", "cairo")
+            add_options(
+                "backend_cairo",
+                "backend_opengl"
+            )
+            add_includedirs("src")
+            add_deps("samurai-render")
+            add_files("examples/cairo_bounce.c")
+
+        target("slurpy")
+            set_kind("binary")
+            add_packages("wayland", "cairo")
+            add_options(
+                "backend_cairo",
+                "backend_opengl"
+            )
+            add_includedirs("src")
+            add_deps("samurai-render")
+            add_files("examples/slurpy.c")
     end
     if get_config("backend_opengl") then
         target("opengl_bounce")
-        set_kind("binary")
-        add_packages("wayland")
-        add_options(
-            "backend_cairo",
-            "backend_opengl"
-        )
-        add_includedirs("src")
-        add_links("GL")
-        add_deps("samurai-render")
-        add_files("examples/opengl_bounce.c")
+            set_kind("binary")
+            add_packages("wayland")
+            add_options(
+                "backend_cairo",
+                "backend_opengl"
+            )
+            add_includedirs("src")
+            add_links("GL")
+            add_deps("samurai-render")
+            add_files("examples/opengl_bounce.c")
     end
 end

@@ -1,0 +1,141 @@
+#include <backends/cairo.h>
+#include <context.h>
+#include <linux/input-event-codes.h>
+#include <stdio.h>
+
+enum slurpy_state {
+  STATE_NONE,
+  STATE_CHANGE,
+};
+
+struct slurpy_point {
+  double x;
+  double y;
+};
+
+struct slurpy_data {
+  struct slurpy_point hold;
+  struct slurpy_point start;
+  struct slurpy_point end;
+  enum slurpy_state state;
+  struct samure_output *current_output;
+  int dirty;
+};
+
+static void on_event(struct samure_event *e, struct samure_context *ctx,
+                     void *user_data) {
+  struct slurpy_data *d = (struct slurpy_data *)user_data;
+  switch (e->type) {
+  case SAMURE_EVENT_POINTER_ENTER:
+    d->current_output = e->output;
+    break;
+  case SAMURE_EVENT_POINTER_BUTTON:
+    if (e->button == BTN_LEFT) {
+      if (e->state == WL_POINTER_BUTTON_STATE_PRESSED) {
+        d->start = d->hold;
+        d->end.x = d->start.x;
+        d->end.y = d->start.y;
+        d->state = STATE_CHANGE;
+      } else {
+        d->state = STATE_NONE;
+        ctx->running = 0;
+      }
+    }
+    break;
+  case SAMURE_EVENT_POINTER_MOTION:
+    switch (d->state) {
+    case STATE_NONE:
+      d->hold.x = e->x + d->current_output->geo.x;
+      d->hold.y = e->y + d->current_output->geo.y;
+      break;
+    case STATE_CHANGE:
+      d->end.x = e->x + d->current_output->geo.x;
+      d->end.y = e->y + d->current_output->geo.y;
+      d->dirty = 1;
+      break;
+    }
+    break;
+  case SAMURE_EVENT_KEYBOARD_KEY:
+    if ((e->key == KEY_ESC || e->key == KEY_ENTER) &&
+        e->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
+      ctx->running = 0;
+    }
+    break;
+  }
+}
+
+static void on_render(struct samure_output *output, struct samure_context *ctx,
+                      double delta_time, void *user_data) {
+  struct slurpy_data *d = (struct slurpy_data *)user_data;
+  struct samure_backend_cairo *c = samure_get_backend_cairo(ctx);
+  cairo_t *cr = c->surfaces[OUT_IDX()].cairo;
+  cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, (double)(0x40) / 255.0);
+  cairo_paint(cr);
+  cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.0);
+  cairo_rectangle(cr, OUT_X(d->start.x), OUT_Y(d->start.y),
+                  d->end.x - d->start.x, d->end.y - d->start.y);
+  cairo_fill(cr);
+  cairo_rectangle(cr, OUT_X(d->start.x), OUT_Y(d->start.y),
+                  d->end.x - d->start.x, d->end.y - d->start.y);
+  cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
+  cairo_stroke(cr);
+}
+
+int main(void) {
+  struct slurpy_data d = {0};
+  d.dirty = 1;
+
+  struct samure_context_config cfg =
+      samure_create_context_config(on_event, on_render, NULL, &d);
+  cfg.backend = SAMURE_BACKEND_CAIRO;
+  cfg.pointer_interaction = 1;
+  cfg.keyboard_interaction = 1;
+
+  struct samure_context *ctx = samure_create_context(&cfg);
+  if (ctx->error_string) {
+    fprintf(stderr, "Failed to create context: %s\n", ctx->error_string);
+    return 1;
+  }
+
+  ctx->running = 1;
+  while (ctx->running) {
+    samure_frame_timer_start_frame(&ctx->frame_timer);
+    samure_context_process_events(ctx, on_event);
+    if (d.dirty) {
+      for (size_t i = 0; i < ctx->num_outputs; i++) {
+        samure_context_render_output(ctx, &ctx->outputs[i], on_render, 0.0);
+      }
+    }
+    samure_frame_timer_end_frame(&ctx->frame_timer);
+  }
+  samure_destroy_context(ctx);
+
+  struct slurpy_point start;
+  struct slurpy_point end;
+  if (d.start.x > d.end.x) {
+    start.x = d.end.x;
+    end.x = d.start.x;
+  } else {
+    start.x = d.start.x;
+    end.x = d.end.x;
+  }
+  if (d.start.y > d.end.y) {
+    start.y = d.end.y;
+    end.y = d.start.y;
+  } else {
+    start.y = d.start.y;
+    end.y = d.end.y;
+  }
+
+  const struct slurpy_point dims = {
+      .x = end.x - start.x,
+      .y = end.y - start.y,
+  };
+  if (dims.x == 0.0 && dims.y == 0.0) {
+    return 1;
+  }
+
+  printf("%.0f,%.0f %.0fx%.0f\n", start.x, start.y, dims.x, dims.y);
+  return 0;
+}
