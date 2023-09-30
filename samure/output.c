@@ -1,4 +1,5 @@
 #include "output.h"
+#include "callbacks.h"
 #include "context.h"
 #include <stdlib.h>
 
@@ -115,4 +116,51 @@ void samure_output_attach_layer_surface(struct samure_output *o,
   o->num_sfc++;
   o->sfc = realloc(o->sfc, o->num_sfc * sizeof(struct samure_layer_surface *));
   o->sfc[o->num_sfc - 1] = sfc;
+}
+
+extern struct samure_shared_buffer
+samure_output_screenshot(struct samure_context *ctx,
+                         struct samure_output *output) {
+  struct samure_screenshot_data data = {0};
+  data.ctx = ctx;
+  data.output = output;
+
+  struct zwlr_screencopy_frame_v1 *frame =
+      zwlr_screencopy_manager_v1_capture_output(ctx->screencopy_manager, 1,
+                                                output->output);
+  if (!frame) {
+    return data.buffer;
+  };
+
+  zwlr_screencopy_frame_v1_add_listener(frame, &screencopy_frame_listener,
+                                        &data);
+
+  while (data.state == SAMURE_SCREENSHOT_PENDING &&
+         wl_display_dispatch(ctx->display) != -1)
+    ;
+
+  if (data.state == SAMURE_SCREENSHOT_FAILED) {
+    return data.buffer;
+  }
+
+  if (!data.buffer.buffer) {
+    return data.buffer;
+  }
+
+  data.state = SAMURE_SCREENSHOT_PENDING;
+  zwlr_screencopy_frame_v1_copy(frame, data.buffer.buffer);
+
+  while (data.state == SAMURE_SCREENSHOT_PENDING &&
+         wl_display_dispatch(ctx->display) != -1)
+    ;
+
+  if (data.state == SAMURE_SCREENSHOT_FAILED) {
+    return data.buffer;
+  }
+
+  if (data.buffer.format == BUFFER_FORMAT) {
+    return data.buffer;
+  }
+
+  return data.buffer;
 }

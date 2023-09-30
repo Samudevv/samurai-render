@@ -53,8 +53,8 @@ void samure_backend_cairo_associate_layer_surface(
   struct samure_cairo_surface *cairo_sfc =
       malloc(sizeof(struct samure_cairo_surface));
 
-  cairo_sfc->buffer =
-      samure_create_shared_buffer(ctx->shm, output->geo.w, output->geo.h);
+  cairo_sfc->buffer = samure_create_shared_buffer(ctx->shm, BUFFER_FORMAT,
+                                                  output->geo.w, output->geo.h);
   if (cairo_sfc->buffer.buffer == NULL) {
     CAI_ADD_ERR_F("failed to create shared memory buffer for layer surface for "
                   "output: %s",

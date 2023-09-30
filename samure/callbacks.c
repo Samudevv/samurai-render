@@ -50,6 +50,10 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
              0) {
     ctx->cursor_shape_manager = wl_registry_bind(
         registry, name, &wp_cursor_shape_manager_v1_interface, version);
+  } else if (strcmp(interface, zwlr_screencopy_manager_v1_interface.name) ==
+             0) {
+    ctx->screencopy_manager = wl_registry_bind(
+        registry, name, &zwlr_screencopy_manager_v1_interface, version);
   }
 }
 
@@ -288,6 +292,46 @@ void keyboard_modifiers(void *data, struct wl_keyboard *wl_keyboard,
 
 void keyboard_repeat_info(void *data, struct wl_keyboard *wl_keyboard,
                           int32_t rate, int32_t delay) {}
+
+void screencopy_frame_buffer(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t format, uint32_t width, uint32_t height, uint32_t stride) {
+  struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
+
+  d->buffer = samure_create_shared_buffer(d->ctx->shm, format, width, height);
+  /* TODO: handle errors*/
+}
+
+void screencopy_frame_flags(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t flags) {}
+
+void screencopy_frame_ready(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t tv_sec_hi, uint32_t tv_sec_lo, uint32_t tv_nsec) {
+  struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
+  d->state = SAMURE_SCREENSHOT_READY;
+}
+
+void screencopy_frame_failed(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1) {
+  struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
+  d->state = SAMURE_SCREENSHOT_FAILED;
+}
+
+void screencopy_frame_damage(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t x, uint32_t y, uint32_t width, uint32_t height) {}
+
+void screencopy_frame_linux_dmabuf(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t format, uint32_t width, uint32_t height) {}
+
+void screencopy_frame_buffer_done(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1) {
+  struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
+  d->state = SAMURE_SCREENSHOT_DONE;
+}
 
 struct samure_callback_data *
 samure_create_callback_data(struct samure_context *ctx, void *data) {

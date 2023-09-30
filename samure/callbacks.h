@@ -1,6 +1,7 @@
 #pragma once
 #include "wayland/cursor-shape-v1-client-protocol.h"
 #include "wayland/wlr-layer-shell-unstable-v1.h"
+#include "wayland/wlr-screencopy-unstable-v1.h"
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
 
@@ -81,6 +82,32 @@ extern void keyboard_modifiers(void *data, struct wl_keyboard *wl_keyboard,
 extern void keyboard_repeat_info(void *data, struct wl_keyboard *wl_keyboard,
                                  int32_t rate, int32_t delay);
 
+extern void screencopy_frame_buffer(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t format, uint32_t width, uint32_t height, uint32_t stride);
+
+extern void screencopy_frame_flags(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t flags);
+
+extern void screencopy_frame_ready(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t tv_sec_hi, uint32_t tv_sec_lo, uint32_t tv_nsec);
+
+extern void screencopy_frame_failed(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1);
+
+extern void screencopy_frame_damage(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t x, uint32_t y, uint32_t width, uint32_t height);
+
+extern void screencopy_frame_linux_dmabuf(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
+    uint32_t format, uint32_t width, uint32_t height);
+
+extern void screencopy_frame_buffer_done(
+    void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1);
+
 static struct wl_registry_listener registry_listener = {
     .global = registry_global,
     .global_remove = registry_global_remove,
@@ -119,6 +146,16 @@ static struct zxdg_output_v1_listener xdg_output_listener = {
     .done = xdg_output_done,
     .name = xdg_output_name,
     .description = xdg_output_description,
+};
+
+static struct zwlr_screencopy_frame_v1_listener screencopy_frame_listener = {
+    .buffer = screencopy_frame_buffer,
+    .buffer_done = screencopy_frame_buffer_done,
+    .damage = screencopy_frame_damage,
+    .failed = screencopy_frame_failed,
+    .flags = screencopy_frame_flags,
+    .linux_dmabuf = screencopy_frame_linux_dmabuf,
+    .ready = screencopy_frame_ready,
 };
 
 struct samure_callback_data {

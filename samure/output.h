@@ -1,6 +1,7 @@
 #pragma once
 
 #include "layer_surface.h"
+#include "shared_memory.h"
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
@@ -29,6 +30,20 @@ struct samure_output {
   size_t num_sfc;
   struct samure_rect geo;
   char *name;
+};
+
+enum samure_screenshot_state {
+  SAMURE_SCREENSHOT_PENDING,
+  SAMURE_SCREENSHOT_READY,
+  SAMURE_SCREENSHOT_FAILED,
+  SAMURE_SCREENSHOT_DONE,
+};
+
+struct samure_screenshot_data {
+  struct samure_context *ctx;
+  struct samure_output *output;
+  struct samure_shared_buffer buffer;
+  enum samure_screenshot_state state;
 };
 
 extern struct samure_output samure_create_output(struct wl_output *output);
@@ -65,3 +80,7 @@ extern void samure_output_set_keyboard_interaction(struct samure_output *output,
 extern void
 samure_output_attach_layer_surface(struct samure_output *output,
                                    struct samure_layer_surface *layer_surface);
+
+extern struct samure_shared_buffer
+samure_output_screenshot(struct samure_context *ctx,
+                         struct samure_output *output);

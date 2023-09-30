@@ -6,11 +6,12 @@
 #include <time.h>
 #include <unistd.h>
 
-#define BUFFER_FORMAT WL_SHM_FORMAT_ARGB8888
 #define SHM_FILE_NAME "/samure-shared-memory"
 
-struct samure_shared_buffer
-samure_create_shared_buffer(struct wl_shm *shm, int32_t width, int32_t height) {
+struct samure_shared_buffer samure_create_shared_buffer(struct wl_shm *shm,
+                                                        uint32_t format,
+                                                        int32_t width,
+                                                        int32_t height) {
   struct samure_shared_buffer b = {0};
 
   const int32_t stride = width * 4;
@@ -59,12 +60,12 @@ samure_create_shared_buffer(struct wl_shm *shm, int32_t width, int32_t height) {
   }
 
   struct wl_shm_pool *pool = wl_shm_create_pool(shm, b.fd, size);
-  b.buffer =
-      wl_shm_pool_create_buffer(pool, 0, width, height, stride, BUFFER_FORMAT);
+  b.buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, format);
   wl_shm_pool_destroy(pool);
 
   b.width = width;
   b.height = height;
+  b.format = format;
 
   return b;
 }
@@ -73,4 +74,26 @@ void samure_destroy_shared_buffer(struct samure_shared_buffer b) {
   munmap(b.data, b.width * b.height * 4);
   close(b.fd);
   wl_buffer_destroy(b.buffer);
+}
+
+extern void samure_shared_buffer_copy(struct samure_shared_buffer dst,
+                                      struct samure_shared_buffer src) {
+  if (src.format == dst.format) {
+    memcpy(dst.data, src.data, dst.width * dst.height * 4);
+    return;
+  }
+
+  if (src.format != WL_SHM_FORMAT_XBGR8888 || dst.format != BUFFER_FORMAT ||
+      dst.width != src.width || dst.height != src.height) {
+    return;
+  }
+
+  uint8_t *s = (uint8_t *)src.data;
+  uint8_t *d = (uint8_t *)dst.data;
+  for (size_t i = 0; i < dst.width * dst.height * 4; i += 4) {
+    d[i + 0] = s[i + 2]; // A
+    d[i + 1] = s[i + 1]; // B
+    d[i + 2] = s[i + 0]; // G
+    d[i + 3] = s[i + 3]; // R
+  }
 }

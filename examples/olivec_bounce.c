@@ -1,6 +1,7 @@
 #include <linux/input-event-codes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #define OLIVEC_IMPLEMENTATION
@@ -49,7 +50,7 @@ static void render_callback(struct samure_output *output,
   struct blank_data *d = (struct blank_data *)data;
   const uintptr_t i = OUT_IDX();
 
-  olivec_fill(d->canvas[i], 0x00000000);
+  // olivec_fill(d->canvas[i], 0x00000000);
   if (samure_circle_in_output(output, d->qx, d->qy, 100)) {
     olivec_circle(d->canvas[i], OUT_X(d->qx), OUT_Y(d->qy), 100, 0xFF00FF00);
 
@@ -118,6 +119,20 @@ int main(void) {
   }
 
   puts("Successfully initialized samurai-render context");
+
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    struct samure_shared_buffer screenshot =
+        samure_output_screenshot(ctx, &ctx->outputs[i]);
+    struct samure_raw_surface *r =
+        samure_get_raw_surface(ctx->outputs[i].sfc[0]);
+    if (screenshot.buffer == NULL) {
+      fprintf(stderr, "Screenshot failed\n");
+    } else {
+      printf("Screenshot success!\n");
+      samure_shared_buffer_copy(r->shared_buffer, screenshot);
+      samure_destroy_shared_buffer(screenshot);
+    }
+  }
 
   d.canvas = malloc(ctx->num_outputs * sizeof(Olivec_Canvas));
   for (size_t i = 0; i < ctx->num_outputs; i++) {

@@ -2,6 +2,7 @@
 
 #include "wayland/cursor-shape-v1-client-protocol.h"
 #include "wayland/wlr-layer-shell-unstable-v1.h"
+#include "wayland/wlr-screencopy-unstable-v1.h"
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
 
@@ -69,6 +70,7 @@ struct samure_context {
   struct zwlr_layer_shell_v1 *layer_shell;
   struct zxdg_output_manager_v1 *output_manager;
   struct wp_cursor_shape_manager_v1 *cursor_shape_manager;
+  struct zwlr_screencopy_manager_v1 *screencopy_manager;
 
   struct samure_seat *seats;
   size_t num_seats;

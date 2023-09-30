@@ -75,6 +75,7 @@ samure_create_context(struct samure_context_config *config) {
   if (ctx->shm == NULL)                  CTX_ADD_ERR_F("%s", "no shm support");
   if (ctx->compositor == NULL)           CTX_ADD_ERR_F("%s", "no compositor support");
   if (ctx->cursor_shape_manager == NULL) CTX_ADD_ERR_F("%s", "no cursor shape manager support");
+  if (ctx->screencopy_manager == NULL)   CTX_ADD_ERR_F("%s", "no screencopy manager support");
   // clang-format on
 
   if (ctx->error_string) {
@@ -192,6 +193,7 @@ void samure_destroy_context(struct samure_context *ctx) {
   zwlr_layer_shell_v1_destroy(ctx->layer_shell);
   zxdg_output_manager_v1_destroy(ctx->output_manager);
   wp_cursor_shape_manager_v1_destroy(ctx->cursor_shape_manager);
+  zwlr_screencopy_manager_v1_destroy(ctx->screencopy_manager);
 
   wl_display_disconnect(ctx->display);
 

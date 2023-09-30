@@ -54,7 +54,7 @@ void samure_backend_raw_associate_layer_surface(
       (struct samure_raw_surface *)sfc->backend_data;
 
   raw_sfc->shared_buffer =
-      samure_create_shared_buffer(ctx->shm, o->geo.w, o->geo.h);
+      samure_create_shared_buffer(ctx->shm, BUFFER_FORMAT, o->geo.w, o->geo.h);
   if (raw_sfc->shared_buffer.buffer == NULL) {
     RAW_ADD_ERR_F("failed to create shared memory buffer for output %s",
                   o->name ? o->name : "");
