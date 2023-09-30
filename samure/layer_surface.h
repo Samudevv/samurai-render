@@ -3,6 +3,8 @@
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include <wayland-client.h>
 
+#include "shared_memory.h"
+
 #define SAMURE_LAYER_SURFACE_ANCHOR_FILL                                       \
   (ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |      \
    ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT | ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM)
@@ -30,6 +32,9 @@ samure_create_layer_surface(struct samure_context *ctx,
 extern void samure_destroy_layer_surface(struct samure_context *ctx,
                                          struct samure_output *output,
                                          struct samure_layer_surface *sfc);
+
+extern void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
+                                             struct samure_shared_buffer buf);
 
 struct samure_layer_surface_callback_data {
   struct samure_context *ctx;

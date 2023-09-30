@@ -40,9 +40,7 @@ void samure_backend_raw_render_end(struct samure_output *output,
                                    struct samure_backend *b) {
   struct samure_raw_surface *r =
       (struct samure_raw_surface *)layer_surface->backend_data;
-  wl_surface_attach(layer_surface->surface, r->shared_buffer.buffer, 0, 0);
-  wl_surface_damage(layer_surface->surface, 0, 0, output->geo.w, output->geo.h);
-  wl_surface_commit(layer_surface->surface);
+  samure_layer_surface_draw_buffer(layer_surface, r->shared_buffer);
 }
 
 void samure_backend_raw_associate_layer_surface(

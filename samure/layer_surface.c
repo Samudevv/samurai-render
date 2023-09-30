@@ -77,6 +77,13 @@ void samure_destroy_layer_surface(struct samure_context *ctx,
   free(sfc);
 }
 
+void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
+                                      struct samure_shared_buffer buf) {
+  wl_surface_attach(sfc->surface, buf.buffer, 0, 0);
+  wl_surface_damage(sfc->surface, 0, 0, buf.width, buf.height);
+  wl_surface_commit(sfc->surface);
+}
+
 struct samure_layer_surface_callback_data *
 samure_create_layer_surface_callback_data(
     struct samure_context *ctx, struct samure_output *output,

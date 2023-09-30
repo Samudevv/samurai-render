@@ -41,9 +41,7 @@ void samure_backend_cairo_render_end(struct samure_output *output,
                                      struct samure_backend *backend) {
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)s->backend_data;
-  wl_surface_attach(s->surface, c->buffer.buffer, 0, 0);
-  wl_surface_damage(s->surface, 0, 0, output->geo.w, output->geo.h);
-  wl_surface_commit(s->surface);
+  samure_layer_surface_draw_buffer(s, c->buffer);
 }
 
 void samure_backend_cairo_associate_layer_surface(
@@ -75,6 +73,10 @@ void samure_backend_cairo_associate_layer_surface(
 void samure_backend_cairo_unassociate_layer_surface(
     struct samure_context *ctx, struct samure_backend *backend,
     struct samure_output *output, struct samure_layer_surface *layer_surface) {
+  if (!layer_surface->backend_data) {
+    return;
+  }
+
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)layer_surface->backend_data;
 
