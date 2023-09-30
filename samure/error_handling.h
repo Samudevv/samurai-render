@@ -1,0 +1,142 @@
+#pragma once
+
+#include <assert.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define SAMURE_RESULT(typename) struct samure_##typename##_result
+
+#define SAMURE_RESULT_TYPE(typename) struct samure_##typename
+
+#define SAMURE_DEFINE_RESULT(typename)                                         \
+  SAMURE_RESULT(typename) {                                                    \
+    SAMURE_RESULT_TYPE(typename) * result;                                     \
+    uint64_t error;                                                            \
+  }
+
+#define SAMURE_RETURN(typename, value, error_code)                             \
+  SAMURE_RESULT(typename)                                                      \
+  __FUNCTION__##_result = {.result = value, .error = error_code};              \
+  return __FUNCTION__##_result
+
+#define SAMURE_RETURN_RESULT(typename, value)                                  \
+  SAMURE_RETURN(typename, value, SAMURE_ERROR_NONE)
+
+#define SAMURE_RETURN_ERROR(typename, error_code)                              \
+  SAMURE_RETURN(typename, NULL, error_code)
+
+#define SAMURE_DESTROY_ERROR(typename, varname, error_code)                    \
+  {                                                                            \
+    samure_destroy_##typename(varname);                                        \
+    SAMURE_RETURN_ERROR(typename, error_code);                                 \
+  }
+
+#define SAMURE_GET_RESULT(typename, result)                                    \
+  (SAMURE_RESULT_TYPE(typename) *)_samure_get_result(                          \
+      (struct _samure_generic_result *)&result)
+
+#define SAMURE_HAS_ERROR(result) (result.error != SAMURE_ERROR_NONE)
+#define SAMURE_IS_ERROR(error_code) (error_code != SAMURE_ERROR_NONE)
+
+#define SAMURE_CALL_AND_RETURN_ON_ERROR(result, func, ...)                     \
+  if (SAMURE_HAS_ERROR(result)) {                                              \
+    func return __VA_ARGS__;                                                   \
+  }
+
+#define SAMURE_RETURN_AND_PRINT_ON_ERROR(result, msg, ...)                     \
+  SAMURE_CALL_AND_RETURN_ON_ERROR(result, samure_perror(msg, result.error);    \
+                                  , __VA_ARGS__)
+
+#define SAMURE_RESULT_ALLOC(typename, varname)                                 \
+  SAMURE_RESULT_TYPE(typename) *varname =                                      \
+      malloc(sizeof(SAMURE_RESULT_TYPE(typename)));                            \
+  if (!varname) {                                                              \
+    SAMURE_RETURN_ERROR(typename, SAMURE_ERROR_MEMORY);                        \
+  }                                                                            \
+  memset(varname, 0, sizeof(*varname))
+
+enum samure_error {
+  SAMURE_ERROR_NONE = 0,
+  SAMURE_ERROR_FAILED = (1 << 0),
+  SAMURE_ERROR_NOT_IMPLEMENTED = (1 << 1),
+  SAMURE_ERROR_DISPLAY_CONNECT = (1 << 2),
+  SAMURE_ERROR_NO_OUTPUTS = (1 << 3),
+  SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER = (1 << 4),
+  SAMURE_ERROR_NO_LAYER_SHELL = (1 << 5),
+  SAMURE_ERROR_NO_SHM = (1 << 6),
+  SAMURE_ERROR_NO_COMPOSITOR = (1 << 7),
+  SAMURE_ERROR_NO_CURSOR_SHAPE_MANAGER = (1 << 8),
+  SAMURE_ERROR_NO_SCREENCOPY_MANAGER = (1 << 9),
+  SAMURE_ERROR_BACKEND_INIT = (1 << 10),
+  SAMURE_ERROR_NO_BACKEND_SUPPORT = (1 << 11),
+  SAMURE_ERROR_LAYER_SURFACE_INIT = (1 << 12),
+  SAMURE_ERROR_MEMORY = (1 << 13),
+
+};
+
+#define SAMURE_NUM_ERRORS 14
+
+static const char *samure_strerror(enum samure_error error_code) {
+  // clang-format off
+  switch (error_code) {
+  case SAMURE_ERROR_NONE:                    return "no error";
+  case SAMURE_ERROR_FAILED:                  return "failed";
+  case SAMURE_ERROR_NOT_IMPLEMENTED:         return "not implemented";
+  case SAMURE_ERROR_DISPLAY_CONNECT:         return "display connection failed";
+  case SAMURE_ERROR_NO_OUTPUTS:              return "no outputs";
+  case SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER:   return "no xdg output manager";
+  case SAMURE_ERROR_NO_LAYER_SHELL:          return "no layer shell";
+  case SAMURE_ERROR_NO_SHM:                  return "no shm";
+  case SAMURE_ERROR_NO_COMPOSITOR:           return "no compositor";
+  case SAMURE_ERROR_NO_CURSOR_SHAPE_MANAGER: return "no cursor shape manager";
+  case SAMURE_ERROR_NO_SCREENCOPY_MANAGER:   return "no screencopy manager";
+  case SAMURE_ERROR_BACKEND_INIT:            return "backend initialization failed";
+  case SAMURE_ERROR_NO_BACKEND_SUPPORT:      return "backend is not supported";
+  case SAMURE_ERROR_LAYER_SURFACE_INIT:      return "layer surface initialization failed";
+  case SAMURE_ERROR_MEMORY:                  return "memory allocation failed";
+  default:                                   return "unknown error";
+  }
+  // clang-format on
+}
+
+static char *samure_build_error_string(uint64_t error_code) {
+  if (error_code == SAMURE_ERROR_NONE) {
+    return strdup(samure_strerror(SAMURE_ERROR_NONE));
+  }
+
+  char *error_string = NULL;
+  size_t index = 0;
+
+  for (uint64_t i = 0; i < SAMURE_NUM_ERRORS - 1; i++) {
+    enum samure_error code = error_code & (1 << i);
+    if (code != SAMURE_ERROR_NONE) {
+      const char *err_str = samure_strerror(code);
+      const size_t err_str_len = strlen(err_str);
+      error_string =
+          realloc(error_string, index + err_str_len + 1 + 2 * (index != 0));
+      sprintf(&error_string[index], index == 0 ? "%s" : "; %s", err_str);
+      index += err_str_len + 2 * (index != 0);
+    }
+  }
+
+  return error_string;
+}
+
+static int samure_perror(const char *msg, uint64_t error_code) {
+  char *error_string = samure_build_error_string(error_code);
+  const int rv = fprintf(stderr, "%s: %s\n", msg, error_string);
+  free(error_string);
+  return rv;
+}
+
+struct _samure_generic_result {
+  void *result;
+  uint64_t error;
+};
+
+static void *_samure_get_result(struct _samure_generic_result *result) {
+  assert(result->error == SAMURE_ERROR_NONE);
+  return result->result;
+}

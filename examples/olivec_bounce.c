@@ -112,11 +112,10 @@ int main(void) {
       event_callback, render_callback, update_callback, &d);
   context_config.pointer_interaction = 1;
 
-  struct samure_context *ctx = samure_create_context(&context_config);
-  if (ctx->error_string) {
-    fprintf(stderr, "%s\n", ctx->error_string);
-    return EXIT_FAILURE;
-  }
+  SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
+  SAMURE_RETURN_AND_PRINT_ON_ERROR(ctx_rs, "Failed to create context",
+                                   EXIT_FAILURE);
+  struct samure_context *ctx = SAMURE_GET_RESULT(context, ctx_rs);
 
   puts("Successfully initialized samurai-render context");
 

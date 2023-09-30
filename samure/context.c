@@ -10,24 +10,6 @@
 #include "backends/opengl.h"
 #include "backends/raw.h"
 
-#define CTX_ERR(msg)                                                           \
-  if (ctx->error_string)                                                       \
-    free(ctx->error_string);                                                   \
-  ctx->error_string = strdup(msg)
-#define CTX_ERR_F(format, ...)                                                 \
-  if (ctx->error_string)                                                       \
-    free(ctx->error_string);                                                   \
-  ctx->error_string = malloc(2048);                                            \
-  snprintf(ctx->error_string, 2048, format, __VA_ARGS__)
-#define CTX_ADD_ERR_F(format, ...)                                             \
-  {                                                                            \
-    const size_t error_string_len =                                            \
-        ctx->error_string ? strlen(ctx->error_string) : 0;                     \
-    ctx->error_string = realloc(ctx->error_string, error_string_len + 2048);   \
-    snprintf(&ctx->error_string[error_string_len], 2048, "\n" format,          \
-             __VA_ARGS__);                                                     \
-  }
-
 struct samure_context_config samure_default_context_config() {
   struct samure_context_config c = {0};
   c.max_fps = SAMURE_MAX_FPS;
@@ -47,10 +29,9 @@ samure_create_context_config(samure_event_callback event_callback,
   return c;
 }
 
-struct samure_context *
+SAMURE_RESULT(context)
 samure_create_context(struct samure_context_config *config) {
-  struct samure_context *ctx = malloc(sizeof(struct samure_context));
-  memset(ctx, 0, sizeof(*ctx));
+  SAMURE_RESULT_ALLOC(context, ctx);
 
   if (config) {
     ctx->config = *config;
@@ -60,26 +41,27 @@ samure_create_context(struct samure_context_config *config) {
 
   ctx->display = wl_display_connect(NULL);
   if (ctx->display == NULL) {
-    CTX_ERR("failed to connect to display");
-    return ctx;
+    SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_DISPLAY_CONNECT);
   }
 
   struct wl_registry *registry = wl_display_get_registry(ctx->display);
   wl_registry_add_listener(registry, &registry_listener, ctx);
   wl_display_roundtrip(ctx->display);
 
+  uint64_t error_code = SAMURE_ERROR_NONE;
+
   // clang-format off
-  if (ctx->num_outputs == 0)             CTX_ADD_ERR_F("%s", "no outputs");
-  if (ctx->output_manager == NULL)       CTX_ADD_ERR_F("%s", "no xdg output manager support");
-  if (ctx->layer_shell == NULL)          CTX_ADD_ERR_F("%s", "no wlr layer shell support");
-  if (ctx->shm == NULL)                  CTX_ADD_ERR_F("%s", "no shm support");
-  if (ctx->compositor == NULL)           CTX_ADD_ERR_F("%s", "no compositor support");
-  if (ctx->cursor_shape_manager == NULL) CTX_ADD_ERR_F("%s", "no cursor shape manager support");
-  if (ctx->screencopy_manager == NULL)   CTX_ADD_ERR_F("%s", "no screencopy manager support");
+  if (ctx->num_outputs == 0)             { error_code |= SAMURE_ERROR_NO_OUTPUTS;              }
+  if (ctx->output_manager == NULL)       { error_code |= SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER;   }
+  if (ctx->layer_shell == NULL)          { error_code |= SAMURE_ERROR_NO_LAYER_SHELL;          }
+  if (ctx->shm == NULL)                  { error_code |= SAMURE_ERROR_NO_SHM;                  }
+  if (ctx->compositor == NULL)           { error_code |= SAMURE_ERROR_NO_COMPOSITOR;           }
+  if (ctx->cursor_shape_manager == NULL) { error_code |= SAMURE_ERROR_NO_CURSOR_SHAPE_MANAGER; }
+  if (ctx->screencopy_manager == NULL)   { error_code |= SAMURE_ERROR_NO_SCREENCOPY_MANAGER;   }
   // clang-format on
 
-  if (ctx->error_string) {
-    return ctx;
+  if (SAMURE_IS_ERROR(error_code)) {
+    SAMURE_DESTROY_ERROR(context, ctx, error_code);
   }
 
   if (ctx->num_seats != 0) {
@@ -112,30 +94,26 @@ samure_create_context(struct samure_context_config *config) {
         samure_init_backend_opengl(ctx, ctx->config.gl);
     ctx->config.gl = NULL;
     if (o->error_string) {
-      CTX_ERR_F("failed to initialize opengl backend: %s", o->error_string);
       free(o->error_string);
       free(o);
-      return ctx;
+      SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_BACKEND_INIT);
     }
     ctx->backend = &o->base;
 #else
-    CTX_ERR("samurai-render has not been build with opengl support (Build "
-            "using --backend_opengl=y)");
+    SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_NO_BACKEND_SUPPORT);
 #endif
   } break;
   case SAMURE_BACKEND_CAIRO: {
 #ifdef BACKEND_CAIRO
     struct samure_backend_cairo *c = samure_init_backend_cairo(ctx);
     if (c->error_string) {
-      CTX_ERR_F("failed to initialize cairo backend: %s", c->error_string);
       free(c->error_string);
       free(c);
-      return ctx;
+      SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_BACKEND_INIT);
     }
     ctx->backend = &c->base;
 #else
-    CTX_ERR("samurai-render has not been build with cairo support (Build using "
-            "--backend_cairo=y)");
+    SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_NO_BACKEND_SUPPORT);
 #endif
   } break;
   case SAMURE_BACKEND_NONE:
@@ -144,10 +122,9 @@ samure_create_context(struct samure_context_config *config) {
   {
     struct samure_backend_raw *r = samure_init_backend_raw(ctx);
     if (r->error_string) {
-      CTX_ERR_F("failed to initialize raw backend: %s", r->error_string);
       free(r->error_string);
       free(r);
-      return ctx;
+      SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_BACKEND_INIT);
     }
     ctx->backend = &r->base;
   } break;
@@ -165,14 +142,18 @@ samure_create_context(struct samure_context_config *config) {
   ctx->frame_timer = samure_init_frame_timer(ctx->config.max_fps);
 
   if (!ctx->config.not_create_output_layer_surfaces) {
-    samure_context_create_output_layer_surfaces(ctx);
+    const uint64_t err = samure_context_create_output_layer_surfaces(ctx);
+    if (SAMURE_IS_ERROR(err)) {
+      SAMURE_DESTROY_ERROR(context, ctx, err);
+    }
   }
 
-  return ctx;
+  SAMURE_RETURN_RESULT(context, ctx);
 }
 
 void samure_destroy_context(struct samure_context *ctx) {
-  wl_display_flush(ctx->display);
+  if (ctx->display)
+    wl_display_flush(ctx->display);
 
   if (ctx->backend && ctx->backend->destroy) {
     ctx->backend->destroy(ctx, ctx->backend);
@@ -188,18 +169,23 @@ void samure_destroy_context(struct samure_context *ctx) {
   }
   free(ctx->outputs);
 
-  wl_shm_destroy(ctx->shm);
-  wl_compositor_destroy(ctx->compositor);
-  zwlr_layer_shell_v1_destroy(ctx->layer_shell);
-  zxdg_output_manager_v1_destroy(ctx->output_manager);
-  wp_cursor_shape_manager_v1_destroy(ctx->cursor_shape_manager);
-  zwlr_screencopy_manager_v1_destroy(ctx->screencopy_manager);
+  if (ctx->shm)
+    wl_shm_destroy(ctx->shm);
+  if (ctx->compositor)
+    wl_compositor_destroy(ctx->compositor);
+  if (ctx->layer_shell)
+    zwlr_layer_shell_v1_destroy(ctx->layer_shell);
+  if (ctx->output_manager)
+    zxdg_output_manager_v1_destroy(ctx->output_manager);
+  if (ctx->cursor_shape_manager)
+    wp_cursor_shape_manager_v1_destroy(ctx->cursor_shape_manager);
+  if (ctx->screencopy_manager)
+    zwlr_screencopy_manager_v1_destroy(ctx->screencopy_manager);
 
-  wl_display_disconnect(ctx->display);
+  if (ctx->display)
+    wl_display_disconnect(ctx->display);
 
   free(ctx->events);
-
-  free(ctx->error_string);
   free(ctx);
 }
 
@@ -354,7 +340,10 @@ void samure_context_update(struct samure_context *ctx,
   }
 }
 
-void samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
+uint64_t
+samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
+  uint64_t error_code = SAMURE_ERROR_NONE;
+
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     struct samure_output *o = &ctx->outputs[i];
 
@@ -363,13 +352,14 @@ void samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
         (uint32_t)ctx->config.keyboard_interaction,
         ctx->config.pointer_interaction || ctx->config.touch_interaction, 1);
     if (layer_surface->error_string) {
-      CTX_ADD_ERR_F("failed to create layer surface for output %zu: %s", i,
-                    layer_surface->error_string);
       free(layer_surface->error_string);
       free(layer_surface);
+      error_code |= SAMURE_ERROR_LAYER_SURFACE_INIT;
       continue;
     }
 
     samure_output_attach_layer_surface(o, layer_surface);
   }
+
+  return error_code;
 }

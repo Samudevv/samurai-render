@@ -85,11 +85,8 @@ int main(void) {
   cfg.gl->major_version = 1;
   cfg.gl->minor_version = 0;
 
-  struct samure_context *ctx = samure_create_context(&cfg);
-  if (ctx->error_string) {
-    fprintf(stderr, "%s\n", ctx->error_string);
-    return EXIT_FAILURE;
-  }
+  SAMURE_RESULT(context) ctx_rs = samure_create_context(&cfg);
+  struct samure_context *ctx = SAMURE_GET_RESULT(context, ctx_rs);
 
   samure_backend_opengl_make_context_current(
       (struct samure_backend_opengl *)ctx->backend, ctx->outputs[0].sfc[0]);

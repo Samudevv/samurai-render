@@ -67,11 +67,8 @@ int main(int args, char *argv[]) {
   context_config.not_create_output_layer_surfaces = 1;
   context_config.max_fps = 60;
 
-  struct samure_context *ctx = samure_create_context(&context_config);
-  if (ctx->error_string) {
-    fprintf(stderr, "%s\n", ctx->error_string);
-    return EXIT_FAILURE;
-  }
+  SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
+  struct samure_context *ctx = SAMURE_GET_RESULT(context, ctx_rs);
 
   puts("Successfully initialized samurai-render context");
 

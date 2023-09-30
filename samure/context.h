@@ -7,6 +7,7 @@
 #include <wayland-client.h>
 
 #include "backend.h"
+#include "error_handling.h"
 #include "events.h"
 #include "frame_timer.h"
 #include "output.h"
@@ -85,8 +86,6 @@ struct samure_context {
   int running;
   enum samure_render_state render_state;
 
-  char *error_string;
-
   struct samure_backend *backend;
 
   struct samure_context_config config;
@@ -94,8 +93,10 @@ struct samure_context {
   struct samure_frame_timer frame_timer;
 };
 
-extern struct samure_context *
-samure_create_context(struct samure_context_config *config);
+SAMURE_DEFINE_RESULT(context);
+
+extern SAMURE_RESULT(context)
+    samure_create_context(struct samure_context_config *config);
 extern void samure_destroy_context(struct samure_context *ctx);
 extern void samure_context_run(struct samure_context *ctx);
 extern struct samure_rect
@@ -121,5 +122,5 @@ extern void samure_context_update(struct samure_context *ctx,
                                   samure_update_callback update_callback,
                                   double delta_time);
 
-extern void
+extern uint64_t
 samure_context_create_output_layer_surfaces(struct samure_context *ctx);

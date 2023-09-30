@@ -89,11 +89,8 @@ int main(void) {
   cfg.pointer_interaction = 1;
   cfg.keyboard_interaction = 1;
 
-  struct samure_context *ctx = samure_create_context(&cfg);
-  if (ctx->error_string) {
-    fprintf(stderr, "Failed to create context: %s\n", ctx->error_string);
-    return 1;
-  }
+  SAMURE_RESULT(context) ctx_rs = samure_create_context(&cfg);
+  struct samure_context *ctx = SAMURE_GET_RESULT(context, ctx_rs);
 
   for (size_t i = 0; i < ctx->num_seats; i++) {
     samure_seat_set_pointer_shape(&ctx->seats[i],
