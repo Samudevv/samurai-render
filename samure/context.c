@@ -132,6 +132,7 @@ samure_create_context(struct samure_context_config *config) {
 
     o->xdg_output =
         zxdg_output_manager_v1_get_xdg_output(ctx->output_manager, o->output);
+    /* TODO: handle errors*/
     zxdg_output_v1_add_listener(o->xdg_output, &xdg_output_listener, o);
   }
   wl_display_roundtrip(ctx->display);

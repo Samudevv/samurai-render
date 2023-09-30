@@ -91,22 +91,31 @@ typedef uint64_t samure_error;
 static const char *samure_strerror(enum samure_error_code error_code) {
   // clang-format off
   switch (error_code) {
-  case SAMURE_ERROR_NONE:                    return "no error";
-  case SAMURE_ERROR_FAILED:                  return "failed";
-  case SAMURE_ERROR_NOT_IMPLEMENTED:         return "not implemented";
-  case SAMURE_ERROR_DISPLAY_CONNECT:         return "display connection failed";
-  case SAMURE_ERROR_NO_OUTPUTS:              return "no outputs";
-  case SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER:   return "no xdg output manager";
-  case SAMURE_ERROR_NO_LAYER_SHELL:          return "no layer shell";
-  case SAMURE_ERROR_NO_SHM:                  return "no shm";
-  case SAMURE_ERROR_NO_COMPOSITOR:           return "no compositor";
-  case SAMURE_ERROR_NO_CURSOR_SHAPE_MANAGER: return "no cursor shape manager";
-  case SAMURE_ERROR_NO_SCREENCOPY_MANAGER:   return "no screencopy manager";
-  case SAMURE_ERROR_BACKEND_INIT:            return "backend initialization failed";
-  case SAMURE_ERROR_NO_BACKEND_SUPPORT:      return "backend is not supported";
-  case SAMURE_ERROR_LAYER_SURFACE_INIT:      return "layer surface initialization failed";
-  case SAMURE_ERROR_MEMORY:                  return "memory allocation failed";
-  default:                                   return "unknown error";
+  case SAMURE_ERROR_NONE:                      return "no error";
+  case SAMURE_ERROR_FAILED:                    return "failed";
+  case SAMURE_ERROR_NOT_IMPLEMENTED:           return "not implemented";
+  case SAMURE_ERROR_DISPLAY_CONNECT:           return "display connection failed";
+  case SAMURE_ERROR_NO_OUTPUTS:                return "no outputs";
+  case SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER:     return "no xdg output manager";
+  case SAMURE_ERROR_NO_LAYER_SHELL:            return "no layer shell";
+  case SAMURE_ERROR_NO_SHM:                    return "no shm";
+  case SAMURE_ERROR_NO_COMPOSITOR:             return "no compositor";
+  case SAMURE_ERROR_NO_CURSOR_SHAPE_MANAGER:   return "no cursor shape manager";
+  case SAMURE_ERROR_NO_SCREENCOPY_MANAGER:     return "no screencopy manager";
+  case SAMURE_ERROR_BACKEND_INIT:              return "backend initialization failed";
+  case SAMURE_ERROR_NO_BACKEND_SUPPORT:        return "backend is not supported";
+  case SAMURE_ERROR_LAYER_SURFACE_INIT:        return "layer surface initialization failed";
+  case SAMURE_ERROR_MEMORY:                    return "memory allocation failed";
+  case SAMURE_ERROR_SHARED_BUFFER_INIT:        return "shared buffer initialization failed";
+  case SAMURE_ERROR_OPENGL_LOAD_PROC:          return "loading of functions failed";
+  case SAMURE_ERROR_OPENGL_DISPLAY_CONNECT:    return "egl display connection failed";
+  case SAMURE_ERROR_OPENGL_INITIALIZE:         return "egl display initialization failed";
+  case SAMURE_ERROR_OPENGL_CONFIG:             return "did not find a fitting config";
+  case SAMURE_ERROR_OPENGL_BIND_API:           return "binding to opengl api failed";
+  case SAMURE_ERROR_OPENGL_CONTEXT_INIT:       return "egl context creation failed";
+  case SAMURE_ERROR_OPENGL_WL_EGL_WINDOW_INIT: return "wayland egl window creation failed";
+  case SAMURE_ERROR_OPENGL_SURFACE_INIT:       return "egl surface creation failed";
+  default:                                     return "unknown error";
   }
   // clang-format on
 }
