@@ -34,7 +34,7 @@ extern void samure_destroy_layer_surface(struct samure_context *ctx,
                                          struct samure_layer_surface *sfc);
 
 extern void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
-                                             struct samure_shared_buffer buf);
+                                             struct samure_shared_buffer *buf);
 
 struct samure_layer_surface_callback_data {
   struct samure_context *ctx;

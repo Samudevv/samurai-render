@@ -82,9 +82,17 @@ enum samure_error_code {
   SAMURE_ERROR_OPENGL_CONTEXT_INIT = (1 << 20),
   SAMURE_ERROR_OPENGL_WL_EGL_WINDOW_INIT = (1 << 21),
   SAMURE_ERROR_OPENGL_SURFACE_INIT = (1 << 22),
+  SAMURE_ERROR_SHARED_BUFFER_FD_INIT = (1 << 23),
+  SAMURE_ERROR_SHARED_BUFFER_TRUNCATE = (1 << 24),
+  SAMURE_ERROR_SHARED_BUFFER_MMAP = (1 << 25),
+  SAMURE_ERROR_SHARED_BUFFER_POOL_INIT = (1 << 26),
+  SAMURE_ERROR_SHARED_BUFFER_BUFFER_INIT = (1 << 27),
+  SAMURE_ERROR_FRAME_INIT = (1 << 28),
+  SAMURE_ERROR_CAIRO_SURFACE_INIT = (1 << 29),
+  SAMURE_ERROR_CAIRO_INIT = (1 << 30),
 };
 
-#define SAMURE_NUM_ERRORS 22
+#define SAMURE_NUM_ERRORS 31
 
 typedef uint64_t samure_error;
 
@@ -115,6 +123,14 @@ static const char *samure_strerror(enum samure_error_code error_code) {
   case SAMURE_ERROR_OPENGL_CONTEXT_INIT:       return "egl context creation failed";
   case SAMURE_ERROR_OPENGL_WL_EGL_WINDOW_INIT: return "wayland egl window creation failed";
   case SAMURE_ERROR_OPENGL_SURFACE_INIT:       return "egl surface creation failed";
+  case SAMURE_ERROR_SHARED_BUFFER_FD_INIT:     return "failed to open file descriptor";
+  case SAMURE_ERROR_SHARED_BUFFER_TRUNCATE:    return "failed to truncate file";
+  case SAMURE_ERROR_SHARED_BUFFER_MMAP:        return "mmap failed";
+  case SAMURE_ERROR_SHARED_BUFFER_POOL_INIT:   return "shm pool initialization failed";
+  case SAMURE_ERROR_SHARED_BUFFER_BUFFER_INIT: return "shm buffer initialization failed";
+  case SAMURE_ERROR_FRAME_INIT:                return "screencopy initialization failed";
+  case SAMURE_ERROR_CAIRO_SURFACE_INIT:        return "cairo surface initialization failed";
+  case SAMURE_ERROR_CAIRO_INIT:                return "cairo initialization failed";
   default:                                     return "unknown error";
   }
   // clang-format on

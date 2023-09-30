@@ -8,11 +8,14 @@
 
 #define SHM_FILE_NAME "/samure-shared-memory"
 
-struct samure_shared_buffer samure_create_shared_buffer(struct wl_shm *shm,
-                                                        uint32_t format,
-                                                        int32_t width,
-                                                        int32_t height) {
-  struct samure_shared_buffer b = {0};
+SAMURE_RESULT(shared_buffer)
+samure_create_shared_buffer(struct wl_shm *shm, uint32_t format, int32_t width,
+                            int32_t height) {
+  SAMURE_RESULT_ALLOC(shared_buffer, b);
+
+  b->width = width;
+  b->height = height;
+  b->format = format;
 
   const int32_t stride = width * 4;
   const int32_t size = stride * height;
@@ -34,66 +37,75 @@ struct samure_shared_buffer samure_create_shared_buffer(struct wl_shm *shm,
 
     retries--;
 
-    b.fd = shm_open(file_name, O_RDWR | O_CREAT | O_EXCL, 0600);
-    if (b.fd >= 0) {
+    b->fd = shm_open(file_name, O_RDWR | O_CREAT | O_EXCL, 0600);
+    if (b->fd >= 0) {
       shm_unlink(file_name);
       break;
     }
   } while (retries > 0 && errno == EEXIST);
 
-  if (b.fd < 0) {
-    return b;
+  if (b->fd < 0) {
+    SAMURE_DESTROY_ERROR(shared_buffer, b, SAMURE_ERROR_SHARED_BUFFER_FD_INIT);
   }
 
-  if (ftruncate(b.fd, size) < 0) {
-    close(b.fd);
-    b.fd = -1;
-    return b;
+  if (ftruncate(b->fd, size) < 0) {
+    SAMURE_DESTROY_ERROR(shared_buffer, b, SAMURE_ERROR_SHARED_BUFFER_TRUNCATE);
   }
 
-  b.data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, b.fd, 0);
-  if (b.data == MAP_FAILED) {
-    close(b.fd);
-    b.fd = -1;
-    b.data = NULL;
-    return b;
+  b->data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, b->fd, 0);
+  if (b->data == MAP_FAILED) {
+    b->data = NULL;
+    SAMURE_DESTROY_ERROR(shared_buffer, b, SAMURE_ERROR_SHARED_BUFFER_MMAP);
   }
 
-  struct wl_shm_pool *pool = wl_shm_create_pool(shm, b.fd, size);
-  b.buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, format);
+  struct wl_shm_pool *pool = wl_shm_create_pool(shm, b->fd, size);
+  if (!pool) {
+    SAMURE_DESTROY_ERROR(shared_buffer, b,
+                         SAMURE_ERROR_SHARED_BUFFER_POOL_INIT);
+  }
+  b->buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, format);
   wl_shm_pool_destroy(pool);
-
-  b.width = width;
-  b.height = height;
-  b.format = format;
-
-  return b;
-}
-
-void samure_destroy_shared_buffer(struct samure_shared_buffer b) {
-  munmap(b.data, b.width * b.height * 4);
-  close(b.fd);
-  wl_buffer_destroy(b.buffer);
-}
-
-extern void samure_shared_buffer_copy(struct samure_shared_buffer dst,
-                                      struct samure_shared_buffer src) {
-  if (src.format == dst.format) {
-    memcpy(dst.data, src.data, dst.width * dst.height * 4);
-    return;
+  if (!b->buffer) {
+    SAMURE_DESTROY_ERROR(shared_buffer, b,
+                         SAMURE_ERROR_SHARED_BUFFER_BUFFER_INIT);
   }
 
-  if (src.format != WL_SHM_FORMAT_XBGR8888 || dst.format != BUFFER_FORMAT ||
-      dst.width != src.width || dst.height != src.height) {
-    return;
+  SAMURE_RETURN_RESULT(shared_buffer, b);
+}
+
+void samure_destroy_shared_buffer(struct samure_shared_buffer *b) {
+  if (b->data)
+    munmap(b->data, b->width * b->height * 4);
+  if (b->fd >= 0)
+    close(b->fd);
+  if (b->buffer)
+    wl_buffer_destroy(b->buffer);
+  free(b);
+}
+
+extern samure_error
+samure_shared_buffer_copy(struct samure_shared_buffer *dst,
+                          struct samure_shared_buffer *src) {
+  if (src->format == dst->format && dst->width == src->width &&
+      dst->height == src->height) {
+    memcpy(dst->data, src->data, dst->width * dst->height * 4);
+    return SAMURE_ERROR_NONE;
   }
 
-  uint8_t *s = (uint8_t *)src.data;
-  uint8_t *d = (uint8_t *)dst.data;
-  for (size_t i = 0; i < dst.width * dst.height * 4; i += 4) {
+  if (src->format != WL_SHM_FORMAT_XBGR8888 ||
+      dst->format != SAMURE_BUFFER_FORMAT || dst->width != src->width ||
+      dst->height != src->height) {
+    return SAMURE_ERROR_FAILED;
+  }
+
+  uint8_t *s = (uint8_t *)src->data;
+  uint8_t *d = (uint8_t *)dst->data;
+  for (size_t i = 0; i < dst->width * dst->height * 4; i += 4) {
     d[i + 0] = s[i + 2]; // A
     d[i + 1] = s[i + 1]; // B
     d[i + 2] = s[i + 0]; // G
     d[i + 3] = s[i + 3]; // R
   }
+
+  return SAMURE_ERROR_NONE;
 }

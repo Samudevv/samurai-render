@@ -118,9 +118,9 @@ void samure_output_attach_layer_surface(struct samure_output *o,
   o->sfc[o->num_sfc - 1] = sfc;
 }
 
-extern struct samure_shared_buffer
-samure_output_screenshot(struct samure_context *ctx,
-                         struct samure_output *output) {
+extern SAMURE_RESULT(shared_buffer)
+    samure_output_screenshot(struct samure_context *ctx,
+                             struct samure_output *output) {
   struct samure_screenshot_data data = {0};
   data.ctx = ctx;
   data.output = output;
@@ -129,7 +129,7 @@ samure_output_screenshot(struct samure_context *ctx,
       zwlr_screencopy_manager_v1_capture_output(ctx->screencopy_manager, 1,
                                                 output->output);
   if (!frame) {
-    return data.buffer;
+    SAMURE_RETURN_ERROR(shared_buffer, SAMURE_ERROR_FRAME_INIT);
   };
 
   zwlr_screencopy_frame_v1_add_listener(frame, &screencopy_frame_listener,
@@ -140,27 +140,30 @@ samure_output_screenshot(struct samure_context *ctx,
     ;
 
   if (data.state == SAMURE_SCREENSHOT_FAILED) {
-    return data.buffer;
+    if (data.buffer_rs.result) {
+      samure_destroy_shared_buffer(data.buffer_rs.result);
+    }
+    SAMURE_RETURN_ERROR(shared_buffer,
+                        SAMURE_ERROR_FAILED | data.buffer_rs.error);
   }
 
-  if (!data.buffer.buffer) {
-    return data.buffer;
+  if (SAMURE_HAS_ERROR(data.buffer_rs)) {
+    SAMURE_RETURN_ERROR(shared_buffer, data.buffer_rs.error);
   }
+
+  struct samure_shared_buffer *buffer =
+      SAMURE_GET_RESULT(shared_buffer, data.buffer_rs);
 
   data.state = SAMURE_SCREENSHOT_PENDING;
-  zwlr_screencopy_frame_v1_copy(frame, data.buffer.buffer);
+  zwlr_screencopy_frame_v1_copy(frame, buffer->buffer);
 
   while (data.state == SAMURE_SCREENSHOT_PENDING &&
          wl_display_dispatch(ctx->display) != -1)
     ;
 
   if (data.state == SAMURE_SCREENSHOT_FAILED) {
-    return data.buffer;
+    SAMURE_DESTROY_ERROR(shared_buffer, buffer, SAMURE_ERROR_FAILED);
   }
 
-  if (data.buffer.format == BUFFER_FORMAT) {
-    return data.buffer;
-  }
-
-  return data.buffer;
+  SAMURE_RETURN_RESULT(shared_buffer, buffer);
 }

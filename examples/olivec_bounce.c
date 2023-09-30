@@ -123,7 +123,7 @@ int main(void) {
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     struct samure_raw_surface *r =
         (struct samure_raw_surface *)ctx->outputs[i].sfc[0]->backend_data;
-    d.canvas[i] = olivec_canvas(r->shared_buffer.data, ctx->outputs[i].geo.w,
+    d.canvas[i] = olivec_canvas(r->buffer->data, ctx->outputs[i].geo.w,
                                 ctx->outputs[i].geo.h, ctx->outputs[i].geo.w);
   }
 

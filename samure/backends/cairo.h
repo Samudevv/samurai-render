@@ -7,7 +7,7 @@
 #include "../shared_memory.h"
 
 struct samure_cairo_surface {
-  struct samure_shared_buffer buffer;
+  struct samure_shared_buffer *buffer;
   cairo_surface_t *cairo_surface;
   cairo_t *cairo;
 };

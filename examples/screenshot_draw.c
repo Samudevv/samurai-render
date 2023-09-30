@@ -80,12 +80,12 @@ int main(int args, char *argv[]) {
         samure_create_layer_surface(ctx, &ctx->outputs[i], SAMURE_LAYER_OVERLAY,
                                     SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 0);
 
-    struct samure_shared_buffer screenshot =
-        samure_output_screenshot(ctx, &ctx->outputs[i]);
-    if (screenshot.buffer) {
-      samure_layer_surface_draw_buffer(bgs[i], screenshot);
-      samure_destroy_shared_buffer(screenshot);
-    }
+    SAMURE_RESULT(shared_buffer)
+    screenshot_rs = samure_output_screenshot(ctx, &ctx->outputs[i]);
+    struct samure_shared_buffer *screenshot =
+        SAMURE_GET_RESULT(shared_buffer, screenshot_rs);
+    samure_layer_surface_draw_buffer(bgs[i], screenshot);
+    samure_destroy_shared_buffer(screenshot);
   }
 
   samure_context_create_output_layer_surfaces(ctx);

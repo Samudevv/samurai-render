@@ -8,7 +8,7 @@ struct samure_context;
 struct samure_layer_surface;
 
 struct samure_raw_surface {
-  struct samure_shared_buffer shared_buffer;
+  struct samure_shared_buffer *buffer;
 };
 
 struct samure_backend_raw {

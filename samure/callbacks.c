@@ -299,8 +299,8 @@ void screencopy_frame_buffer(
     uint32_t format, uint32_t width, uint32_t height, uint32_t stride) {
   struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
 
-  d->buffer = samure_create_shared_buffer(d->ctx->shm, format, width, height);
-  /* TODO: handle errors*/
+  d->buffer_rs =
+      samure_create_shared_buffer(d->ctx->shm, format, width, height);
 }
 
 void screencopy_frame_flags(

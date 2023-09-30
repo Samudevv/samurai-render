@@ -43,23 +43,38 @@ samure_error samure_backend_cairo_associate_layer_surface(
     return SAMURE_ERROR_MEMORY;
   }
 
-  cairo_sfc->buffer = samure_create_shared_buffer(ctx->shm, BUFFER_FORMAT,
-                                                  output->geo.w, output->geo.h);
-  if (cairo_sfc->buffer.buffer == NULL) {
+  SAMURE_RESULT(shared_buffer)
+  b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
+                                     output->geo.w, output->geo.h);
+  if (SAMURE_HAS_ERROR(b_rs)) {
     free(cairo_sfc);
-    return SAMURE_ERROR_SHARED_BUFFER_INIT;
-  } else {
-    cairo_sfc->cairo_surface = cairo_image_surface_create_for_data(
-        (unsigned char *)cairo_sfc->buffer.data, CAIRO_FORMAT_ARGB32,
-        cairo_sfc->buffer.width, cairo_sfc->buffer.height,
-        cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
-                                      cairo_sfc->buffer.width));
-    cairo_sfc->cairo = cairo_create(cairo_sfc->cairo_surface);
-    /* TODO: handle error*/
-
-    sfc->backend_data = cairo_sfc;
-    samure_backend_cairo_render_end(output, sfc, ctx, &c->base);
+    return SAMURE_ERROR_SHARED_BUFFER_INIT | b_rs.error;
   }
+
+  cairo_sfc->buffer = SAMURE_GET_RESULT(shared_buffer, b_rs);
+
+  cairo_sfc->cairo_surface = cairo_image_surface_create_for_data(
+      (unsigned char *)cairo_sfc->buffer->data, CAIRO_FORMAT_ARGB32,
+      cairo_sfc->buffer->width, cairo_sfc->buffer->height,
+      cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32,
+                                    cairo_sfc->buffer->width));
+  if (cairo_surface_status(cairo_sfc->cairo_surface) != CAIRO_STATUS_SUCCESS) {
+    samure_destroy_shared_buffer(cairo_sfc->buffer);
+    cairo_surface_destroy(cairo_sfc->cairo_surface);
+    free(cairo_sfc);
+    return SAMURE_ERROR_CAIRO_SURFACE_INIT;
+  }
+  cairo_sfc->cairo = cairo_create(cairo_sfc->cairo_surface);
+  if (cairo_status(cairo_sfc->cairo) != CAIRO_STATUS_SUCCESS) {
+    samure_destroy_shared_buffer(cairo_sfc->buffer);
+    cairo_surface_destroy(cairo_sfc->cairo_surface);
+    cairo_destroy(cairo_sfc->cairo);
+    free(cairo_sfc);
+    return SAMURE_ERROR_CAIRO_INIT;
+  }
+
+  sfc->backend_data = cairo_sfc;
+  samure_backend_cairo_render_end(output, sfc, ctx, &c->base);
 
   return SAMURE_ERROR_NONE;
 }

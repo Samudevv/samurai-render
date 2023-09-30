@@ -29,7 +29,7 @@ void samure_backend_raw_render_end(struct samure_output *output,
                                    struct samure_backend *b) {
   struct samure_raw_surface *r =
       (struct samure_raw_surface *)layer_surface->backend_data;
-  samure_layer_surface_draw_buffer(layer_surface, r->shared_buffer);
+  samure_layer_surface_draw_buffer(layer_surface, r->buffer);
 }
 
 samure_error samure_backend_raw_associate_layer_surface(
@@ -41,16 +41,20 @@ samure_error samure_backend_raw_associate_layer_surface(
   if (!raw_sfc) {
     return SAMURE_ERROR_MEMORY;
   }
+  memset(raw_sfc, 0, sizeof(struct samure_raw_surface));
+
+  SAMURE_RESULT(shared_buffer)
+  b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT, o->geo.w,
+                                     o->geo.h);
+  if (SAMURE_HAS_ERROR(b_rs)) {
+    free(raw_sfc);
+    return SAMURE_ERROR_SHARED_BUFFER_INIT | b_rs.error;
+  }
+
+  raw_sfc->buffer = SAMURE_GET_RESULT(shared_buffer, b_rs);
 
   sfc->backend_data = raw_sfc;
-
-  raw_sfc->shared_buffer =
-      samure_create_shared_buffer(ctx->shm, BUFFER_FORMAT, o->geo.w, o->geo.h);
-  if (raw_sfc->shared_buffer.buffer == NULL) {
-    return SAMURE_ERROR_SHARED_BUFFER_INIT;
-  } else {
-    samure_backend_raw_render_end(o, sfc, ctx, &r->base);
-  }
+  samure_backend_raw_render_end(o, sfc, ctx, &r->base);
 
   return SAMURE_ERROR_NONE;
 }
@@ -64,7 +68,7 @@ void samure_backend_raw_unassociate_layer_surface(
 
   struct samure_raw_surface *r = (struct samure_raw_surface *)sfc->backend_data;
 
-  samure_destroy_shared_buffer(r->shared_buffer);
+  samure_destroy_shared_buffer(r->buffer);
   free(r);
   sfc->backend_data = NULL;
 }

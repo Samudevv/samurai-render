@@ -42,7 +42,7 @@ enum samure_screenshot_state {
 struct samure_screenshot_data {
   struct samure_context *ctx;
   struct samure_output *output;
-  struct samure_shared_buffer buffer;
+  SAMURE_RESULT(shared_buffer) buffer_rs;
   enum samure_screenshot_state state;
 };
 
@@ -81,6 +81,6 @@ extern void
 samure_output_attach_layer_surface(struct samure_output *output,
                                    struct samure_layer_surface *layer_surface);
 
-extern struct samure_shared_buffer
-samure_output_screenshot(struct samure_context *ctx,
-                         struct samure_output *output);
+extern SAMURE_RESULT(shared_buffer)
+    samure_output_screenshot(struct samure_context *ctx,
+                             struct samure_output *output);

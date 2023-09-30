@@ -109,7 +109,7 @@ int main(int args, char *argv[]) {
       if (bg_img_w == ctx->outputs[i].geo.w &&
           bg_img_h == ctx->outputs[i].geo.h) {
         struct samure_cairo_surface *c = samure_get_cairo_surface(bgs[i]);
-        memcpy(c->buffer.data, cairo_image_surface_get_data(bg_img),
+        memcpy(c->buffer->data, cairo_image_surface_get_data(bg_img),
                ctx->outputs[i].geo.w * ctx->outputs[i].geo.h * 4);
         ctx->backend->render_end(&ctx->outputs[i], bgs[i], ctx, ctx->backend);
       }
