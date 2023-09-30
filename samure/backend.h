@@ -1,6 +1,7 @@
 #pragma once
-
 #include <stdint.h>
+
+#include "error_handling.h"
 
 struct samure_context;
 struct samure_output;
@@ -21,10 +22,9 @@ struct samure_backend {
                      struct samure_context *ctx,
                      struct samure_backend *backend);
   void (*destroy)(struct samure_context *ctx, struct samure_backend *backend);
-  void (*associate_layer_surface)(struct samure_context *ctx,
-                                  struct samure_backend *backend,
-                                  struct samure_output *output,
-                                  struct samure_layer_surface *layer_surface);
+  samure_error (*associate_layer_surface)(
+      struct samure_context *ctx, struct samure_backend *backend,
+      struct samure_output *output, struct samure_layer_surface *layer_surface);
   void (*unassociate_layer_surface)(struct samure_context *ctx,
                                     struct samure_backend *backend,
                                     struct samure_output *output,

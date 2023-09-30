@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -337,6 +338,7 @@ struct samure_callback_data *
 samure_create_callback_data(struct samure_context *ctx, void *data) {
   struct samure_callback_data *d = (struct samure_callback_data *)malloc(
       sizeof(struct samure_callback_data));
+  assert(d != NULL);
 
   d->ctx = ctx;
   d->data = data;

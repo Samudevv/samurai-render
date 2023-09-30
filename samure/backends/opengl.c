@@ -4,21 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define GL_ERR(format)                                                         \
-  gl->error_string = malloc(1024);                                             \
-  snprintf(gl->error_string, 1024, "%s", format);                              \
-  free(cfg);                                                                   \
-  if (gl->context) {                                                           \
-    eglDestroyContext(gl->display, gl->context);                               \
-  }                                                                            \
-  if (gl->display) {                                                           \
-    eglTerminate(gl->display);                                                 \
-  }
-#define GL_ERR_F(format, ...)                                                  \
-  char error_buffer[1024];                                                     \
-  snprintf(error_buffer, 1024, format, __VA_ARGS__);                           \
-  GL_ERR(error_buffer);
-
 eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT = NULL;
 eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT = NULL;
 
@@ -39,42 +24,42 @@ struct samure_opengl_config *samure_default_opengl_config() {
   return cfg;
 }
 
-struct samure_backend_opengl *
+#define SAMURE_BACKEND_OPENGL_DESTROY_ERROR(error_code)                        \
+  {                                                                            \
+    samure_destroy_backend_opengl(ctx, (struct samure_backend *)gl);           \
+    SAMURE_RETURN_ERROR(backend_opengl, error_code);                           \
+  }
+
+SAMURE_RESULT(backend_opengl)
 samure_init_backend_opengl(struct samure_context *ctx,
                            struct samure_opengl_config *cfg) {
   if (cfg == NULL) {
     cfg = samure_default_opengl_config();
   }
 
-  struct samure_backend_opengl *gl =
-      malloc(sizeof(struct samure_backend_opengl));
-  memset(gl, 0, sizeof(struct samure_backend_opengl));
+  SAMURE_RESULT_ALLOC(backend_opengl, gl);
 
   eglGetPlatformDisplayEXT =
       (eglGetPlatformDisplayEXT_t)eglGetProcAddress("eglGetPlatformDisplayEXT");
   if (!eglGetPlatformDisplayEXT) {
-    GL_ERR("failed to load eglGetPlatformDisplayEXT");
-    return gl;
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_LOAD_PROC);
   }
 
   eglCreatePlatformWindowSurfaceEXT =
       (eglCreatePlatformWindowSurfaceEXT_t)eglGetProcAddress(
           "eglCreatePlatformWindowSurfaceEXT");
   if (!eglCreatePlatformWindowSurfaceEXT) {
-    GL_ERR("failed to load eglCreatePlatformWindowSurfaceEXT");
-    return gl;
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_LOAD_PROC);
   }
 
   gl->display =
       eglGetPlatformDisplayEXT(EGL_PLATFORM_WAYLAND_KHR, ctx->display, NULL);
   if (gl->display == EGL_NO_DISPLAY) {
-    GL_ERR("failed to get egl display connection");
-    return gl;
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_DISPLAY_CONNECT);
   }
 
   if (eglInitialize(gl->display, NULL, NULL) != EGL_TRUE) {
-    GL_ERR("failed to initialize egl");
-    return gl;
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_INITIALIZE);
   }
 
   // clang-format off
@@ -103,24 +88,20 @@ samure_init_backend_opengl(struct samure_context *ctx,
   EGLConfig config;
   if (eglChooseConfig(gl->display, config_attributes, &config, 1,
                       &num_config) != EGL_TRUE) {
-    GL_ERR("failed to choose egl config");
-    return gl;
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONFIG);
   }
   if (num_config == 0) {
-    GL_ERR("did not find any egl configs");
-    return gl;
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONFIG);
   }
 
   if (eglBindAPI(EGL_OPENGL_API) != EGL_TRUE) {
-    GL_ERR("failed to bind opengl api");
-    return gl;
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_BIND_API);
   }
 
   gl->context =
       eglCreateContext(gl->display, config, EGL_NO_CONTEXT, context_attributes);
   if (gl->context == EGL_NO_CONTEXT) {
-    GL_ERR("failed to create egl context");
-    return gl;
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONTEXT_INIT);
   }
 
   gl->config = config;
@@ -134,18 +115,20 @@ samure_init_backend_opengl(struct samure_context *ctx,
   gl->base.unassociate_layer_surface =
       samure_backend_opengl_unassociate_layer_surface;
 
-  return gl;
+  SAMURE_RETURN_RESULT(backend_opengl, gl);
 }
 
 void samure_destroy_backend_opengl(struct samure_context *ctx,
                                    struct samure_backend *backend) {
   struct samure_backend_opengl *gl = (struct samure_backend_opengl *)backend;
 
-  eglDestroyContext(gl->display, gl->context);
+  if (gl->display && gl->context)
+    eglDestroyContext(gl->display, gl->context);
 
-  eglTerminate(gl->display);
-  free(gl->error_string);
-  free(gl->cfg);
+  if (gl->display)
+    eglTerminate(gl->display);
+  if (gl)
+    free(gl->cfg);
   free(gl);
 }
 
@@ -165,12 +148,16 @@ void samure_backend_opengl_render_end(
   eglSwapBuffers(gl->display, s->surface);
 }
 
-void samure_backend_opengl_associate_layer_surface(
+samure_error samure_backend_opengl_associate_layer_surface(
     struct samure_context *ctx, struct samure_backend *backend,
     struct samure_output *output, struct samure_layer_surface *sfc) {
   struct samure_backend_opengl *gl = (struct samure_backend_opengl *)backend;
   struct samure_opengl_surface *s =
       malloc(sizeof(struct samure_opengl_surface));
+  if (!s) {
+    return SAMURE_ERROR_MEMORY;
+  }
+
   memset(s, 0, sizeof(struct samure_opengl_surface));
 
   sfc->backend_data = s;
@@ -178,8 +165,8 @@ void samure_backend_opengl_associate_layer_surface(
   s->egl_window =
       wl_egl_window_create(sfc->surface, output->geo.w, output->geo.h);
   if (!s->egl_window) {
-    /* TODO: handle error*/
-    return;
+    free(s);
+    return SAMURE_ERROR_OPENGL_WL_EGL_WINDOW_INIT;
   }
 
   // clang-format off
@@ -194,8 +181,12 @@ void samure_backend_opengl_associate_layer_surface(
       gl->display, gl->config, (EGLNativeWindowType)s->egl_window,
       surface_attributes);
   if (s->surface == EGL_NO_SURFACE) {
-    /* TODO: handle error*/
+    wl_egl_window_destroy(s->egl_window);
+    free(s);
+    return SAMURE_ERROR_OPENGL_SURFACE_INIT;
   }
+
+  return SAMURE_ERROR_NONE;
 }
 
 void samure_backend_opengl_unassociate_layer_surface(

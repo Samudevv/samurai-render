@@ -13,7 +13,7 @@
 #define SAMURE_DEFINE_RESULT(typename)                                         \
   SAMURE_RESULT(typename) {                                                    \
     SAMURE_RESULT_TYPE(typename) * result;                                     \
-    uint64_t error;                                                            \
+    samure_error error;                                                        \
   }
 
 #define SAMURE_RETURN(typename, value, error_code)                             \
@@ -34,8 +34,8 @@
   }
 
 #define SAMURE_GET_RESULT(typename, result)                                    \
-  (SAMURE_RESULT_TYPE(typename) *)_samure_get_result(                          \
-      (struct _samure_generic_result *)&result)
+  ((SAMURE_RESULT_TYPE(typename) *)_samure_get_result(                         \
+      (struct _samure_generic_result *)&result))
 
 #define SAMURE_HAS_ERROR(result) (result.error != SAMURE_ERROR_NONE)
 #define SAMURE_IS_ERROR(error_code) (error_code != SAMURE_ERROR_NONE)
@@ -57,7 +57,7 @@
   }                                                                            \
   memset(varname, 0, sizeof(*varname))
 
-enum samure_error {
+enum samure_error_code {
   SAMURE_ERROR_NONE = 0,
   SAMURE_ERROR_FAILED = (1 << 0),
   SAMURE_ERROR_NOT_IMPLEMENTED = (1 << 1),
@@ -73,12 +73,22 @@ enum samure_error {
   SAMURE_ERROR_NO_BACKEND_SUPPORT = (1 << 11),
   SAMURE_ERROR_LAYER_SURFACE_INIT = (1 << 12),
   SAMURE_ERROR_MEMORY = (1 << 13),
-
+  SAMURE_ERROR_SHARED_BUFFER_INIT = (1 << 14),
+  SAMURE_ERROR_OPENGL_LOAD_PROC = (1 << 15),
+  SAMURE_ERROR_OPENGL_DISPLAY_CONNECT = (1 << 16),
+  SAMURE_ERROR_OPENGL_INITIALIZE = (1 << 17),
+  SAMURE_ERROR_OPENGL_CONFIG = (1 << 18),
+  SAMURE_ERROR_OPENGL_BIND_API = (1 << 19),
+  SAMURE_ERROR_OPENGL_CONTEXT_INIT = (1 << 20),
+  SAMURE_ERROR_OPENGL_WL_EGL_WINDOW_INIT = (1 << 21),
+  SAMURE_ERROR_OPENGL_SURFACE_INIT = (1 << 22),
 };
 
-#define SAMURE_NUM_ERRORS 14
+#define SAMURE_NUM_ERRORS 22
 
-static const char *samure_strerror(enum samure_error error_code) {
+typedef uint64_t samure_error;
+
+static const char *samure_strerror(enum samure_error_code error_code) {
   // clang-format off
   switch (error_code) {
   case SAMURE_ERROR_NONE:                    return "no error";
@@ -109,8 +119,8 @@ static char *samure_build_error_string(uint64_t error_code) {
   char *error_string = NULL;
   size_t index = 0;
 
-  for (uint64_t i = 0; i < SAMURE_NUM_ERRORS - 1; i++) {
-    enum samure_error code = error_code & (1 << i);
+  for (samure_error i = 0; i < SAMURE_NUM_ERRORS - 1; i++) {
+    enum samure_error_code code = error_code & (1 << i);
     if (code != SAMURE_ERROR_NONE) {
       const char *err_str = samure_strerror(code);
       const size_t err_str_len = strlen(err_str);
@@ -133,7 +143,7 @@ static int samure_perror(const char *msg, uint64_t error_code) {
 
 struct _samure_generic_result {
   void *result;
-  uint64_t error;
+  samure_error error;
 };
 
 static void *_samure_get_result(struct _samure_generic_result *result) {

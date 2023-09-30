@@ -4,6 +4,7 @@
 #include <wayland-egl.h>
 
 #include "../backend.h"
+#include "../error_handling.h"
 
 #define EGL_PLATFORM_WAYLAND_KHR 0x31D8
 
@@ -44,13 +45,13 @@ struct samure_backend_opengl {
   EGLContext context;
   EGLConfig config;
   struct samure_opengl_config *cfg;
-
-  char *error_string;
 };
 
-extern struct samure_backend_opengl *
-samure_init_backend_opengl(struct samure_context *ctx,
-                           struct samure_opengl_config *cfg);
+SAMURE_DEFINE_RESULT(backend_opengl);
+
+extern SAMURE_RESULT(backend_opengl)
+    samure_init_backend_opengl(struct samure_context *ctx,
+                               struct samure_opengl_config *cfg);
 extern void samure_destroy_backend_opengl(struct samure_context *ctx,
                                           struct samure_backend *gl);
 extern void samure_backend_opengl_render_start(
@@ -59,7 +60,7 @@ extern void samure_backend_opengl_render_start(
 extern void samure_backend_opengl_render_end(
     struct samure_output *output, struct samure_layer_surface *layer_surface,
     struct samure_context *ctx, struct samure_backend *gl);
-extern void samure_backend_opengl_associate_layer_surface(
+extern samure_error samure_backend_opengl_associate_layer_surface(
     struct samure_context *ctx, struct samure_backend *backend,
     struct samure_output *output, struct samure_layer_surface *layer_surface);
 extern void samure_backend_opengl_unassociate_layer_surface(

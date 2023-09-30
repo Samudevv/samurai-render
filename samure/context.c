@@ -90,28 +90,26 @@ samure_create_context(struct samure_context_config *config) {
   switch (ctx->config.backend) {
   case SAMURE_BACKEND_OPENGL: {
 #ifdef BACKEND_OPENGL
-    struct samure_backend_opengl *o =
-        samure_init_backend_opengl(ctx, ctx->config.gl);
+    SAMURE_RESULT(backend_opengl)
+    o_rs = samure_init_backend_opengl(ctx, ctx->config.gl);
     ctx->config.gl = NULL;
-    if (o->error_string) {
-      free(o->error_string);
-      free(o);
-      SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_BACKEND_INIT);
+    if (SAMURE_HAS_ERROR(o_rs)) {
+      SAMURE_DESTROY_ERROR(context, ctx,
+                           SAMURE_ERROR_BACKEND_INIT | o_rs.error);
     }
-    ctx->backend = &o->base;
+    ctx->backend = &SAMURE_GET_RESULT(backend_opengl, o_rs)->base;
 #else
     SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_NO_BACKEND_SUPPORT);
 #endif
   } break;
   case SAMURE_BACKEND_CAIRO: {
 #ifdef BACKEND_CAIRO
-    struct samure_backend_cairo *c = samure_init_backend_cairo(ctx);
-    if (c->error_string) {
-      free(c->error_string);
-      free(c);
-      SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_BACKEND_INIT);
+    SAMURE_RESULT(backend_cairo) c_rs = samure_init_backend_cairo(ctx);
+    if (SAMURE_HAS_ERROR(c_rs)) {
+      SAMURE_DESTROY_ERROR(context, ctx,
+                           SAMURE_ERROR_BACKEND_INIT | c_rs.error);
     }
-    ctx->backend = &c->base;
+    ctx->backend = &SAMURE_GET_RESULT(backend_cairo, c_rs)->base;
 #else
     SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_NO_BACKEND_SUPPORT);
 #endif
@@ -120,13 +118,12 @@ samure_create_context(struct samure_context_config *config) {
     break;
   default: // SAMURE_BACKEND_RAW
   {
-    struct samure_backend_raw *r = samure_init_backend_raw(ctx);
-    if (r->error_string) {
-      free(r->error_string);
-      free(r);
-      SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_BACKEND_INIT);
+    SAMURE_RESULT(backend_raw) r_rs = samure_init_backend_raw(ctx);
+    if (SAMURE_HAS_ERROR(r_rs)) {
+      SAMURE_DESTROY_ERROR(context, ctx,
+                           SAMURE_ERROR_BACKEND_INIT | r_rs.error);
     }
-    ctx->backend = &r->base;
+    ctx->backend = &SAMURE_GET_RESULT(backend_raw, r_rs)->base;
   } break;
   }
 
