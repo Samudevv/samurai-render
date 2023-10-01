@@ -7,6 +7,8 @@
 eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT = NULL;
 eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT = NULL;
 
+SAMURE_DEFINE_RESULT_UNWRAP(backend_opengl);
+
 struct samure_opengl_config *samure_default_opengl_config() {
   struct samure_opengl_config *cfg =
       malloc(sizeof(struct samure_opengl_config));

@@ -67,8 +67,8 @@ int main(int args, char *argv[]) {
   context_config.not_create_output_layer_surfaces = 1;
   context_config.max_fps = 60;
 
-  SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
-  struct samure_context *ctx = SAMURE_UNWRAP(context, ctx_rs);
+  struct samure_context *ctx =
+      SAMURE_UNWRAP(context, samure_create_context(&context_config));
 
   puts("Successfully initialized samurai-render context");
 
@@ -76,16 +76,13 @@ int main(int args, char *argv[]) {
 
   bgs = malloc(ctx->num_outputs * sizeof(struct samure_layer_surface *));
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    SAMURE_RESULT(layer_surface)
-    bgs_rs =
+    bgs[i] = SAMURE_UNWRAP(
+        layer_surface,
         samure_create_layer_surface(ctx, &ctx->outputs[i], SAMURE_LAYER_OVERLAY,
-                                    SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 0);
-    bgs[i] = SAMURE_UNWRAP(layer_surface, bgs_rs);
+                                    SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 0));
 
-    SAMURE_RESULT(shared_buffer)
-    screenshot_rs = samure_output_screenshot(ctx, &ctx->outputs[i]);
-    struct samure_shared_buffer *screenshot =
-        SAMURE_UNWRAP(shared_buffer, screenshot_rs);
+    struct samure_shared_buffer *screenshot = SAMURE_UNWRAP(
+        shared_buffer, samure_output_screenshot(ctx, &ctx->outputs[i]));
     samure_layer_surface_draw_buffer(bgs[i], screenshot);
     samure_destroy_shared_buffer(screenshot);
   }

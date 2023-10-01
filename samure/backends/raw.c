@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-SAMURE_RESULT(backend_raw) samure_init_backend_raw(struct samure_context *ctx) {
+SAMURE_DEFINE_RESULT_UNWRAP(backend_raw);
+
+SAMURE_RESULT(backend_raw)
+samure_init_backend_raw(struct samure_context *ctx) {
   SAMURE_RESULT_ALLOC(backend_raw, r);
 
   r->base.render_end = samure_backend_raw_render_end;

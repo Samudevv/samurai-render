@@ -10,6 +10,8 @@
 #include "backends/opengl.h"
 #include "backends/raw.h"
 
+SAMURE_DEFINE_RESULT_UNWRAP(context);
+
 struct samure_context_config samure_default_context_config() {
   struct samure_context_config c = {0};
   c.max_fps = SAMURE_MAX_FPS;

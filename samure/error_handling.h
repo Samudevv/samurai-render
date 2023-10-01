@@ -14,7 +14,16 @@
   SAMURE_RESULT(typename) {                                                    \
     SAMURE_RESULT_TYPE(typename) * result;                                     \
     samure_error error;                                                        \
+  };                                                                           \
+  inline SAMURE_RESULT_TYPE(typename) * _samure_##                             \
+      typename##_unwrap(SAMURE_RESULT(typename) rs) {                          \
+    assert(rs.error == SAMURE_ERROR_NONE);                                     \
+    return rs.result;                                                          \
   }
+
+#define SAMURE_DEFINE_RESULT_UNWRAP(typename)                                  \
+  extern inline SAMURE_RESULT_TYPE(typename) * _samure_##                      \
+      typename##_unwrap(SAMURE_RESULT(typename) rs)
 
 #define SAMURE_RETURN(typename, value, error_code)                             \
   SAMURE_RESULT(typename)                                                      \
@@ -33,9 +42,7 @@
     SAMURE_RETURN_ERROR(typename, error_code);                                 \
   }
 
-#define SAMURE_UNWRAP(typename, result)                                        \
-  ((SAMURE_RESULT_TYPE(typename) *)_samure_get_result(                         \
-      (struct _samure_generic_result *)&result))
+#define SAMURE_UNWRAP(typename, result) _samure_##typename##_unwrap(result)
 
 #define SAMURE_HAS_ERROR(result) (result.error != SAMURE_ERROR_NONE)
 #define SAMURE_IS_ERROR(error_code) (error_code != SAMURE_ERROR_NONE)
@@ -165,14 +172,4 @@ static int samure_perror(const char *msg, uint64_t error_code) {
   const int rv = fprintf(stderr, "%s: %s\n", msg, error_string);
   free(error_string);
   return rv;
-}
-
-struct _samure_generic_result {
-  void *result;
-  samure_error error;
-};
-
-static void *_samure_get_result(struct _samure_generic_result *result) {
-  assert(result->error == SAMURE_ERROR_NONE);
-  return result->result;
 }

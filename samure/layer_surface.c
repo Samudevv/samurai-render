@@ -12,6 +12,8 @@
     SAMURE_RETURN_ERROR(layer_surface, error_code);                            \
   }
 
+SAMURE_DEFINE_RESULT_UNWRAP(layer_surface);
+
 SAMURE_RESULT(layer_surface)
 samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
                             uint32_t layer, uint32_t anchor,

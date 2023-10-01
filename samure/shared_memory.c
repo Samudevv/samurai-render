@@ -8,6 +8,8 @@
 
 #define SHM_FILE_NAME "/samure-shared-memory"
 
+SAMURE_DEFINE_RESULT_UNWRAP(shared_buffer);
+
 SAMURE_RESULT(shared_buffer)
 samure_create_shared_buffer(struct wl_shm *shm, uint32_t format, int32_t width,
                             int32_t height) {

@@ -94,8 +94,8 @@ int main(void) {
   context_config.backend = SAMURE_BACKEND_CAIRO;
   context_config.pointer_interaction = 1;
 
-  SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
-  struct samure_context *ctx = SAMURE_UNWRAP(context, ctx_rs);
+  struct samure_context *ctx =
+      SAMURE_UNWRAP(context, samure_create_context(&context_config));
 
   const struct samure_rect r = samure_context_get_output_rect(ctx);
 

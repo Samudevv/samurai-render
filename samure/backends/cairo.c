@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+SAMURE_DEFINE_RESULT_UNWRAP(backend_cairo);
+
 SAMURE_RESULT(backend_cairo)
 samure_init_backend_cairo(struct samure_context *ctx) {
   SAMURE_RESULT_ALLOC(backend_cairo, c);
