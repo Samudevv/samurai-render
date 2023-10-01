@@ -33,6 +33,10 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
     ctx->num_seats++;
     ctx->seats =
         realloc(ctx->seats, ctx->num_seats * sizeof(struct samure_seat));
+    if (!ctx->seats) {
+      ctx->num_seats = 0;
+      return;
+    }
     ctx->seats[ctx->num_seats - 1] = samure_create_seat(seat);
   } else if (strcmp(interface, wl_compositor_interface.name) == 0) {
     ctx->compositor =
@@ -47,6 +51,10 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
     ctx->num_outputs++;
     ctx->outputs =
         realloc(ctx->outputs, ctx->num_outputs * sizeof(struct samure_output));
+    if (!ctx->outputs) {
+      ctx->num_outputs = 0;
+      return;
+    }
     ctx->outputs[ctx->num_outputs - 1] = samure_create_output(output);
 
   } else if (strcmp(interface, zxdg_output_manager_v1_interface.name) == 0) {

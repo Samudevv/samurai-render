@@ -160,9 +160,17 @@ static char *samure_build_error_string(uint64_t error_code) {
       const size_t err_str_len = strlen(err_str);
       error_string =
           realloc(error_string, index + err_str_len + 1 + 2 * (index != 0));
+      if (!error_string) {
+        index = 0;
+        continue;
+      }
       sprintf(&error_string[index], index == 0 ? "%s" : "; %s", err_str);
       index += err_str_len + 2 * (index != 0);
     }
+  }
+
+  if (!error_string) {
+    return strdup("error message failed");
   }
 
   return error_string;

@@ -44,6 +44,7 @@ samure_error samure_backend_cairo_associate_layer_surface(
   if (!cairo_sfc) {
     return SAMURE_ERROR_MEMORY;
   }
+  memset(cairo_sfc, 0, sizeof(struct samure_cairo_surface));
 
   SAMURE_RESULT(shared_buffer)
   b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,

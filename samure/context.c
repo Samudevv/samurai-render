@@ -263,6 +263,10 @@ void samure_context_set_input_regions(struct samure_context *ctx,
         num_output_rects++;
         output_rects = realloc(output_rects,
                                num_output_rects * sizeof(struct samure_rect));
+        if (!output_rects) {
+          num_output_rects = 0;
+          continue;
+        }
 
         output_rects[num_output_rects - 1].x =
             OUT_X2((&ctx->outputs[i]), r[i].x);

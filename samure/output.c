@@ -115,6 +115,10 @@ void samure_output_attach_layer_surface(struct samure_output *o,
                                         struct samure_layer_surface *sfc) {
   o->num_sfc++;
   o->sfc = realloc(o->sfc, o->num_sfc * sizeof(struct samure_layer_surface *));
+  if (!o->sfc) {
+    o->num_sfc = 0;
+    return;
+  }
   o->sfc[o->num_sfc - 1] = sfc;
 }
 
