@@ -11,6 +11,11 @@
     ctx->cap_events = ctx->num_events;                                         \
     ctx->events =                                                              \
         realloc(ctx->events, ctx->cap_events * sizeof(struct samure_event));   \
+    if (!ctx->events) {                                                        \
+      ctx->cap_events = 0;                                                     \
+      ctx->num_events = 0;                                                     \
+      return;                                                                  \
+    }                                                                          \
   }
 
 #define LAST_EVENT ctx->events[ctx->num_events - 1]
@@ -99,24 +104,25 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   }
   seat->last_pointer_enter = serial;
 
+  struct samure_output *output = NULL;
+
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    for (size_t j = 0; j < ctx->outputs[i].num_sfc; j++) {
+      if (ctx->outputs[i].sfc[j]->surface == surface) {
+        output = &ctx->outputs[i];
+        break;
+      }
+    }
+  }
+  seat->pointer_focus.output = output;
+
   NEW_EVENT();
 
   LAST_EVENT.type = SAMURE_EVENT_POINTER_ENTER;
   LAST_EVENT.seat = seat;
   LAST_EVENT.x = wl_fixed_to_double(surface_x);
   LAST_EVENT.y = wl_fixed_to_double(surface_y);
-  LAST_EVENT.output = NULL;
-
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    for (size_t j = 0; j < ctx->outputs[i].num_sfc; j++) {
-      if (ctx->outputs[i].sfc[j]->surface == surface) {
-        LAST_EVENT.output = &ctx->outputs[i];
-        break;
-      }
-    }
-  }
-
-  seat->pointer_focus.output = LAST_EVENT.output;
+  LAST_EVENT.output = output;
 }
 
 void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
@@ -125,22 +131,23 @@ void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_seat *seat = (struct samure_seat *)d->data;
   struct samure_context *ctx = d->ctx;
 
-  NEW_EVENT();
-
-  LAST_EVENT.type = SAMURE_EVENT_POINTER_LEAVE;
-  LAST_EVENT.seat = seat;
-  LAST_EVENT.output = NULL;
+  struct samure_output *output = NULL;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     for (size_t j = 0; j < ctx->outputs[i].num_sfc; j++) {
       if (ctx->outputs[i].sfc[j]->surface == surface) {
-        LAST_EVENT.output = &ctx->outputs[i];
+        output = &ctx->outputs[i];
         break;
       }
     }
   }
-
   seat->pointer_focus.output = NULL;
+
+  NEW_EVENT();
+
+  LAST_EVENT.type = SAMURE_EVENT_POINTER_LEAVE;
+  LAST_EVENT.seat = seat;
+  LAST_EVENT.output = output;
 }
 
 void pointer_motion(void *data, struct wl_pointer *pointer, uint32_t time,
@@ -179,6 +186,7 @@ void layer_surface_configure(void *data,
   struct samure_layer_surface_callback_data *d =
       (struct samure_layer_surface_callback_data *)data;
   struct samure_context *ctx = d->ctx;
+  zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
 
   NEW_EVENT();
 
@@ -187,8 +195,6 @@ void layer_surface_configure(void *data,
   LAST_EVENT.surface = d->surface;
   LAST_EVENT.width = width;
   LAST_EVENT.height = height;
-
-  zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
 }
 
 void layer_surface_closed(void *data,
@@ -230,22 +236,24 @@ void keyboard_enter(void *data, struct wl_keyboard *wl_keyboard,
   struct samure_context *ctx = d->ctx;
   struct samure_seat *seat = (struct samure_seat *)d->data;
 
-  NEW_EVENT();
-
-  LAST_EVENT.type = SAMURE_EVENT_KEYBOARD_ENTER;
-  LAST_EVENT.seat = seat;
-  LAST_EVENT.output = NULL;
+  struct samure_output *output = NULL;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     for (size_t j = 0; j < ctx->outputs[i].num_sfc; j++) {
       if (ctx->outputs[i].sfc[j]->surface == surface) {
-        LAST_EVENT.output = &ctx->outputs[i];
+        output = &ctx->outputs[i];
         break;
       }
     }
   }
 
-  seat->keyboard_focus.output = LAST_EVENT.output;
+  seat->keyboard_focus.output = output;
+
+  NEW_EVENT();
+
+  LAST_EVENT.type = SAMURE_EVENT_KEYBOARD_ENTER;
+  LAST_EVENT.seat = seat;
+  LAST_EVENT.output = output;
 }
 
 void keyboard_leave(void *data, struct wl_keyboard *wl_keyboard,
@@ -254,22 +262,24 @@ void keyboard_leave(void *data, struct wl_keyboard *wl_keyboard,
   struct samure_context *ctx = d->ctx;
   struct samure_seat *seat = (struct samure_seat *)d->data;
 
-  NEW_EVENT();
-
-  LAST_EVENT.type = SAMURE_EVENT_KEYBOARD_LEAVE;
-  LAST_EVENT.seat = seat;
-  LAST_EVENT.output = NULL;
+  struct samure_output *output = NULL;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     for (size_t j = 0; j < ctx->outputs[i].num_sfc; j++) {
       if (ctx->outputs[i].sfc[j]->surface == surface) {
-        LAST_EVENT.output = &ctx->outputs[i];
+        output = &ctx->outputs[i];
         break;
       }
     }
   }
 
   seat->keyboard_focus.output = NULL;
+
+  NEW_EVENT();
+
+  LAST_EVENT.type = SAMURE_EVENT_KEYBOARD_LEAVE;
+  LAST_EVENT.seat = seat;
+  LAST_EVENT.output = NULL;
 }
 
 void keyboard_key(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial,
