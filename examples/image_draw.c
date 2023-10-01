@@ -93,7 +93,7 @@ int main(int args, char *argv[]) {
   context_config.max_fps = 60;
 
   SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
-  struct samure_context *ctx = SAMURE_GET_RESULT(context, ctx_rs);
+  struct samure_context *ctx = SAMURE_UNWRAP(context, ctx_rs);
 
   puts("Successfully initialized samurai-render context");
 
@@ -102,9 +102,11 @@ int main(int args, char *argv[]) {
   if (bg_img) {
     bgs = malloc(ctx->num_outputs * sizeof(struct samure_layer_surface *));
     for (size_t i = 0; i < ctx->num_outputs; i++) {
-      bgs[i] = samure_create_layer_surface(
+      SAMURE_RESULT(layer_surface)
+      bgs_rs = samure_create_layer_surface(
           ctx, &ctx->outputs[i], SAMURE_LAYER_OVERLAY,
           SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 1);
+      bgs[i] = SAMURE_UNWRAP(layer_surface, bgs_rs);
 
       if (bg_img_w == ctx->outputs[i].geo.w &&
           bg_img_h == ctx->outputs[i].geo.h) {

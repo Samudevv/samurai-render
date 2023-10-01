@@ -97,7 +97,7 @@ samure_create_context(struct samure_context_config *config) {
       SAMURE_DESTROY_ERROR(context, ctx,
                            SAMURE_ERROR_BACKEND_INIT | o_rs.error);
     }
-    ctx->backend = &SAMURE_GET_RESULT(backend_opengl, o_rs)->base;
+    ctx->backend = &SAMURE_UNWRAP(backend_opengl, o_rs)->base;
 #else
     SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_NO_BACKEND_SUPPORT);
 #endif
@@ -109,7 +109,7 @@ samure_create_context(struct samure_context_config *config) {
       SAMURE_DESTROY_ERROR(context, ctx,
                            SAMURE_ERROR_BACKEND_INIT | c_rs.error);
     }
-    ctx->backend = &SAMURE_GET_RESULT(backend_cairo, c_rs)->base;
+    ctx->backend = &SAMURE_UNWRAP(backend_cairo, c_rs)->base;
 #else
     SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_NO_BACKEND_SUPPORT);
 #endif
@@ -123,7 +123,7 @@ samure_create_context(struct samure_context_config *config) {
       SAMURE_DESTROY_ERROR(context, ctx,
                            SAMURE_ERROR_BACKEND_INIT | r_rs.error);
     }
-    ctx->backend = &SAMURE_GET_RESULT(backend_raw, r_rs)->base;
+    ctx->backend = &SAMURE_UNWRAP(backend_raw, r_rs)->base;
   } break;
   }
 
@@ -345,18 +345,17 @@ samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     struct samure_output *o = &ctx->outputs[i];
 
-    struct samure_layer_surface *layer_surface = samure_create_layer_surface(
+    SAMURE_RESULT(layer_surface)
+    sfc_rs = samure_create_layer_surface(
         ctx, o, SAMURE_LAYER_OVERLAY, SAMURE_LAYER_SURFACE_ANCHOR_FILL,
         (uint32_t)ctx->config.keyboard_interaction,
         ctx->config.pointer_interaction || ctx->config.touch_interaction, 1);
-    if (layer_surface->error_string) {
-      free(layer_surface->error_string);
-      free(layer_surface);
-      error_code |= SAMURE_ERROR_LAYER_SURFACE_INIT;
+    if (SAMURE_HAS_ERROR(sfc_rs)) {
+      error_code |= SAMURE_ERROR_LAYER_SURFACE_INIT | sfc_rs.error;
       continue;
     }
 
-    samure_output_attach_layer_surface(o, layer_surface);
+    samure_output_attach_layer_surface(o, SAMURE_UNWRAP(layer_surface, sfc_rs));
   }
 
   return error_code;

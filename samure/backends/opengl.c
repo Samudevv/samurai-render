@@ -192,12 +192,18 @@ samure_error samure_backend_opengl_associate_layer_surface(
 void samure_backend_opengl_unassociate_layer_surface(
     struct samure_context *ctx, struct samure_backend *backend,
     struct samure_output *output, struct samure_layer_surface *layer_surface) {
+  if (!layer_surface->backend_data) {
+    return;
+  }
+
   struct samure_backend_opengl *gl = (struct samure_backend_opengl *)backend;
   struct samure_opengl_surface *s =
       (struct samure_opengl_surface *)layer_surface->backend_data;
 
-  eglDestroySurface(gl->display, s->surface);
-  wl_egl_window_destroy(s->egl_window);
+  if (s->surface)
+    eglDestroySurface(gl->display, s->surface);
+  if (s->egl_window)
+    wl_egl_window_destroy(s->egl_window);
   free(s);
   layer_surface->backend_data = NULL;
 }

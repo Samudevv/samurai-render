@@ -152,7 +152,7 @@ extern SAMURE_RESULT(shared_buffer)
   }
 
   struct samure_shared_buffer *buffer =
-      SAMURE_GET_RESULT(shared_buffer, data.buffer_rs);
+      SAMURE_UNWRAP(shared_buffer, data.buffer_rs);
 
   data.state = SAMURE_SCREENSHOT_PENDING;
   zwlr_screencopy_frame_v1_copy(frame, buffer->buffer);

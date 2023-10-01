@@ -1,40 +1,33 @@
 #include "layer_surface.h"
 #include "callbacks.h"
 #include "context.h"
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define SFC_ERR(msg)                                                           \
-  if (s->error_string)                                                         \
-    free(s->error_string);                                                     \
-  s->error_string = strdup(msg)
-#define SFC_ERR_F(format, ...)                                                 \
-  if (s->error_string)                                                         \
-    free(s->error_string);                                                     \
-  s->error_string = malloc(2048);                                              \
-  snprintf(s->error_string, 2048, format, __VA_ARGS__)
+#define SAMURE_LAYER_SURFACE_DESTROY_ERROR(error_code)                         \
+  {                                                                            \
+    samure_destroy_layer_surface(ctx, o, s);                                   \
+    SAMURE_RETURN_ERROR(layer_surface, error_code);                            \
+  }
 
-struct samure_layer_surface *
+SAMURE_RESULT(layer_surface)
 samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
                             uint32_t layer, uint32_t anchor,
                             uint32_t keyboard_interaction,
                             int pointer_interaction, int backend_association) {
-  struct samure_layer_surface *s = malloc(sizeof(struct samure_layer_surface));
-  memset(s, 0, sizeof(struct samure_layer_surface));
+  SAMURE_RESULT_ALLOC(layer_surface, s);
 
   s->surface = wl_compositor_create_surface(ctx->compositor);
   if (!s->surface) {
-    SFC_ERR("failed to create surface");
-    return s;
+    SAMURE_LAYER_SURFACE_DESTROY_ERROR(SAMURE_ERROR_SURFACE_INIT);
   }
 
   s->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
       ctx->layer_shell, s->surface, o->output, layer, "samurai-render");
   if (!s->layer_surface) {
-    SFC_ERR("failed to create layer surface");
-    wl_surface_destroy(s->surface);
-    return s;
+    SAMURE_LAYER_SURFACE_DESTROY_ERROR(SAMURE_ERROR_LAYER_SURFACE_INIT);
   }
 
   s->callback_data = samure_create_layer_surface_callback_data(ctx, o, s);
@@ -49,18 +42,24 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
     wl_surface_set_input_region(s->surface, NULL);
   } else {
     struct wl_region *reg = wl_compositor_create_region(ctx->compositor);
-    wl_surface_set_input_region(s->surface, reg);
-    wl_region_destroy(reg);
+    if (reg) {
+      wl_surface_set_input_region(s->surface, reg);
+      wl_region_destroy(reg);
+    }
   }
   wl_surface_commit(s->surface);
   wl_display_roundtrip(ctx->display);
 
   if (backend_association && ctx->backend &&
       ctx->backend->associate_layer_surface) {
-    ctx->backend->associate_layer_surface(ctx, ctx->backend, o, s);
+    const samure_error err =
+        ctx->backend->associate_layer_surface(ctx, ctx->backend, o, s);
+    if (SAMURE_IS_ERROR(err)) {
+      SAMURE_LAYER_SURFACE_DESTROY_ERROR(err);
+    }
   }
 
-  return s;
+  SAMURE_RETURN_RESULT(layer_surface, s);
 }
 
 void samure_destroy_layer_surface(struct samure_context *ctx,
@@ -70,10 +69,12 @@ void samure_destroy_layer_surface(struct samure_context *ctx,
     ctx->backend->unassociate_layer_surface(ctx, ctx->backend, o, sfc);
   }
 
-  zwlr_layer_surface_v1_destroy(sfc->layer_surface);
-  wl_surface_destroy(sfc->surface);
-  free(sfc->error_string);
-  free(sfc->callback_data);
+  if (sfc->layer_surface)
+    zwlr_layer_surface_v1_destroy(sfc->layer_surface);
+  if (sfc->surface)
+    wl_surface_destroy(sfc->surface);
+  if (sfc->callback_data)
+    free(sfc->callback_data);
   free(sfc);
 }
 
@@ -90,6 +91,7 @@ samure_create_layer_surface_callback_data(
     struct samure_layer_surface *surface) {
   struct samure_layer_surface_callback_data *d =
       malloc(sizeof(struct samure_layer_surface_callback_data));
+  assert(d != NULL);
   d->ctx = ctx;
   d->output = output;
   d->surface = surface;

@@ -51,7 +51,7 @@ samure_error samure_backend_raw_associate_layer_surface(
     return SAMURE_ERROR_SHARED_BUFFER_INIT | b_rs.error;
   }
 
-  raw_sfc->buffer = SAMURE_GET_RESULT(shared_buffer, b_rs);
+  raw_sfc->buffer = SAMURE_UNWRAP(shared_buffer, b_rs);
 
   sfc->backend_data = raw_sfc;
   samure_backend_raw_render_end(o, sfc, ctx, &r->base);

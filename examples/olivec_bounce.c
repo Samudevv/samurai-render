@@ -115,7 +115,7 @@ int main(void) {
   SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
   SAMURE_RETURN_AND_PRINT_ON_ERROR(ctx_rs, "Failed to create context",
                                    EXIT_FAILURE);
-  struct samure_context *ctx = SAMURE_GET_RESULT(context, ctx_rs);
+  struct samure_context *ctx = SAMURE_UNWRAP(context, ctx_rs);
 
   puts("Successfully initialized samurai-render context");
 

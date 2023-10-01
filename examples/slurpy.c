@@ -90,7 +90,7 @@ int main(void) {
   cfg.keyboard_interaction = 1;
 
   SAMURE_RESULT(context) ctx_rs = samure_create_context(&cfg);
-  struct samure_context *ctx = SAMURE_GET_RESULT(context, ctx_rs);
+  struct samure_context *ctx = SAMURE_UNWRAP(context, ctx_rs);
 
   for (size_t i = 0; i < ctx->num_seats; i++) {
     samure_seat_set_pointer_shape(&ctx->seats[i],

@@ -33,7 +33,7 @@
     SAMURE_RETURN_ERROR(typename, error_code);                                 \
   }
 
-#define SAMURE_GET_RESULT(typename, result)                                    \
+#define SAMURE_UNWRAP(typename, result)                                        \
   ((SAMURE_RESULT_TYPE(typename) *)_samure_get_result(                         \
       (struct _samure_generic_result *)&result))
 
@@ -90,9 +90,10 @@ enum samure_error_code {
   SAMURE_ERROR_FRAME_INIT = (1 << 28),
   SAMURE_ERROR_CAIRO_SURFACE_INIT = (1 << 29),
   SAMURE_ERROR_CAIRO_INIT = (1 << 30),
+  SAMURE_ERROR_SURFACE_INIT = (1 << 31),
 };
 
-#define SAMURE_NUM_ERRORS 31
+#define SAMURE_NUM_ERRORS 32
 
 typedef uint64_t samure_error;
 

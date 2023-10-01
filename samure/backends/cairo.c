@@ -51,7 +51,7 @@ samure_error samure_backend_cairo_associate_layer_surface(
     return SAMURE_ERROR_SHARED_BUFFER_INIT | b_rs.error;
   }
 
-  cairo_sfc->buffer = SAMURE_GET_RESULT(shared_buffer, b_rs);
+  cairo_sfc->buffer = SAMURE_UNWRAP(shared_buffer, b_rs);
 
   cairo_sfc->cairo_surface = cairo_image_surface_create_for_data(
       (unsigned char *)cairo_sfc->buffer->data, CAIRO_FORMAT_ARGB32,
@@ -89,8 +89,10 @@ void samure_backend_cairo_unassociate_layer_surface(
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)layer_surface->backend_data;
 
-  cairo_destroy(c->cairo);
-  cairo_surface_destroy(c->cairo_surface);
+  if (c->cairo)
+    cairo_destroy(c->cairo);
+  if (c->cairo_surface)
+    cairo_surface_destroy(c->cairo_surface);
   free(c);
   layer_surface->backend_data = NULL;
 }
