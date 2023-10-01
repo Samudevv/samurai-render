@@ -139,6 +139,7 @@ static const char *samure_strerror(enum samure_error_code error_code) {
   case SAMURE_ERROR_FRAME_INIT:                return "screencopy initialization failed";
   case SAMURE_ERROR_CAIRO_SURFACE_INIT:        return "cairo surface initialization failed";
   case SAMURE_ERROR_CAIRO_INIT:                return "cairo initialization failed";
+  case SAMURE_ERROR_SURFACE_INIT:              return "surface initialization failed";
   default:                                     return "unknown error";
   }
   // clang-format on
