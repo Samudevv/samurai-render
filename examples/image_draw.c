@@ -105,11 +105,7 @@ int main(int args, char *argv[]) {
       bgs[i] = SAMURE_UNWRAP(layer_surface,
                              samure_create_layer_surface(
                                  ctx, ctx->outputs[i], SAMURE_LAYER_OVERLAY,
-                                 SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 0));
-      bgs[i]->w = ctx->outputs[i]->geo.w;
-      bgs[i]->h = ctx->outputs[i]->geo.h;
-      SAMURE_ASSERT(samure_backend_cairo_associate_layer_surface(ctx, bgs[i]));
-
+                                 SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 1));
       if (bg_img_w == ctx->outputs[i]->geo.w &&
           bg_img_h == ctx->outputs[i]->geo.h) {
         struct samure_cairo_surface *c = samure_get_cairo_surface(bgs[i]);

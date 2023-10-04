@@ -21,6 +21,11 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
                             int backend_association) {
   SAMURE_RESULT_ALLOC(layer_surface, s);
 
+  if (o) {
+    s->w = o->geo.w;
+    s->h = o->geo.h;
+  }
+
   s->surface = wl_compositor_create_surface(ctx->compositor);
   if (!s->surface) {
     SAMURE_LAYER_SURFACE_DESTROY_ERROR(SAMURE_ERROR_SURFACE_INIT);

@@ -356,23 +356,10 @@ samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
     sfc_rs = samure_create_layer_surface(
         ctx, o, SAMURE_LAYER_OVERLAY, SAMURE_LAYER_SURFACE_ANCHOR_FILL,
         (uint32_t)ctx->config.keyboard_interaction,
-        ctx->config.pointer_interaction || ctx->config.touch_interaction, 0);
+        ctx->config.pointer_interaction || ctx->config.touch_interaction, 1);
     if (SAMURE_HAS_ERROR(sfc_rs)) {
       error_code |= SAMURE_ERROR_LAYER_SURFACE_INIT | sfc_rs.error;
       continue;
-    }
-
-    struct samure_layer_surface *sfc = SAMURE_UNWRAP(layer_surface, sfc_rs);
-    sfc->w = o->geo.w;
-    sfc->h = o->geo.h;
-
-    if (ctx->backend && ctx->backend->associate_layer_surface) {
-      const samure_error err = ctx->backend->associate_layer_surface(ctx, sfc);
-      if (SAMURE_IS_ERROR(err)) {
-        samure_destroy_layer_surface(ctx, sfc);
-        error_code |= err;
-        continue;
-      }
     }
 
     samure_output_attach_layer_surface(o, SAMURE_UNWRAP(layer_surface, sfc_rs));
