@@ -104,15 +104,15 @@ int main(int args, char *argv[]) {
     for (size_t i = 0; i < ctx->num_outputs; i++) {
       bgs[i] = SAMURE_UNWRAP(layer_surface,
                              samure_create_layer_surface(
-                                 ctx, &ctx->outputs[i], SAMURE_LAYER_OVERLAY,
+                                 ctx, ctx->outputs[i], SAMURE_LAYER_OVERLAY,
                                  SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 1));
 
-      if (bg_img_w == ctx->outputs[i].geo.w &&
-          bg_img_h == ctx->outputs[i].geo.h) {
+      if (bg_img_w == ctx->outputs[i]->geo.w &&
+          bg_img_h == ctx->outputs[i]->geo.h) {
         struct samure_cairo_surface *c = samure_get_cairo_surface(bgs[i]);
         memcpy(c->buffer->data, cairo_image_surface_get_data(bg_img),
-               ctx->outputs[i].geo.w * ctx->outputs[i].geo.h * 4);
-        ctx->backend->render_end(&ctx->outputs[i], bgs[i], ctx, ctx->backend);
+               ctx->outputs[i]->geo.w * ctx->outputs[i]->geo.h * 4);
+        ctx->backend->render_end(ctx->outputs[i], bgs[i], ctx, ctx->backend);
       }
     }
     cairo_surface_destroy(bg_img);
@@ -125,7 +125,7 @@ int main(int args, char *argv[]) {
 
   if (bgs) {
     for (size_t i = 0; i < ctx->num_outputs; i++) {
-      samure_destroy_layer_surface(ctx, &ctx->outputs[i], bgs[i]);
+      samure_destroy_layer_surface(ctx, ctx->outputs[i], bgs[i]);
     }
     free(bgs);
   }

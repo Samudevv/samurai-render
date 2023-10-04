@@ -22,7 +22,9 @@
 
 void registry_global(void *data, struct wl_registry *registry, uint32_t name,
                      const char *interface, uint32_t version) {
-  struct samure_context *ctx = (struct samure_context *)data;
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+  struct samure_registry_data *reg_d = (struct samure_registry_data *)d->data;
 
   if (strcmp(interface, wl_shm_interface.name) == 0) {
     ctx->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
@@ -30,14 +32,14 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
     struct wl_seat *seat =
         wl_registry_bind(registry, name, &wl_seat_interface, 1);
 
-    ctx->num_seats++;
-    ctx->seats =
-        realloc(ctx->seats, ctx->num_seats * sizeof(struct samure_seat));
-    if (!ctx->seats) {
-      ctx->num_seats = 0;
+    reg_d->num_seats++;
+    reg_d->seats =
+        realloc(reg_d->seats, reg_d->num_seats * sizeof(struct wl_seat *));
+    if (!reg_d->seats) {
+      reg_d->num_seats = 0;
       return;
     }
-    ctx->seats[ctx->num_seats - 1] = samure_create_seat(seat);
+    reg_d->seats[reg_d->num_seats - 1] = seat;
   } else if (strcmp(interface, wl_compositor_interface.name) == 0) {
     ctx->compositor =
         wl_registry_bind(registry, name, &wl_compositor_interface, 1);
@@ -48,15 +50,14 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
     struct wl_output *output =
         wl_registry_bind(registry, name, &wl_output_interface, 3);
 
-    ctx->num_outputs++;
-    ctx->outputs =
-        realloc(ctx->outputs, ctx->num_outputs * sizeof(struct samure_output));
-    if (!ctx->outputs) {
-      ctx->num_outputs = 0;
+    reg_d->num_outputs++;
+    reg_d->outputs = realloc(reg_d->outputs,
+                             reg_d->num_outputs * sizeof(struct wl_output *));
+    if (!reg_d->outputs) {
+      reg_d->num_outputs = 0;
       return;
     }
-    ctx->outputs[ctx->num_outputs - 1] = samure_create_output(output);
-
+    reg_d->outputs[reg_d->num_outputs - 1] = output;
   } else if (strcmp(interface, zxdg_output_manager_v1_interface.name) == 0) {
     ctx->output_manager =
         wl_registry_bind(registry, name, &zxdg_output_manager_v1_interface, 2);
@@ -115,9 +116,9 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_output *output = NULL;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    for (size_t j = 0; j < ctx->outputs[i].num_sfc; j++) {
-      if (ctx->outputs[i].sfc[j]->surface == surface) {
-        output = &ctx->outputs[i];
+    for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {
+      if (ctx->outputs[i]->sfc[j]->surface == surface) {
+        output = ctx->outputs[i];
         break;
       }
     }
@@ -142,9 +143,9 @@ void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_output *output = NULL;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    for (size_t j = 0; j < ctx->outputs[i].num_sfc; j++) {
-      if (ctx->outputs[i].sfc[j]->surface == surface) {
-        output = &ctx->outputs[i];
+    for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {
+      if (ctx->outputs[i]->sfc[j]->surface == surface) {
+        output = ctx->outputs[i];
         break;
       }
     }
@@ -247,9 +248,9 @@ void keyboard_enter(void *data, struct wl_keyboard *wl_keyboard,
   struct samure_output *output = NULL;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    for (size_t j = 0; j < ctx->outputs[i].num_sfc; j++) {
-      if (ctx->outputs[i].sfc[j]->surface == surface) {
-        output = &ctx->outputs[i];
+    for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {
+      if (ctx->outputs[i]->sfc[j]->surface == surface) {
+        output = ctx->outputs[i];
         break;
       }
     }
@@ -273,9 +274,9 @@ void keyboard_leave(void *data, struct wl_keyboard *wl_keyboard,
   struct samure_output *output = NULL;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    for (size_t j = 0; j < ctx->outputs[i].num_sfc; j++) {
-      if (ctx->outputs[i].sfc[j]->surface == surface) {
-        output = &ctx->outputs[i];
+    for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {
+      if (ctx->outputs[i]->sfc[j]->surface == surface) {
+        output = ctx->outputs[i];
         break;
       }
     }

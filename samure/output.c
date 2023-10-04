@@ -1,23 +1,40 @@
 #include "output.h"
 #include "callbacks.h"
 #include "context.h"
+#include <assert.h>
 #include <stdlib.h>
 
-struct samure_output samure_create_output(struct wl_output *output) {
-  struct samure_output o = {0};
-  o.output = output;
-  return o;
+SAMURE_DEFINE_RESULT_UNWRAP(output);
+
+SAMURE_RESULT(output)
+samure_create_output(struct samure_context *ctx, struct wl_output *output) {
+  SAMURE_RESULT_ALLOC(output, o);
+
+  o->output = output;
+  o->xdg_output =
+      zxdg_output_manager_v1_get_xdg_output(ctx->output_manager, o->output);
+  if (!o->xdg_output) {
+    samure_destroy_output(ctx, o);
+    SAMURE_RETURN_ERROR(output, SAMURE_ERROR_OUTPUT_INIT);
+  }
+  zxdg_output_v1_add_listener(o->xdg_output, &xdg_output_listener, o);
+  wl_display_roundtrip(ctx->display);
+
+  SAMURE_RETURN_RESULT(output, o);
 }
 
 void samure_destroy_output(struct samure_context *ctx,
-                           struct samure_output output) {
-  free(output.name);
-  for (size_t i = 0; i < output.num_sfc; i++) {
-    samure_destroy_layer_surface(ctx, &output, output.sfc[i]);
+                           struct samure_output *o) {
+  free(o->name);
+  for (size_t i = 0; i < o->num_sfc; i++) {
+    samure_destroy_layer_surface(ctx, o, o->sfc[i]);
   }
-  free(output.sfc);
-  zxdg_output_v1_destroy(output.xdg_output);
-  wl_output_destroy(output.output);
+  free(o->sfc);
+  if (o->xdg_output)
+    zxdg_output_v1_destroy(o->xdg_output);
+  if (o->output)
+    wl_output_destroy(o->output);
+  free(o);
 }
 
 int samure_circle_in_output(struct samure_output *o, int32_t x, int32_t y,
@@ -128,6 +145,7 @@ extern SAMURE_RESULT(shared_buffer)
   struct samure_screenshot_data data = {0};
   data.ctx = ctx;
   data.output = output;
+  data.buffer_rs.error = SAMURE_ERROR_NOT_IMPLEMENTED;
 
   struct zwlr_screencopy_frame_v1 *frame =
       zwlr_screencopy_manager_v1_capture_output(ctx->screencopy_manager, 1,

@@ -73,10 +73,10 @@ struct samure_context {
   struct wp_cursor_shape_manager_v1 *cursor_shape_manager;
   struct zwlr_screencopy_manager_v1 *screencopy_manager;
 
-  struct samure_seat *seats;
+  struct samure_seat **seats;
   size_t num_seats;
 
-  struct samure_output *outputs;
+  struct samure_output **outputs;
   size_t num_outputs;
 
   struct samure_event *events;
@@ -91,6 +91,13 @@ struct samure_context {
   struct samure_context_config config;
 
   struct samure_frame_timer frame_timer;
+};
+
+struct samure_registry_data {
+  struct wl_seat **seats;
+  size_t num_seats;
+  struct wl_output **outputs;
+  size_t num_outputs;
 };
 
 SAMURE_DEFINE_RESULT(context);

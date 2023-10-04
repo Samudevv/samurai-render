@@ -93,7 +93,7 @@ int main(void) {
       SAMURE_UNWRAP(context, samure_create_context(&cfg));
 
   for (size_t i = 0; i < ctx->num_seats; i++) {
-    samure_seat_set_pointer_shape(&ctx->seats[i],
+    samure_seat_set_pointer_shape(ctx->seats[i],
                                   WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CROSSHAIR);
   }
 

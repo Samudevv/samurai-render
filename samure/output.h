@@ -1,5 +1,6 @@
 #pragma once
 
+#include "error_handling.h"
 #include "layer_surface.h"
 #include "shared_memory.h"
 #include "wayland/wlr-layer-shell-unstable-v1.h"
@@ -46,9 +47,12 @@ struct samure_screenshot_data {
   enum samure_screenshot_state state;
 };
 
-extern struct samure_output samure_create_output(struct wl_output *output);
+SAMURE_DEFINE_RESULT(output);
+
+extern SAMURE_RESULT(output)
+    samure_create_output(struct samure_context *ctx, struct wl_output *output);
 extern void samure_destroy_output(struct samure_context *ctx,
-                                  struct samure_output output);
+                                  struct samure_output *output);
 extern int samure_circle_in_output(struct samure_output *output,
                                    int32_t circle_x, int32_t circle_y,
                                    int32_t radius);

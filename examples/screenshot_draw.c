@@ -78,11 +78,11 @@ int main(int args, char *argv[]) {
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     bgs[i] = SAMURE_UNWRAP(
         layer_surface,
-        samure_create_layer_surface(ctx, &ctx->outputs[i], SAMURE_LAYER_OVERLAY,
+        samure_create_layer_surface(ctx, ctx->outputs[i], SAMURE_LAYER_OVERLAY,
                                     SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 0));
 
     struct samure_shared_buffer *screenshot = SAMURE_UNWRAP(
-        shared_buffer, samure_output_screenshot(ctx, &ctx->outputs[i]));
+        shared_buffer, samure_output_screenshot(ctx, ctx->outputs[i]));
     samure_layer_surface_draw_buffer(bgs[i], screenshot);
     samure_destroy_shared_buffer(screenshot);
   }
@@ -94,7 +94,7 @@ int main(int args, char *argv[]) {
 
   if (bgs) {
     for (size_t i = 0; i < ctx->num_outputs; i++) {
-      samure_destroy_layer_surface(ctx, &ctx->outputs[i], bgs[i]);
+      samure_destroy_layer_surface(ctx, ctx->outputs[i], bgs[i]);
     }
     free(bgs);
   }

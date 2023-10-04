@@ -46,14 +46,17 @@ samure_create_context(struct samure_context_config *config) {
     SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_DISPLAY_CONNECT);
   }
 
+  struct samure_registry_data reg_d = {0};
+
   struct wl_registry *registry = wl_display_get_registry(ctx->display);
-  wl_registry_add_listener(registry, &registry_listener, ctx);
+  wl_registry_add_listener(registry, &registry_listener,
+                           samure_create_callback_data(ctx, &reg_d));
   wl_display_roundtrip(ctx->display);
 
   uint64_t error_code = SAMURE_ERROR_NONE;
 
   // clang-format off
-  if (ctx->num_outputs == 0)             { error_code |= SAMURE_ERROR_NO_OUTPUTS;              }
+  if (reg_d.num_outputs == 0)            { error_code |= SAMURE_ERROR_NO_OUTPUTS;              }
   if (ctx->output_manager == NULL)       { error_code |= SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER;   }
   if (ctx->layer_shell == NULL)          { error_code |= SAMURE_ERROR_NO_LAYER_SHELL;          }
   if (ctx->shm == NULL)                  { error_code |= SAMURE_ERROR_NO_SHM;                  }
@@ -66,28 +69,17 @@ samure_create_context(struct samure_context_config *config) {
     SAMURE_DESTROY_ERROR(context, ctx, error_code);
   }
 
-  if (ctx->num_seats != 0) {
-    for (size_t i = 0; i < ctx->num_seats; i++) {
-      wl_seat_add_listener(ctx->seats[i].seat, &seat_listener,
-                           samure_create_callback_data(ctx, &ctx->seats[i]));
-    }
-    wl_display_roundtrip(ctx->display);
-    for (size_t i = 0; i < ctx->num_seats; i++) {
-      struct samure_callback_data *cbd =
-          samure_create_callback_data(ctx, &ctx->seats[i]);
-
-      if (ctx->seats[i].pointer) {
-        wl_pointer_add_listener(ctx->seats[i].pointer, &pointer_listener, cbd);
-      }
-      if (ctx->seats[i].keyboard) {
-        wl_keyboard_add_listener(ctx->seats[i].keyboard, &keyboard_listener,
-                                 cbd);
-      }
-      if (ctx->seats[i].touch) {
-        // TODO: Add touch listener
+  if (reg_d.num_seats != 0) {
+    ctx->seats = malloc(ctx->num_seats * sizeof(struct samure_seat *));
+    for (size_t i = 0; i < reg_d.num_seats; i++) {
+      SAMURE_RESULT(seat) s_rs = samure_create_seat(ctx, reg_d.seats[i]);
+      if (!SAMURE_HAS_ERROR(s_rs)) {
+        ctx->seats[ctx->num_seats] = SAMURE_UNWRAP(seat, s_rs);
+        ctx->num_seats++;
       }
     }
   }
+  free(reg_d.seats);
 
   switch (ctx->config.backend) {
   case SAMURE_BACKEND_OPENGL: {
@@ -129,15 +121,17 @@ samure_create_context(struct samure_context_config *config) {
   } break;
   }
 
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    struct samure_output *o = &ctx->outputs[i];
-
-    o->xdg_output =
-        zxdg_output_manager_v1_get_xdg_output(ctx->output_manager, o->output);
-    /* TODO: handle errors*/
-    zxdg_output_v1_add_listener(o->xdg_output, &xdg_output_listener, o);
+  ctx->outputs = malloc(reg_d.num_outputs * sizeof(struct samure_output *));
+  if (ctx->outputs) {
+    for (size_t i = 0; i < reg_d.num_outputs; i++) {
+      SAMURE_RESULT(output) o_rs = samure_create_output(ctx, reg_d.outputs[i]);
+      if (!SAMURE_HAS_ERROR(o_rs)) {
+        ctx->outputs[ctx->num_outputs] = SAMURE_UNWRAP(output, o_rs);
+        ctx->num_outputs++;
+      }
+    }
   }
-  wl_display_roundtrip(ctx->display);
+  free(reg_d.outputs);
 
   ctx->frame_timer = samure_init_frame_timer(ctx->config.max_fps);
 
@@ -198,7 +192,7 @@ void samure_context_run(struct samure_context *ctx) {
 
     if (ctx->render_state != SAMURE_RENDER_STATE_NONE) {
       for (size_t i = 0; i < ctx->num_outputs; i++) {
-        samure_context_render_output(ctx, &ctx->outputs[i],
+        samure_context_render_output(ctx, ctx->outputs[i],
                                      ctx->config.render_callback,
                                      ctx->frame_timer.delta_time);
       }
@@ -216,25 +210,29 @@ void samure_context_run(struct samure_context *ctx) {
 }
 
 struct samure_rect samure_context_get_output_rect(struct samure_context *ctx) {
+  if (ctx->num_outputs == 0) {
+    struct samure_rect r = {.x = 0, .y = 0, .w = 0, .h = 0};
+  }
+
   struct samure_rect r = {
-      .x = ctx->outputs[0].geo.x,
-      .y = ctx->outputs[0].geo.y,
-      .w = ctx->outputs[0].geo.x + ctx->outputs[0].geo.w,
-      .h = ctx->outputs[0].geo.y + ctx->outputs[0].geo.h,
+      .x = ctx->outputs[0]->geo.x,
+      .y = ctx->outputs[0]->geo.y,
+      .w = ctx->outputs[0]->geo.x + ctx->outputs[0]->geo.w,
+      .h = ctx->outputs[0]->geo.y + ctx->outputs[0]->geo.h,
   };
 
   for (size_t i = 1; i < ctx->num_outputs; i++) {
-    if (ctx->outputs[i].geo.x < r.x) {
-      r.x = ctx->outputs[i].geo.x;
+    if (ctx->outputs[i]->geo.x < r.x) {
+      r.x = ctx->outputs[i]->geo.x;
     }
-    if (ctx->outputs[i].geo.y < r.y) {
-      r.y = ctx->outputs[i].geo.y;
+    if (ctx->outputs[i]->geo.y < r.y) {
+      r.y = ctx->outputs[i]->geo.y;
     }
-    if (ctx->outputs[i].geo.x + ctx->outputs[i].geo.w > r.w) {
-      r.w = ctx->outputs[i].geo.x + ctx->outputs[i].geo.w;
+    if (ctx->outputs[i]->geo.x + ctx->outputs[i]->geo.w > r.w) {
+      r.w = ctx->outputs[i]->geo.x + ctx->outputs[i]->geo.w;
     }
-    if (ctx->outputs[i].geo.y + ctx->outputs[i].geo.h > r.h) {
-      r.h = ctx->outputs[i].geo.y + ctx->outputs[i].geo.h;
+    if (ctx->outputs[i]->geo.y + ctx->outputs[i]->geo.h > r.h) {
+      r.h = ctx->outputs[i]->geo.y + ctx->outputs[i]->geo.h;
     }
   }
 
@@ -247,7 +245,7 @@ struct samure_rect samure_context_get_output_rect(struct samure_context *ctx) {
 void samure_context_set_pointer_interaction(struct samure_context *ctx,
                                             int enable) {
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    samure_output_set_pointer_interaction(ctx, &ctx->outputs[i], enable);
+    samure_output_set_pointer_interaction(ctx, ctx->outputs[i], enable);
   }
 }
 
@@ -258,7 +256,7 @@ void samure_context_set_input_regions(struct samure_context *ctx,
     size_t num_output_rects = 0;
 
     for (size_t i = 0; i < num_rects; i++) {
-      if (samure_rect_in_output(&ctx->outputs[j], r[i].x, r[i].y, r[i].w,
+      if (samure_rect_in_output(ctx->outputs[j], r[i].x, r[i].y, r[i].w,
                                 r[i].h)) {
         num_output_rects++;
         output_rects = realloc(output_rects,
@@ -268,16 +266,14 @@ void samure_context_set_input_regions(struct samure_context *ctx,
           continue;
         }
 
-        output_rects[num_output_rects - 1].x =
-            OUT_X2((&ctx->outputs[i]), r[i].x);
-        output_rects[num_output_rects - 1].y =
-            OUT_Y2((&ctx->outputs[i]), r[i].y);
+        output_rects[num_output_rects - 1].x = OUT_X2(ctx->outputs[i], r[i].x);
+        output_rects[num_output_rects - 1].y = OUT_Y2(ctx->outputs[i], r[i].y);
         output_rects[num_output_rects - 1].w = r[i].w;
         output_rects[num_output_rects - 1].h = r[i].h;
       }
     }
 
-    samure_output_set_input_regions(ctx, &ctx->outputs[j], output_rects,
+    samure_output_set_input_regions(ctx, ctx->outputs[j], output_rects,
                                     num_output_rects);
     free(output_rects);
   }
@@ -286,7 +282,7 @@ void samure_context_set_input_regions(struct samure_context *ctx,
 void samure_context_set_keyboard_interaction(struct samure_context *ctx,
                                              int enable) {
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    samure_output_set_keyboard_interaction(&ctx->outputs[i], enable);
+    samure_output_set_keyboard_interaction(ctx->outputs[i], enable);
   }
 }
 
@@ -349,7 +345,7 @@ samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
   uint64_t error_code = SAMURE_ERROR_NONE;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    struct samure_output *o = &ctx->outputs[i];
+    struct samure_output *o = ctx->outputs[i];
 
     SAMURE_RESULT(layer_surface)
     sfc_rs = samure_create_layer_surface(

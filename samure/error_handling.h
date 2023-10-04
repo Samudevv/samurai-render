@@ -27,8 +27,8 @@
 
 #define SAMURE_RETURN(typename, value, error_code)                             \
   SAMURE_RESULT(typename)                                                      \
-  __FUNCTION__##_result = {.result = value, .error = error_code};              \
-  return __FUNCTION__##_result
+  _##typename##_result = {.result = value, .error = error_code};               \
+  return _##typename##_result
 
 #define SAMURE_RETURN_RESULT(typename, value)                                  \
   SAMURE_RETURN(typename, value, SAMURE_ERROR_NONE)
@@ -64,47 +64,46 @@
   }                                                                            \
   memset(varname, 0, sizeof(*varname))
 
-enum samure_error_code {
-  SAMURE_ERROR_NONE = 0,
-  SAMURE_ERROR_FAILED = (1 << 0),
-  SAMURE_ERROR_NOT_IMPLEMENTED = (1 << 1),
-  SAMURE_ERROR_DISPLAY_CONNECT = (1 << 2),
-  SAMURE_ERROR_NO_OUTPUTS = (1 << 3),
-  SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER = (1 << 4),
-  SAMURE_ERROR_NO_LAYER_SHELL = (1 << 5),
-  SAMURE_ERROR_NO_SHM = (1 << 6),
-  SAMURE_ERROR_NO_COMPOSITOR = (1 << 7),
-  SAMURE_ERROR_NO_CURSOR_SHAPE_MANAGER = (1 << 8),
-  SAMURE_ERROR_NO_SCREENCOPY_MANAGER = (1 << 9),
-  SAMURE_ERROR_BACKEND_INIT = (1 << 10),
-  SAMURE_ERROR_NO_BACKEND_SUPPORT = (1 << 11),
-  SAMURE_ERROR_LAYER_SURFACE_INIT = (1 << 12),
-  SAMURE_ERROR_MEMORY = (1 << 13),
-  SAMURE_ERROR_SHARED_BUFFER_INIT = (1 << 14),
-  SAMURE_ERROR_OPENGL_LOAD_PROC = (1 << 15),
-  SAMURE_ERROR_OPENGL_DISPLAY_CONNECT = (1 << 16),
-  SAMURE_ERROR_OPENGL_INITIALIZE = (1 << 17),
-  SAMURE_ERROR_OPENGL_CONFIG = (1 << 18),
-  SAMURE_ERROR_OPENGL_BIND_API = (1 << 19),
-  SAMURE_ERROR_OPENGL_CONTEXT_INIT = (1 << 20),
-  SAMURE_ERROR_OPENGL_WL_EGL_WINDOW_INIT = (1 << 21),
-  SAMURE_ERROR_OPENGL_SURFACE_INIT = (1 << 22),
-  SAMURE_ERROR_SHARED_BUFFER_FD_INIT = (1 << 23),
-  SAMURE_ERROR_SHARED_BUFFER_TRUNCATE = (1 << 24),
-  SAMURE_ERROR_SHARED_BUFFER_MMAP = (1 << 25),
-  SAMURE_ERROR_SHARED_BUFFER_POOL_INIT = (1 << 26),
-  SAMURE_ERROR_SHARED_BUFFER_BUFFER_INIT = (1 << 27),
-  SAMURE_ERROR_FRAME_INIT = (1 << 28),
-  SAMURE_ERROR_CAIRO_SURFACE_INIT = (1 << 29),
-  SAMURE_ERROR_CAIRO_INIT = (1 << 30),
-  SAMURE_ERROR_SURFACE_INIT = (1 << 31),
-};
+#define SAMURE_ERROR_NONE 0
+#define SAMURE_ERROR_FAILED (1 << 0)
+#define SAMURE_ERROR_NOT_IMPLEMENTED (1 << 1)
+#define SAMURE_ERROR_DISPLAY_CONNECT (1 << 2)
+#define SAMURE_ERROR_NO_OUTPUTS (1 << 3)
+#define SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER (1 << 4)
+#define SAMURE_ERROR_NO_LAYER_SHELL (1 << 5)
+#define SAMURE_ERROR_NO_SHM (1 << 6)
+#define SAMURE_ERROR_NO_COMPOSITOR (1 << 7)
+#define SAMURE_ERROR_NO_CURSOR_SHAPE_MANAGER (1 << 8)
+#define SAMURE_ERROR_NO_SCREENCOPY_MANAGER (1 << 9)
+#define SAMURE_ERROR_BACKEND_INIT (1 << 10)
+#define SAMURE_ERROR_NO_BACKEND_SUPPORT (1 << 11)
+#define SAMURE_ERROR_LAYER_SURFACE_INIT (1 << 12)
+#define SAMURE_ERROR_MEMORY (1 << 13)
+#define SAMURE_ERROR_SHARED_BUFFER_INIT (1 << 14)
+#define SAMURE_ERROR_OPENGL_LOAD_PROC (1 << 15)
+#define SAMURE_ERROR_OPENGL_DISPLAY_CONNECT (1 << 16)
+#define SAMURE_ERROR_OPENGL_INITIALIZE (1 << 17)
+#define SAMURE_ERROR_OPENGL_CONFIG (1 << 18)
+#define SAMURE_ERROR_OPENGL_BIND_API (1 << 19)
+#define SAMURE_ERROR_OPENGL_CONTEXT_INIT (1 << 20)
+#define SAMURE_ERROR_OPENGL_WL_EGL_WINDOW_INIT (1 << 21)
+#define SAMURE_ERROR_OPENGL_SURFACE_INIT (1 << 22)
+#define SAMURE_ERROR_SHARED_BUFFER_FD_INIT (1 << 23)
+#define SAMURE_ERROR_SHARED_BUFFER_TRUNCATE (1 << 24)
+#define SAMURE_ERROR_SHARED_BUFFER_MMAP (1 << 25)
+#define SAMURE_ERROR_SHARED_BUFFER_POOL_INIT (1 << 26)
+#define SAMURE_ERROR_SHARED_BUFFER_BUFFER_INIT (1 << 27)
+#define SAMURE_ERROR_FRAME_INIT (1 << 28)
+#define SAMURE_ERROR_CAIRO_SURFACE_INIT (1 << 29)
+#define SAMURE_ERROR_CAIRO_INIT (1 << 30)
+#define SAMURE_ERROR_SURFACE_INIT ((samure_error)1 << 31)
+#define SAMURE_ERROR_OUTPUT_INIT ((samure_error)1 << 32)
 
-#define SAMURE_NUM_ERRORS 32
+#define SAMURE_NUM_ERRORS 33
 
 typedef uint64_t samure_error;
 
-static const char *samure_strerror(enum samure_error_code error_code) {
+static const char *samure_strerror(samure_error error_code) {
   // clang-format off
   switch (error_code) {
   case SAMURE_ERROR_NONE:                      return "no error";
@@ -140,12 +139,13 @@ static const char *samure_strerror(enum samure_error_code error_code) {
   case SAMURE_ERROR_CAIRO_SURFACE_INIT:        return "cairo surface initialization failed";
   case SAMURE_ERROR_CAIRO_INIT:                return "cairo initialization failed";
   case SAMURE_ERROR_SURFACE_INIT:              return "surface initialization failed";
+  case SAMURE_ERROR_OUTPUT_INIT:               return "output initialization failed";
   default:                                     return "unknown error";
   }
   // clang-format on
 }
 
-static char *samure_build_error_string(uint64_t error_code) {
+static char *samure_build_error_string(samure_error error_code) {
   if (error_code == SAMURE_ERROR_NONE) {
     return strdup(samure_strerror(SAMURE_ERROR_NONE));
   }
@@ -154,7 +154,7 @@ static char *samure_build_error_string(uint64_t error_code) {
   size_t index = 0;
 
   for (samure_error i = 0; i < SAMURE_NUM_ERRORS - 1; i++) {
-    enum samure_error_code code = error_code & (1 << i);
+    const samure_error code = error_code & (1 << i);
     if (code != SAMURE_ERROR_NONE) {
       const char *err_str = samure_strerror(code);
       const size_t err_str_len = strlen(err_str);
@@ -176,7 +176,7 @@ static char *samure_build_error_string(uint64_t error_code) {
   return error_string;
 }
 
-static int samure_perror(const char *msg, uint64_t error_code) {
+static int samure_perror(const char *msg, samure_error error_code) {
   char *error_string = samure_build_error_string(error_code);
   const int rv = fprintf(stderr, "%s: %s\n", msg, error_string);
   free(error_string);

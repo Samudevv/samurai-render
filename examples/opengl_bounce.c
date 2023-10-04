@@ -89,7 +89,7 @@ int main(void) {
       SAMURE_UNWRAP(context, samure_create_context(&cfg));
 
   samure_backend_opengl_make_context_current(
-      (struct samure_backend_opengl *)ctx->backend, ctx->outputs[0].sfc[0]);
+      (struct samure_backend_opengl *)ctx->backend, ctx->outputs[0]->sfc[0]);
 
   printf("OpenGL: %s %s\n", glGetString(GL_VENDOR), glGetString(GL_VERSION));
 

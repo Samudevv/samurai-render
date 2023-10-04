@@ -100,7 +100,7 @@ static void update_callback(struct samure_context *ctx, double delta_time,
     }
 
     for (size_t i = 0; i < ctx->num_seats; i++) {
-      samure_seat_set_pointer_shape(&ctx->seats[i], d->current_cursor);
+      samure_seat_set_pointer_shape(ctx->seats[i], d->current_cursor);
     }
   }
 }
@@ -110,7 +110,7 @@ int main(void) {
 
   struct samure_context_config context_config = samure_create_context_config(
       event_callback, render_callback, update_callback, &d);
-  context_config.pointer_interaction = 1;
+  context_config.pointer_interaction = 0;
 
   SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
   SAMURE_RETURN_AND_PRINT_ON_ERROR(ctx_rs, "Failed to create context",
@@ -122,9 +122,9 @@ int main(void) {
   d.canvas = malloc(ctx->num_outputs * sizeof(Olivec_Canvas));
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     struct samure_raw_surface *r =
-        (struct samure_raw_surface *)ctx->outputs[i].sfc[0]->backend_data;
-    d.canvas[i] = olivec_canvas(r->buffer->data, ctx->outputs[i].geo.w,
-                                ctx->outputs[i].geo.h, ctx->outputs[i].geo.w);
+        samure_get_raw_surface(ctx->outputs[i]->sfc[0]);
+    d.canvas[i] = olivec_canvas(r->buffer->data, ctx->outputs[i]->geo.w,
+                                ctx->outputs[i]->geo.h, ctx->outputs[i]->geo.w);
   }
 
   const struct samure_rect rt = samure_context_get_output_rect(ctx);
@@ -139,7 +139,7 @@ int main(void) {
 
   // Clear screen on exit (to avoid fading animation)
   for (size_t i = 0; i < ctx->num_outputs; i++) {
-    samure_context_render_output(ctx, &ctx->outputs[i],
+    samure_context_render_output(ctx, ctx->outputs[i],
                                  render_callback_clear_outputs_on_exit, 0.0);
   }
 
