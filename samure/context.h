@@ -129,5 +129,5 @@ extern void samure_context_update(struct samure_context *ctx,
                                   samure_update_callback update_callback,
                                   double delta_time);
 
-extern uint64_t
+extern samure_error
 samure_context_create_output_layer_surfaces(struct samure_context *ctx);

@@ -53,7 +53,7 @@ samure_create_context(struct samure_context_config *config) {
                            samure_create_callback_data(ctx, &reg_d));
   wl_display_roundtrip(ctx->display);
 
-  uint64_t error_code = SAMURE_ERROR_NONE;
+  samure_error error_code = SAMURE_ERROR_NONE;
 
   // clang-format off
   if (reg_d.num_outputs == 0)            { error_code |= SAMURE_ERROR_NO_OUTPUTS;              }
@@ -136,7 +136,7 @@ samure_create_context(struct samure_context_config *config) {
   ctx->frame_timer = samure_init_frame_timer(ctx->config.max_fps);
 
   if (!ctx->config.not_create_output_layer_surfaces) {
-    const uint64_t err = samure_context_create_output_layer_surfaces(ctx);
+    const samure_error err = samure_context_create_output_layer_surfaces(ctx);
     if (SAMURE_IS_ERROR(err)) {
       SAMURE_DESTROY_ERROR(context, ctx, err);
     }
@@ -340,9 +340,9 @@ void samure_context_update(struct samure_context *ctx,
   }
 }
 
-uint64_t
+samure_error
 samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
-  uint64_t error_code = SAMURE_ERROR_NONE;
+  samure_error error_code = SAMURE_ERROR_NONE;
 
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     struct samure_output *o = ctx->outputs[i];
