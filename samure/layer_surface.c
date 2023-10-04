@@ -8,7 +8,7 @@
 
 #define SAMURE_LAYER_SURFACE_DESTROY_ERROR(error_code)                         \
   {                                                                            \
-    samure_destroy_layer_surface(ctx, o, s);                                   \
+    samure_destroy_layer_surface(ctx, s);                                      \
     SAMURE_RETURN_ERROR(layer_surface, error_code);                            \
   }
 
@@ -55,7 +55,7 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
   if (backend_association && ctx->backend &&
       ctx->backend->associate_layer_surface) {
     const samure_error err =
-        ctx->backend->associate_layer_surface(ctx, ctx->backend, o, s);
+        ctx->backend->associate_layer_surface(ctx, ctx->backend, s);
     if (SAMURE_IS_ERROR(err)) {
       SAMURE_LAYER_SURFACE_DESTROY_ERROR(err);
     }
@@ -65,10 +65,9 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
 }
 
 void samure_destroy_layer_surface(struct samure_context *ctx,
-                                  struct samure_output *o,
                                   struct samure_layer_surface *sfc) {
   if (ctx->backend && ctx->backend->unassociate_layer_surface) {
-    ctx->backend->unassociate_layer_surface(ctx, ctx->backend, o, sfc);
+    ctx->backend->unassociate_layer_surface(ctx, ctx->backend, sfc);
   }
 
   if (sfc->layer_surface)

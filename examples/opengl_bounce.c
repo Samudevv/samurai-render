@@ -23,8 +23,8 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
   }
 }
 
-static void render_callback(struct samure_output *output,
-                            struct samure_layer_surface *sfc,
+static void render_callback(struct samure_layer_surface *sfc,
+                            struct samure_rect output_geo,
                             struct samure_context *ctx, double delta_time,
                             void *data) {
   struct opengl_data *d = (struct opengl_data *)data;
@@ -32,10 +32,10 @@ static void render_callback(struct samure_output *output,
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  if (samure_square_in_output(output, d->qx - 100, d->qy - 100, 200)) {
+  if (samure_square_in_output(output_geo, d->qx - 100, d->qy - 100, 200)) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0f, output->geo.w, output->geo.h, 0.0f, 0.0f, 1.0f);
+    glOrtho(0.0f, sfc->w, sfc->h, 0.0f, 0.0f, 1.0f);
     glDisable(GL_DEPTH_TEST);
 
     const double qx = OUT_X(d->qx);

@@ -21,32 +21,62 @@ static void olivec_destroy_backend(struct samure_context *ctx,
   free(raw);
 }
 
-static void olivec_backend_render_end(
-    struct samure_output *output, struct samure_layer_surface *layer_surface,
-    struct samure_context *ctx, struct samure_backend *raw) {
+static void
+olivec_backend_render_end(struct samure_layer_surface *layer_surface,
+                          struct samure_context *ctx,
+                          struct samure_backend *raw) {
   struct olivec_surface *os =
       (struct olivec_surface *)layer_surface->backend_data;
   samure_layer_surface_draw_buffer(layer_surface, os->buffer);
 }
 
-static samure_error olivec_backend_associate_layer_surface(
-    struct samure_context *ctx, struct samure_backend *raw,
-    struct samure_output *output, struct samure_layer_surface *sfc) {
+static samure_error
+olivec_backend_associate_layer_surface(struct samure_context *ctx,
+                                       struct samure_backend *raw,
+                                       struct samure_layer_surface *sfc) {
   struct olivec_surface *os = malloc(sizeof(struct olivec_surface));
 
   os->buffer = SAMURE_UNWRAP(
       shared_buffer, samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
-                                                 output->geo.w, output->geo.h));
-  os->canvas = olivec_canvas(os->buffer->data, output->geo.w, output->geo.h,
-                             output->geo.w);
+                                                 sfc->w == 0 ? 1 : sfc->w,
+                                                 sfc->h == 0 ? 1 : sfc->h));
+  if (sfc->w != 0 && sfc->h != 0) {
+    os->canvas = olivec_canvas(os->buffer->data, sfc->w, sfc->h, sfc->w);
+  }
 
   sfc->backend_data = os;
   return SAMURE_ERROR_NONE;
 }
 
-static void olivec_backend_unassociate_layer_surface(
-    struct samure_context *ctx, struct samure_backend *raw,
-    struct samure_output *output, struct samure_layer_surface *sfc) {
+static void olivec_backend_on_layer_surface_configure(
+    struct samure_backend *backend, struct samure_context *ctx,
+    struct samure_layer_surface *layer_surface, int32_t width, int32_t height) {
+  if (!layer_surface->backend_data) {
+    return;
+  }
+
+  struct olivec_surface *os =
+      (struct olivec_surface *)layer_surface->backend_data;
+
+  if (os->buffer->width == width && os->buffer->height == height) {
+    return;
+  }
+
+  if (os->buffer) {
+    samure_destroy_shared_buffer(os->buffer);
+  }
+
+  SAMURE_RESULT(shared_buffer)
+  b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT, width,
+                                     height);
+  os->buffer = SAMURE_UNWRAP(shared_buffer, b_rs);
+  os->canvas = olivec_canvas(os->buffer->data, width, height, width);
+}
+
+static void
+olivec_backend_unassociate_layer_surface(struct samure_context *ctx,
+                                         struct samure_backend *raw,
+                                         struct samure_layer_surface *sfc) {
   if (!sfc->backend_data) {
     return;
   }
@@ -90,15 +120,15 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
   }
 }
 
-static void render_callback(struct samure_output *output,
-                            struct samure_layer_surface *sfc,
+static void render_callback(struct samure_layer_surface *sfc,
+                            struct samure_rect output_geo,
                             struct samure_context *ctx, double delta_time,
                             void *data) {
   struct olivec_surface *os = (struct olivec_surface *)sfc->backend_data;
   struct blank_data *d = (struct blank_data *)data;
 
   olivec_fill(os->canvas, 0x00000000);
-  if (samure_circle_in_output(output, d->qx, d->qy, 100)) {
+  if (samure_circle_in_output(output_geo, d->qx, d->qy, 100)) {
     olivec_circle(os->canvas, OUT_X(d->qx), OUT_Y(d->qy), 100, 0xFF00FF00);
 
     char buffer[1024];
@@ -109,7 +139,7 @@ static void render_callback(struct samure_output *output,
 }
 
 static void render_callback_clear_outputs_on_exit(
-    struct samure_output *output, struct samure_layer_surface *sfc,
+    struct samure_layer_surface *sfc, struct samure_rect output_geo,
     struct samure_context *ctx, double delta_time, void *data) {
   struct olivec_surface *os = (struct olivec_surface *)sfc->backend_data;
   struct blank_data *d = (struct blank_data *)data;
@@ -175,6 +205,7 @@ int main(void) {
   bak->destroy = olivec_destroy_backend;
   bak->associate_layer_surface = olivec_backend_associate_layer_surface;
   bak->unassociate_layer_surface = olivec_backend_unassociate_layer_surface;
+  bak->on_layer_surface_configure = olivec_backend_on_layer_surface_configure;
 
   ctx->backend = bak;
 

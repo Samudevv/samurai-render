@@ -27,7 +27,7 @@ void samure_destroy_output(struct samure_context *ctx,
                            struct samure_output *o) {
   free(o->name);
   for (size_t i = 0; i < o->num_sfc; i++) {
-    samure_destroy_layer_surface(ctx, o, o->sfc[i]);
+    samure_destroy_layer_surface(ctx, o->sfc[i]);
   }
   free(o->sfc);
   if (o->xdg_output)
@@ -37,48 +37,45 @@ void samure_destroy_output(struct samure_context *ctx,
   free(o);
 }
 
-int samure_circle_in_output(struct samure_output *o, int32_t x, int32_t y,
+int samure_circle_in_output(struct samure_rect o, int32_t x, int32_t y,
                             int32_t r) {
   // Middle of the output
-  const int32_t ox = o->geo.x + o->geo.w / 2;
-  const int32_t oy = o->geo.y + o->geo.h / 2;
+  const int32_t ox = o.x + o.w / 2;
+  const int32_t oy = o.y + o.h / 2;
 
   // Distance between the middle of the circle and the middle of the output
   const int32_t dx = abs(x - ox);
   const int32_t dy = abs(y - oy);
 
-  if ((dx > (o->geo.w / 2 + r)) || (dy > (o->geo.h / 2 + r)))
+  if ((dx > (o.w / 2 + r)) || (dy > (o.h / 2 + r)))
     return 0;
 
-  if ((dx <= (o->geo.w / 2)) || (dy <= (o->geo.h / 2)))
+  if ((dx <= (o.w / 2)) || (dy <= (o.h / 2)))
     return 1;
 
-  return (dx - o->geo.w / 2) * (dx - o->geo.w / 2) +
-             (dy - o->geo.h / 2) * (dy - o->geo.h / 2) <=
+  return (dx - o.w / 2) * (dx - o.w / 2) + (dy - o.h / 2) * (dy - o.h / 2) <=
          (r * r);
 }
 
-int samure_rect_in_output(struct samure_output *o, int32_t x, int32_t y,
-                          int32_t w, int32_t h) {
-  return (x < (o->geo.x + o->geo.w)) && ((x + w) > o->geo.x) &&
-         (y < (o->geo.y + o->geo.h)) && ((y + h) > o->geo.y);
+int samure_rect_in_output(struct samure_rect o, int32_t x, int32_t y, int32_t w,
+                          int32_t h) {
+  return (x < (o.x + o.w)) && ((x + w) > o.x) && (y < (o.y + o.h)) &&
+         ((y + h) > o.y);
 }
 
-int samure_square_in_output(struct samure_output *output, int32_t square_x,
+int samure_square_in_output(struct samure_rect o, int32_t square_x,
                             int32_t square_y, int32_t square_size) {
-  return samure_rect_in_output(output, square_x, square_y, square_size,
-                               square_size);
+  return samure_rect_in_output(o, square_x, square_y, square_size, square_size);
 }
 
-int samure_point_in_output(struct samure_output *o, int32_t x, int32_t y) {
-  return (x > o->geo.x) && (x < (o->geo.x + o->geo.w)) && (y > o->geo.y) &&
-         (y < o->geo.y + o->geo.h);
+int samure_point_in_output(struct samure_rect o, int32_t x, int32_t y) {
+  return (x > o.x) && (x < (o.x + o.w)) && (y > o.y) && (y < o.y + o.h);
 }
 
-int samure_triangle_in_output(struct samure_output *o, int32_t x1, int32_t y1,
+int samure_triangle_in_output(struct samure_rect o, int32_t x1, int32_t y1,
                               int32_t x2, int32_t y2, int32_t x3, int32_t y3) {
-  return samure_point_in_output(o, x1, y1) &&
-         samure_point_in_output(o, x2, y2) && samure_point_in_output(o, x3, y3);
+  return samure_point_in_output(o, x1, y1) ||
+         samure_point_in_output(o, x2, y2) || samure_point_in_output(o, x3, y3);
 }
 
 void samure_output_set_pointer_interaction(struct samure_context *ctx,

@@ -21,15 +21,21 @@ extern SAMURE_RESULT(backend_raw)
     samure_init_backend_raw(struct samure_context *ctx);
 extern void samure_destroy_backend_raw(struct samure_context *ctx,
                                        struct samure_backend *raw);
-extern void samure_backend_raw_render_end(
-    struct samure_output *output, struct samure_layer_surface *layer_surface,
-    struct samure_context *ctx, struct samure_backend *raw);
-extern samure_error samure_backend_raw_associate_layer_surface(
-    struct samure_context *ctx, struct samure_backend *raw,
-    struct samure_output *output, struct samure_layer_surface *sfc);
-extern void samure_backend_raw_unassociate_layer_surface(
-    struct samure_context *ctx, struct samure_backend *raw,
-    struct samure_output *output, struct samure_layer_surface *sfc);
+extern void
+samure_backend_raw_render_end(struct samure_layer_surface *layer_surface,
+                              struct samure_context *ctx,
+                              struct samure_backend *raw);
+extern samure_error
+samure_backend_raw_associate_layer_surface(struct samure_context *ctx,
+                                           struct samure_backend *raw,
+                                           struct samure_layer_surface *sfc);
+extern void samure_backend_raw_on_layer_surface_configure(
+    struct samure_backend *backend, struct samure_context *ctx,
+    struct samure_layer_surface *layer_surface, int32_t width, int32_t height);
+extern void
+samure_backend_raw_unassociate_layer_surface(struct samure_context *ctx,
+                                             struct samure_backend *raw,
+                                             struct samure_layer_surface *sfc);
 extern struct samure_backend_raw *
 samure_get_backend_raw(struct samure_context *ctx);
 extern struct samure_raw_surface *

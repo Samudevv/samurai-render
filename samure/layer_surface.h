@@ -19,6 +19,8 @@ struct samure_layer_surface {
   struct wl_surface *surface;
   struct zwlr_layer_surface_v1 *layer_surface;
   void *backend_data;
+  uint32_t w;
+  uint32_t h;
 
   struct samure_layer_surface_callback_data *callback_data;
 };
@@ -33,7 +35,6 @@ extern SAMURE_RESULT(layer_surface)
                                 int backend_association);
 
 extern void samure_destroy_layer_surface(struct samure_context *ctx,
-                                         struct samure_output *output,
                                          struct samure_layer_surface *sfc);
 
 extern void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,

@@ -38,8 +38,8 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
   }
 }
 
-static void render_callback(struct samure_output *output,
-                            struct samure_layer_surface *sfc,
+static void render_callback(struct samure_layer_surface *sfc,
+                            struct samure_rect output_geo,
                             struct samure_context *ctx, double delta_time,
                             void *data) {
   struct samure_cairo_surface *c =
@@ -94,7 +94,7 @@ int main(int args, char *argv[]) {
 
   if (bgs) {
     for (size_t i = 0; i < ctx->num_outputs; i++) {
-      samure_destroy_layer_surface(ctx, ctx->outputs[i], bgs[i]);
+      samure_destroy_layer_surface(ctx, bgs[i]);
     }
     free(bgs);
   }

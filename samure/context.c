@@ -256,7 +256,7 @@ void samure_context_set_input_regions(struct samure_context *ctx,
     size_t num_output_rects = 0;
 
     for (size_t i = 0; i < num_rects; i++) {
-      if (samure_rect_in_output(ctx->outputs[j], r[i].x, r[i].y, r[i].w,
+      if (samure_rect_in_output(ctx->outputs[j]->geo, r[i].x, r[i].y, r[i].w,
                                 r[i].h)) {
         num_output_rects++;
         output_rects = realloc(output_rects,
@@ -266,8 +266,10 @@ void samure_context_set_input_regions(struct samure_context *ctx,
           continue;
         }
 
-        output_rects[num_output_rects - 1].x = OUT_X2(ctx->outputs[i], r[i].x);
-        output_rects[num_output_rects - 1].y = OUT_Y2(ctx->outputs[i], r[i].y);
+        output_rects[num_output_rects - 1].x =
+            OUT_X2(ctx->outputs[i]->geo, r[i].x);
+        output_rects[num_output_rects - 1].y =
+            OUT_Y2(ctx->outputs[i]->geo, r[i].y);
         output_rects[num_output_rects - 1].w = r[i].w;
         output_rects[num_output_rects - 1].h = r[i].h;
       }
@@ -296,9 +298,12 @@ void samure_context_process_events(struct samure_context *ctx,
 
     switch (e->type) {
     case SAMURE_EVENT_LAYER_SURFACE_CONFIGURE:
+      e->surface->w = e->width;
+      e->surface->h = e->height;
+
       if (ctx->backend && ctx->backend->on_layer_surface_configure) {
-        ctx->backend->on_layer_surface_configure(
-            ctx->backend, ctx, e->output, e->surface, e->width, e->height);
+        ctx->backend->on_layer_surface_configure(ctx->backend, ctx, e->surface,
+                                                 e->width, e->height);
       }
       break;
     default:
@@ -318,16 +323,16 @@ void samure_context_render_output(struct samure_context *ctx,
                                   double delta_time) {
   for (size_t i = 0; i < output->num_sfc; i++) {
     if (ctx->backend && ctx->backend->render_start) {
-      ctx->backend->render_start(output, output->sfc[i], ctx, ctx->backend);
+      ctx->backend->render_start(output->sfc[i], ctx, ctx->backend);
     }
 
     if (render_callback) {
-      render_callback(output, output->sfc[i], ctx, delta_time,
+      render_callback(output->sfc[i], output->geo, ctx, delta_time,
                       ctx->config.user_data);
     }
 
     if (ctx->backend && ctx->backend->render_end) {
-      ctx->backend->render_end(output, output->sfc[i], ctx, ctx->backend);
+      ctx->backend->render_end(output->sfc[i], ctx, ctx->backend);
     }
   }
 }
@@ -351,10 +356,24 @@ samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
     sfc_rs = samure_create_layer_surface(
         ctx, o, SAMURE_LAYER_OVERLAY, SAMURE_LAYER_SURFACE_ANCHOR_FILL,
         (uint32_t)ctx->config.keyboard_interaction,
-        ctx->config.pointer_interaction || ctx->config.touch_interaction, 1);
+        ctx->config.pointer_interaction || ctx->config.touch_interaction, 0);
     if (SAMURE_HAS_ERROR(sfc_rs)) {
       error_code |= SAMURE_ERROR_LAYER_SURFACE_INIT | sfc_rs.error;
       continue;
+    }
+
+    struct samure_layer_surface *sfc = SAMURE_UNWRAP(layer_surface, sfc_rs);
+    sfc->w = o->geo.w;
+    sfc->h = o->geo.h;
+
+    if (ctx->backend && ctx->backend->associate_layer_surface) {
+      const samure_error err =
+          ctx->backend->associate_layer_surface(ctx, ctx->backend, sfc);
+      if (SAMURE_IS_ERROR(err)) {
+        samure_destroy_layer_surface(ctx, sfc);
+        error_code |= err;
+        continue;
+      }
     }
 
     samure_output_attach_layer_surface(o, SAMURE_UNWRAP(layer_surface, sfc_rs));

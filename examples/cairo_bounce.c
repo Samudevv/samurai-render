@@ -22,8 +22,8 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
   }
 }
 
-static void render_callback(struct samure_output *output,
-                            struct samure_layer_surface *sfc,
+static void render_callback(struct samure_layer_surface *sfc,
+                            struct samure_rect output_geo,
                             struct samure_context *ctx, double delta_time,
                             void *data) {
   struct samure_cairo_surface *c =
@@ -39,7 +39,7 @@ static void render_callback(struct samure_output *output,
   cairo_set_source_rgba(cairo, 0.0, 0.0, 0.0, 0.0);
   cairo_paint(cairo);
 
-  if (samure_circle_in_output(output, d->qx, d->qy, 100)) {
+  if (samure_circle_in_output(output_geo, d->qx, d->qy, 100)) {
     cairo_set_source_rgba(cairo, 0.0, 1.0, 0.0, 1.0);
     cairo_arc(cairo, qx, qy, 100, 0, M_PI * 2.0);
     cairo_fill(cairo);
