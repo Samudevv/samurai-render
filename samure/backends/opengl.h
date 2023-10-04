@@ -52,25 +52,20 @@ SAMURE_DEFINE_RESULT(backend_opengl);
 extern SAMURE_RESULT(backend_opengl)
     samure_init_backend_opengl(struct samure_context *ctx,
                                struct samure_opengl_config *cfg);
-extern void samure_destroy_backend_opengl(struct samure_context *ctx,
-                                          struct samure_backend *gl);
+extern void samure_destroy_backend_opengl(struct samure_context *ctx);
 extern void
-samure_backend_opengl_render_start(struct samure_layer_surface *layer_surface,
-                                   struct samure_context *ctx,
-                                   struct samure_backend *gl);
+samure_backend_opengl_render_start(struct samure_context *ctx,
+                                   struct samure_layer_surface *layer_surface);
 extern void
-samure_backend_opengl_render_end(struct samure_layer_surface *layer_surface,
-                                 struct samure_context *ctx,
-                                 struct samure_backend *gl);
+samure_backend_opengl_render_end(struct samure_context *ctx,
+                                 struct samure_layer_surface *layer_surface);
 extern samure_error samure_backend_opengl_associate_layer_surface(
-    struct samure_context *ctx, struct samure_backend *backend,
-    struct samure_layer_surface *layer_surface);
+    struct samure_context *ctx, struct samure_layer_surface *layer_surface);
 extern void samure_backend_opengl_on_layer_surface_configure(
-    struct samure_backend *backend, struct samure_context *ctx,
-    struct samure_layer_surface *layer_surface, int32_t width, int32_t height);
+    struct samure_context *ctx, struct samure_layer_surface *layer_surface,
+    int32_t width, int32_t height);
 extern void samure_backend_opengl_unassociate_layer_surface(
-    struct samure_context *ctx, struct samure_backend *backend,
-    struct samure_layer_surface *layer_surface);
+    struct samure_context *ctx, struct samure_layer_surface *layer_surface);
 extern struct samure_backend_opengl *
 samure_get_backend_opengl(struct samure_context *ctx);
 extern struct samure_opengl_surface *

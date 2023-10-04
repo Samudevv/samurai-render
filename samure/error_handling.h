@@ -64,6 +64,8 @@
   }                                                                            \
   memset(varname, 0, sizeof(*varname))
 
+#define SAMURE_ASSERT(err) assert(err == SAMURE_ERROR_NONE)
+
 #define SAMURE_ERROR_NONE 0
 #define SAMURE_ERROR_FAILED (1 << 0)
 #define SAMURE_ERROR_NOT_IMPLEMENTED (1 << 1)

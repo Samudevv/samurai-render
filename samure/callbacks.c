@@ -192,16 +192,14 @@ void pointer_axis(void *data, struct wl_pointer *wl_pointer, uint32_t time,
 void layer_surface_configure(void *data,
                              struct zwlr_layer_surface_v1 *layer_surface,
                              uint32_t serial, uint32_t width, uint32_t height) {
-  struct samure_layer_surface_callback_data *d =
-      (struct samure_layer_surface_callback_data *)data;
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
   zwlr_layer_surface_v1_ack_configure(layer_surface, serial);
 
   NEW_EVENT();
 
   LAST_EVENT.type = SAMURE_EVENT_LAYER_SURFACE_CONFIGURE;
-  LAST_EVENT.output = d->output;
-  LAST_EVENT.surface = d->surface;
+  LAST_EVENT.surface = (struct samure_layer_surface *)d->data;
   LAST_EVENT.width = width;
   LAST_EVENT.height = height;
 }

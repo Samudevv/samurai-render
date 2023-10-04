@@ -13,7 +13,6 @@
 
 struct samure_context;
 struct samure_output;
-struct samure_layer_surface_callback_data;
 
 struct samure_layer_surface {
   struct wl_surface *surface;
@@ -22,7 +21,7 @@ struct samure_layer_surface {
   uint32_t w;
   uint32_t h;
 
-  struct samure_layer_surface_callback_data *callback_data;
+  struct samure_callback_data *callback_data;
 };
 
 SAMURE_DEFINE_RESULT(layer_surface);
@@ -30,7 +29,7 @@ SAMURE_DEFINE_RESULT(layer_surface);
 extern SAMURE_RESULT(layer_surface)
     samure_create_layer_surface(struct samure_context *ctx,
                                 struct samure_output *output, uint32_t layer,
-                                uint32_t anchor, uint32_t keyboard_interaction,
+                                uint32_t anchor, int keyboard_interaction,
                                 int pointer_interaction,
                                 int backend_association);
 
@@ -39,14 +38,3 @@ extern void samure_destroy_layer_surface(struct samure_context *ctx,
 
 extern void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
                                              struct samure_shared_buffer *buf);
-
-struct samure_layer_surface_callback_data {
-  struct samure_context *ctx;
-  struct samure_output *output;
-  struct samure_layer_surface *surface;
-};
-
-extern struct samure_layer_surface_callback_data *
-samure_create_layer_surface_callback_data(struct samure_context *ctx,
-                                          struct samure_output *output,
-                                          struct samure_layer_surface *surface);

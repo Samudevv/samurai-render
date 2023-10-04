@@ -150,7 +150,7 @@ void samure_destroy_context(struct samure_context *ctx) {
     wl_display_flush(ctx->display);
 
   if (ctx->backend && ctx->backend->destroy) {
-    ctx->backend->destroy(ctx, ctx->backend);
+    ctx->backend->destroy(ctx);
   }
 
   for (size_t i = 0; i < ctx->num_seats; i++) {
@@ -302,13 +302,13 @@ void samure_context_process_events(struct samure_context *ctx,
       e->surface->h = e->height;
 
       if (ctx->backend && ctx->backend->on_layer_surface_configure) {
-        ctx->backend->on_layer_surface_configure(ctx->backend, ctx, e->surface,
-                                                 e->width, e->height);
+        ctx->backend->on_layer_surface_configure(ctx, e->surface, e->width,
+                                                 e->height);
       }
       break;
     default:
       if (event_callback) {
-        event_callback(e, ctx, ctx->config.user_data);
+        event_callback(ctx, e, ctx->config.user_data);
       }
       break;
     }
@@ -323,16 +323,16 @@ void samure_context_render_output(struct samure_context *ctx,
                                   double delta_time) {
   for (size_t i = 0; i < output->num_sfc; i++) {
     if (ctx->backend && ctx->backend->render_start) {
-      ctx->backend->render_start(output->sfc[i], ctx, ctx->backend);
+      ctx->backend->render_start(ctx, output->sfc[i]);
     }
 
     if (render_callback) {
-      render_callback(output->sfc[i], output->geo, ctx, delta_time,
+      render_callback(ctx, output->sfc[i], output->geo, delta_time,
                       ctx->config.user_data);
     }
 
     if (ctx->backend && ctx->backend->render_end) {
-      ctx->backend->render_end(output->sfc[i], ctx, ctx->backend);
+      ctx->backend->render_end(ctx, output->sfc[i]);
     }
   }
 }
@@ -367,8 +367,7 @@ samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
     sfc->h = o->geo.h;
 
     if (ctx->backend && ctx->backend->associate_layer_surface) {
-      const samure_error err =
-          ctx->backend->associate_layer_surface(ctx, ctx->backend, sfc);
+      const samure_error err = ctx->backend->associate_layer_surface(ctx, sfc);
       if (SAMURE_IS_ERROR(err)) {
         samure_destroy_layer_surface(ctx, sfc);
         error_code |= err;

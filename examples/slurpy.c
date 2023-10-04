@@ -20,7 +20,7 @@ struct slurpy_data {
   enum slurpy_state state;
 };
 
-static void on_event(struct samure_event *e, struct samure_context *ctx,
+static void on_event(struct samure_context *ctx, struct samure_event *e,
                      void *user_data) {
   struct slurpy_data *d = (struct slurpy_data *)user_data;
   switch (e->type) {
@@ -57,9 +57,10 @@ static void on_event(struct samure_event *e, struct samure_context *ctx,
   }
 }
 
-static void on_render(struct samure_layer_surface *sfc,
-                      struct samure_rect output_geo, struct samure_context *ctx,
-                      double delta_time, void *user_data) {
+static void on_render(struct samure_context *ctx,
+                      struct samure_layer_surface *sfc,
+                      struct samure_rect output_geo, double delta_time,
+                      void *user_data) {
   struct slurpy_data *d = (struct slurpy_data *)user_data;
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)sfc->backend_data;

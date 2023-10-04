@@ -22,15 +22,12 @@ samure_init_backend_raw(struct samure_context *ctx) {
   SAMURE_RETURN_RESULT(backend_raw, r);
 }
 
-void samure_destroy_backend_raw(struct samure_context *ctx,
-                                struct samure_backend *b) {
-  struct samure_backend_raw *r = (struct samure_backend_raw *)b;
-  free(r);
+void samure_destroy_backend_raw(struct samure_context *ctx) {
+  free(ctx->backend);
 }
 
-void samure_backend_raw_render_end(struct samure_layer_surface *layer_surface,
-                                   struct samure_context *ctx,
-                                   struct samure_backend *b) {
+void samure_backend_raw_render_end(struct samure_context *ctx,
+                                   struct samure_layer_surface *layer_surface) {
   struct samure_raw_surface *r =
       (struct samure_raw_surface *)layer_surface->backend_data;
   samure_layer_surface_draw_buffer(layer_surface, r->buffer);
@@ -38,36 +35,33 @@ void samure_backend_raw_render_end(struct samure_layer_surface *layer_surface,
 
 samure_error
 samure_backend_raw_associate_layer_surface(struct samure_context *ctx,
-                                           struct samure_backend *raw,
                                            struct samure_layer_surface *sfc) {
-  struct samure_backend_raw *r = (struct samure_backend_raw *)raw;
-  struct samure_raw_surface *raw_sfc =
-      malloc(sizeof(struct samure_raw_surface));
-  if (!raw_sfc) {
+  struct samure_raw_surface *r = malloc(sizeof(struct samure_raw_surface));
+  if (!r) {
     return SAMURE_ERROR_MEMORY;
   }
-  memset(raw_sfc, 0, sizeof(struct samure_raw_surface));
+  memset(r, 0, sizeof(struct samure_raw_surface));
 
   SAMURE_RESULT(shared_buffer)
   b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
                                      sfc->w == 0 ? 1 : sfc->w,
                                      sfc->h == 0 ? 1 : sfc->h);
   if (SAMURE_HAS_ERROR(b_rs)) {
-    free(raw_sfc);
+    free(r);
     return SAMURE_ERROR_SHARED_BUFFER_INIT | b_rs.error;
   }
 
-  raw_sfc->buffer = SAMURE_UNWRAP(shared_buffer, b_rs);
+  r->buffer = SAMURE_UNWRAP(shared_buffer, b_rs);
 
-  sfc->backend_data = raw_sfc;
-  samure_backend_raw_render_end(sfc, ctx, &r->base);
+  sfc->backend_data = r;
+  samure_backend_raw_render_end(ctx, sfc);
 
   return SAMURE_ERROR_NONE;
 }
 
 void samure_backend_raw_on_layer_surface_configure(
-    struct samure_backend *backend, struct samure_context *ctx,
-    struct samure_layer_surface *layer_surface, int32_t width, int32_t height) {
+    struct samure_context *ctx, struct samure_layer_surface *layer_surface,
+    int32_t width, int32_t height) {
   if (!layer_surface->backend_data) {
     return;
   }
@@ -94,8 +88,7 @@ void samure_backend_raw_on_layer_surface_configure(
 }
 
 void samure_backend_raw_unassociate_layer_surface(
-    struct samure_context *ctx, struct samure_backend *raw,
-    struct samure_layer_surface *sfc) {
+    struct samure_context *ctx, struct samure_layer_surface *sfc) {
   if (!sfc->backend_data) {
     return;
   }

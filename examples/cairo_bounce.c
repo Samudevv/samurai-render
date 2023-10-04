@@ -11,7 +11,7 @@ struct cairo_data {
   double dx, dy;
 };
 
-static void event_callback(struct samure_event *e, struct samure_context *ctx,
+static void event_callback(struct samure_context *ctx, struct samure_event *e,
                            void *data) {
   switch (e->type) {
   case SAMURE_EVENT_POINTER_BUTTON:
@@ -22,9 +22,9 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
   }
 }
 
-static void render_callback(struct samure_layer_surface *sfc,
-                            struct samure_rect output_geo,
-                            struct samure_context *ctx, double delta_time,
+static void render_callback(struct samure_context *ctx,
+                            struct samure_layer_surface *sfc,
+                            struct samure_rect output_geo, double delta_time,
                             void *data) {
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)sfc->backend_data;

@@ -13,7 +13,7 @@ struct image_draw_data {
   int pressed;
 };
 
-static void event_callback(struct samure_event *e, struct samure_context *ctx,
+static void event_callback(struct samure_context *ctx, struct samure_event *e,
                            void *data) {
   struct image_draw_data *d = (struct image_draw_data *)data;
 
@@ -38,9 +38,9 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
   }
 }
 
-static void render_callback(struct samure_layer_surface *sfc,
-                            struct samure_rect output_geo,
-                            struct samure_context *ctx, double delta_time,
+static void render_callback(struct samure_context *ctx,
+                            struct samure_layer_surface *sfc,
+                            struct samure_rect output_geo, double delta_time,
                             void *data) {
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)sfc->backend_data;
@@ -105,14 +105,17 @@ int main(int args, char *argv[]) {
       bgs[i] = SAMURE_UNWRAP(layer_surface,
                              samure_create_layer_surface(
                                  ctx, ctx->outputs[i], SAMURE_LAYER_OVERLAY,
-                                 SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 1));
+                                 SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 0));
+      bgs[i]->w = ctx->outputs[i]->geo.w;
+      bgs[i]->h = ctx->outputs[i]->geo.h;
+      SAMURE_ASSERT(samure_backend_cairo_associate_layer_surface(ctx, bgs[i]));
 
       if (bg_img_w == ctx->outputs[i]->geo.w &&
           bg_img_h == ctx->outputs[i]->geo.h) {
         struct samure_cairo_surface *c = samure_get_cairo_surface(bgs[i]);
         memcpy(c->buffer->data, cairo_image_surface_get_data(bg_img),
                ctx->outputs[i]->geo.w * ctx->outputs[i]->geo.h * 4);
-        ctx->backend->render_end(bgs[i], ctx, ctx->backend);
+        ctx->backend->render_end(ctx, bgs[i]);
       }
     }
     cairo_surface_destroy(bg_img);
