@@ -27,7 +27,8 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
   }
 
   s->layer_surface = zwlr_layer_shell_v1_get_layer_surface(
-      ctx->layer_shell, s->surface, o->output, layer, "samurai-render");
+      ctx->layer_shell, s->surface, o ? o->output : NULL, layer,
+      "samurai-render");
   if (!s->layer_surface) {
     SAMURE_LAYER_SURFACE_DESTROY_ERROR(SAMURE_ERROR_LAYER_SURFACE_INIT);
   }
