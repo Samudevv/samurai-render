@@ -7,9 +7,6 @@
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
 
-#define OUT_IDX2(output)                                                       \
-  (((uintptr_t)output - (uintptr_t)ctx->outputs) / sizeof(struct samure_output))
-#define OUT_IDX() OUT_IDX2(output)
 #define OUT_X2(output, val) (val - output->geo.x)
 #define OUT_X(val) OUT_X2(output, val)
 #define OUT_Y2(output, val) (val - output->geo.y)

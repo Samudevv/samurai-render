@@ -11,6 +11,53 @@
 #include <samure/context.h>
 #include <samure/layer_surface.h>
 
+struct olivec_surface {
+  struct samure_shared_buffer *buffer;
+  Olivec_Canvas canvas;
+};
+
+static void olivec_destroy_backend(struct samure_context *ctx,
+                                   struct samure_backend *raw) {
+  free(raw);
+}
+
+static void olivec_backend_render_end(
+    struct samure_output *output, struct samure_layer_surface *layer_surface,
+    struct samure_context *ctx, struct samure_backend *raw) {
+  struct olivec_surface *os =
+      (struct olivec_surface *)layer_surface->backend_data;
+  samure_layer_surface_draw_buffer(layer_surface, os->buffer);
+}
+
+static samure_error olivec_backend_associate_layer_surface(
+    struct samure_context *ctx, struct samure_backend *raw,
+    struct samure_output *output, struct samure_layer_surface *sfc) {
+  struct olivec_surface *os = malloc(sizeof(struct olivec_surface));
+
+  os->buffer = SAMURE_UNWRAP(
+      shared_buffer, samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
+                                                 output->geo.w, output->geo.h));
+  os->canvas = olivec_canvas(os->buffer->data, output->geo.w, output->geo.h,
+                             output->geo.w);
+
+  sfc->backend_data = os;
+  return SAMURE_ERROR_NONE;
+}
+
+static void olivec_backend_unassociate_layer_surface(
+    struct samure_context *ctx, struct samure_backend *raw,
+    struct samure_output *output, struct samure_layer_surface *sfc) {
+  if (!sfc->backend_data) {
+    return;
+  }
+
+  struct olivec_surface *os = (struct olivec_surface *)sfc->backend_data;
+
+  samure_destroy_shared_buffer(os->buffer);
+  free(os);
+  sfc->backend_data = NULL;
+}
+
 struct blank_data {
   Olivec_Canvas *canvas;
   double qx, qy;
@@ -35,10 +82,10 @@ static void event_callback(struct samure_event *e, struct samure_context *ctx,
     }
     break;
   case SAMURE_EVENT_KEYBOARD_ENTER: {
-    printf("keyboard_enter: output=%lu\n", OUT_IDX2(e->output));
+    printf("keyboard_enter: output=%s\n", e->output->name);
   } break;
   case SAMURE_EVENT_KEYBOARD_LEAVE: {
-    printf("keyboard_leave: output=%lu\n", OUT_IDX2(e->output));
+    printf("keyboard_leave: output=%s\n", e->output->name);
   } break;
   }
 }
@@ -47,26 +94,26 @@ static void render_callback(struct samure_output *output,
                             struct samure_layer_surface *sfc,
                             struct samure_context *ctx, double delta_time,
                             void *data) {
+  struct olivec_surface *os = (struct olivec_surface *)sfc->backend_data;
   struct blank_data *d = (struct blank_data *)data;
-  const uintptr_t i = OUT_IDX();
 
-  olivec_fill(d->canvas[i], 0x00000000);
+  olivec_fill(os->canvas, 0x00000000);
   if (samure_circle_in_output(output, d->qx, d->qy, 100)) {
-    olivec_circle(d->canvas[i], OUT_X(d->qx), OUT_Y(d->qy), 100, 0xFF00FF00);
+    olivec_circle(os->canvas, OUT_X(d->qx), OUT_Y(d->qy), 100, 0xFF00FF00);
 
     char buffer[1024];
     snprintf(buffer, 1024, "%d", ctx->frame_timer.fps);
 
-    olivec_text(d->canvas[i], buffer, 5, 5, olivec_default_font, 5, 0xFFAAAAAA);
+    olivec_text(os->canvas, buffer, 5, 5, olivec_default_font, 5, 0xFFAAAAAA);
   }
 }
 
 static void render_callback_clear_outputs_on_exit(
     struct samure_output *output, struct samure_layer_surface *sfc,
     struct samure_context *ctx, double delta_time, void *data) {
+  struct olivec_surface *os = (struct olivec_surface *)sfc->backend_data;
   struct blank_data *d = (struct blank_data *)data;
-  const uintptr_t i = OUT_IDX();
-  olivec_fill(d->canvas[i], 0x00000000);
+  olivec_fill(os->canvas, 0x00000000);
 }
 
 static void update_callback(struct samure_context *ctx, double delta_time,
@@ -110,7 +157,9 @@ int main(void) {
 
   struct samure_context_config context_config = samure_create_context_config(
       event_callback, render_callback, update_callback, &d);
-  context_config.pointer_interaction = 0;
+  context_config.backend = SAMURE_BACKEND_NONE;
+  context_config.pointer_interaction = 1;
+  context_config.not_create_output_layer_surfaces = 1;
 
   SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
   SAMURE_RETURN_AND_PRINT_ON_ERROR(ctx_rs, "Failed to create context",
@@ -119,13 +168,17 @@ int main(void) {
 
   puts("Successfully initialized samurai-render context");
 
-  d.canvas = malloc(ctx->num_outputs * sizeof(Olivec_Canvas));
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    struct samure_raw_surface *r =
-        samure_get_raw_surface(ctx->outputs[i]->sfc[0]);
-    d.canvas[i] = olivec_canvas(r->buffer->data, ctx->outputs[i]->geo.w,
-                                ctx->outputs[i]->geo.h, ctx->outputs[i]->geo.w);
-  }
+  struct samure_backend *bak = malloc(sizeof(struct samure_backend));
+  assert(bak != NULL);
+  memset(bak, 0, sizeof(struct samure_backend));
+  bak->render_end = olivec_backend_render_end;
+  bak->destroy = olivec_destroy_backend;
+  bak->associate_layer_surface = olivec_backend_associate_layer_surface;
+  bak->unassociate_layer_surface = olivec_backend_unassociate_layer_surface;
+
+  ctx->backend = bak;
+
+  samure_context_create_output_layer_surfaces(ctx);
 
   const struct samure_rect rt = samure_context_get_output_rect(ctx);
 
