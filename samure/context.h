@@ -134,3 +134,6 @@ extern void samure_context_update(struct samure_context *ctx,
 
 extern samure_error
 samure_context_create_output_layer_surfaces(struct samure_context *ctx);
+
+extern void samure_context_set_pointer_shape(struct samure_context *ctx,
+                                             uint32_t shape);

@@ -171,9 +171,7 @@ static void update_callback(struct samure_context *ctx, double delta_time,
       d->current_cursor = WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT;
     }
 
-    for (size_t i = 0; i < ctx->num_seats; i++) {
-      samure_seat_set_pointer_shape(ctx->seats[i], d->current_cursor);
-    }
+    samure_context_set_pointer_shape(ctx, d->current_cursor);
   }
 }
 

@@ -405,3 +405,10 @@ samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
 
   return error_code;
 }
+
+void samure_context_set_pointer_shape(struct samure_context *ctx,
+                                      uint32_t shape) {
+  for (size_t i = 0; i < ctx->num_seats; i++) {
+    samure_seat_set_pointer_shape(ctx->seats[i], shape);
+  }
+}
