@@ -299,7 +299,7 @@ void keyboard_key(void *data, struct wl_keyboard *wl_keyboard, uint32_t serial,
 
   LAST_EVENT.type = SAMURE_EVENT_KEYBOARD_KEY;
   LAST_EVENT.seat = seat;
-  LAST_EVENT.key = key;
+  LAST_EVENT.button = key;
   LAST_EVENT.state = state;
 }
 

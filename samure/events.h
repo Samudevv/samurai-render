@@ -22,10 +22,7 @@ struct samure_event {
   struct samure_seat *seat;
   struct samure_output *output;
   struct samure_layer_surface *surface;
-  union {
-    uint32_t button;
-    uint32_t key;
-  };
+  uint32_t button;
   uint32_t state;
   uint32_t width;
   uint32_t height;
