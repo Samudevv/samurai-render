@@ -145,6 +145,44 @@ samure_create_context(struct samure_context_config *config) {
   SAMURE_RETURN_RESULT(context, ctx);
 }
 
+SAMURE_RESULT(context)
+samure_create_context_with_backend(struct samure_context_config *config,
+                                   struct samure_backend *backend) {
+  struct samure_context_config cfg;
+
+  if (config) {
+    cfg = *config;
+  } else {
+    cfg = samure_default_context_config();
+  }
+
+  const int not_create_output_layer_surfaces =
+      cfg.not_create_output_layer_surfaces;
+  cfg.not_create_output_layer_surfaces = 1;
+  cfg.backend = SAMURE_BACKEND_NONE;
+
+  SAMURE_RESULT(context) ctx_rs = samure_create_context(&cfg);
+  if (SAMURE_HAS_ERROR(ctx_rs)) {
+    return ctx_rs;
+  }
+
+  ctx_rs.result->backend = backend;
+
+  if (!not_create_output_layer_surfaces) {
+    cfg.not_create_output_layer_surfaces = 0;
+    const samure_error err =
+        samure_context_create_output_layer_surfaces(ctx_rs.result);
+    if (SAMURE_IS_ERROR(err)) {
+      samure_destroy_context(ctx_rs.result);
+      ctx_rs.result = NULL;
+      ctx_rs.error = err;
+      return ctx_rs;
+    }
+  }
+
+  return ctx_rs;
+}
+
 void samure_destroy_context(struct samure_context *ctx) {
   if (ctx->display)
     wl_display_flush(ctx->display);

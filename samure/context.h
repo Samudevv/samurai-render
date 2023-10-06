@@ -104,6 +104,9 @@ SAMURE_DEFINE_RESULT(context);
 
 extern SAMURE_RESULT(context)
     samure_create_context(struct samure_context_config *config);
+extern SAMURE_RESULT(context)
+    samure_create_context_with_backend(struct samure_context_config *config,
+                                       struct samure_backend *backend);
 extern void samure_destroy_context(struct samure_context *ctx);
 extern void samure_context_run(struct samure_context *ctx);
 extern struct samure_rect

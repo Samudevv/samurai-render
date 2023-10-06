@@ -85,7 +85,6 @@ olivec_backend_unassociate_layer_surface(struct samure_context *ctx,
 }
 
 struct blank_data {
-  Olivec_Canvas *canvas;
   double qx, qy;
   double dx, dy;
   uint32_t current_cursor;
@@ -181,31 +180,25 @@ static void update_callback(struct samure_context *ctx, double delta_time,
 int main(void) {
   struct blank_data d = {0};
 
+  struct samure_backend *olivec_backend = SAMURE_UNWRAP(
+      backend,
+      samure_create_backend(olivec_backend_on_layer_surface_configure, NULL,
+                            olivec_backend_render_end, olivec_destroy_backend,
+                            olivec_backend_associate_layer_surface,
+                            olivec_backend_unassociate_layer_surface));
+
   struct samure_context_config context_config = samure_create_context_config(
       event_callback, render_callback, update_callback, &d);
   context_config.backend = SAMURE_BACKEND_NONE;
   context_config.pointer_interaction = 1;
-  context_config.not_create_output_layer_surfaces = 1;
 
-  SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
+  SAMURE_RESULT(context)
+  ctx_rs = samure_create_context_with_backend(&context_config, olivec_backend);
   SAMURE_RETURN_AND_PRINT_ON_ERROR(ctx_rs, "Failed to create context",
                                    EXIT_FAILURE);
   struct samure_context *ctx = SAMURE_UNWRAP(context, ctx_rs);
 
   puts("Successfully initialized samurai-render context");
-
-  struct samure_backend *bak = malloc(sizeof(struct samure_backend));
-  assert(bak != NULL);
-  memset(bak, 0, sizeof(struct samure_backend));
-  bak->render_end = olivec_backend_render_end;
-  bak->destroy = olivec_destroy_backend;
-  bak->associate_layer_surface = olivec_backend_associate_layer_surface;
-  bak->unassociate_layer_surface = olivec_backend_unassociate_layer_surface;
-  bak->on_layer_surface_configure = olivec_backend_on_layer_surface_configure;
-
-  ctx->backend = bak;
-
-  samure_context_create_output_layer_surfaces(ctx);
 
   const struct samure_rect rt = samure_context_get_output_rect(ctx);
 
