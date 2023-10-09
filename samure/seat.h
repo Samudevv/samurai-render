@@ -21,6 +21,7 @@ struct samure_seat {
   struct wp_cursor_shape_device_v1 *cursor_shape_device;
   struct samure_focus pointer_focus;
   struct samure_focus keyboard_focus;
+  struct samure_focus touch_focus;
   char *name;
   uint32_t cursor_shape;
   uint32_t last_pointer_enter;

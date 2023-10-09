@@ -11,6 +11,9 @@ enum samure_event_type {
   SAMURE_EVENT_KEYBOARD_KEY,
   SAMURE_EVENT_KEYBOARD_ENTER,
   SAMURE_EVENT_KEYBOARD_LEAVE,
+  SAMURE_EVENT_TOUCH_DOWN,
+  SAMURE_EVENT_TOUCH_UP,
+  SAMURE_EVENT_TOUCH_MOTION,
 };
 
 struct samure_seat;
@@ -28,4 +31,5 @@ struct samure_event {
   uint32_t height;
   double x;
   double y;
+  int32_t touch_id;
 };

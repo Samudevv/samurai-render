@@ -20,6 +20,16 @@
 
 #define LAST_EVENT ctx->events[ctx->num_events - 1]
 
+#define OUTPUT_FOR_SURFACE()                                                   \
+  for (size_t i = 0; i < ctx->num_outputs; i++) {                              \
+    for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {                    \
+      if (ctx->outputs[i]->sfc[j]->surface == surface) {                       \
+        output = ctx->outputs[i];                                              \
+        break;                                                                 \
+      }                                                                        \
+    }                                                                          \
+  }
+
 void registry_global(void *data, struct wl_registry *registry, uint32_t name,
                      const char *interface, uint32_t version) {
   struct samure_callback_data *d = (struct samure_callback_data *)data;
@@ -114,15 +124,7 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   seat->last_pointer_enter = serial;
 
   struct samure_output *output = NULL;
-
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {
-      if (ctx->outputs[i]->sfc[j]->surface == surface) {
-        output = ctx->outputs[i];
-        break;
-      }
-    }
-  }
+  OUTPUT_FOR_SURFACE();
   seat->pointer_focus.output = output;
 
   NEW_EVENT();
@@ -141,15 +143,7 @@ void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_context *ctx = d->ctx;
 
   struct samure_output *output = NULL;
-
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {
-      if (ctx->outputs[i]->sfc[j]->surface == surface) {
-        output = ctx->outputs[i];
-        break;
-      }
-    }
-  }
+  OUTPUT_FOR_SURFACE();
   seat->pointer_focus.output = NULL;
 
   NEW_EVENT();
@@ -244,16 +238,7 @@ void keyboard_enter(void *data, struct wl_keyboard *wl_keyboard,
   struct samure_seat *seat = (struct samure_seat *)d->data;
 
   struct samure_output *output = NULL;
-
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {
-      if (ctx->outputs[i]->sfc[j]->surface == surface) {
-        output = ctx->outputs[i];
-        break;
-      }
-    }
-  }
-
+  OUTPUT_FOR_SURFACE();
   seat->keyboard_focus.output = output;
 
   NEW_EVENT();
@@ -270,16 +255,7 @@ void keyboard_leave(void *data, struct wl_keyboard *wl_keyboard,
   struct samure_seat *seat = (struct samure_seat *)d->data;
 
   struct samure_output *output = NULL;
-
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {
-      if (ctx->outputs[i]->sfc[j]->surface == surface) {
-        output = ctx->outputs[i];
-        break;
-      }
-    }
-  }
-
+  OUTPUT_FOR_SURFACE();
   seat->keyboard_focus.output = NULL;
 
   NEW_EVENT();
@@ -350,6 +326,67 @@ void screencopy_frame_buffer_done(
   struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
   d->state = SAMURE_SCREENSHOT_DONE;
 }
+
+void touch_down(void *data, struct wl_touch *wl_touch, uint32_t serial,
+                uint32_t time, struct wl_surface *surface, int32_t id,
+                wl_fixed_t x, wl_fixed_t y) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+  struct samure_seat *seat = (struct samure_seat *)d->data;
+
+  struct samure_output *output = NULL;
+  OUTPUT_FOR_SURFACE();
+  seat->touch_focus.output = output;
+
+  NEW_EVENT();
+
+  LAST_EVENT.type = SAMURE_EVENT_TOUCH_DOWN;
+  LAST_EVENT.seat = seat;
+  LAST_EVENT.output = output;
+  LAST_EVENT.x = wl_fixed_to_double(x);
+  LAST_EVENT.y = wl_fixed_to_double(y);
+  LAST_EVENT.touch_id = id;
+}
+
+void touch_up(void *data, struct wl_touch *wl_touch, uint32_t serial,
+              uint32_t time, int32_t id) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+  struct samure_seat *seat = (struct samure_seat *)d->data;
+
+  seat->touch_focus.output = NULL;
+
+  NEW_EVENT();
+
+  LAST_EVENT.type = SAMURE_EVENT_TOUCH_UP;
+  LAST_EVENT.seat = seat;
+  LAST_EVENT.touch_id = id;
+}
+
+void touch_motion(void *data, struct wl_touch *wl_touch, uint32_t time,
+                  int32_t id, wl_fixed_t x, wl_fixed_t y) {
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+  struct samure_seat *seat = (struct samure_seat *)d->data;
+
+  NEW_EVENT();
+
+  LAST_EVENT.type = SAMURE_EVENT_TOUCH_UP;
+  LAST_EVENT.seat = seat;
+  LAST_EVENT.x = wl_fixed_to_double(x);
+  LAST_EVENT.y = wl_fixed_to_double(y);
+  LAST_EVENT.touch_id = id;
+}
+
+void touch_frame(void *data, struct wl_touch *wl_touch) {}
+
+void touch_cancel(void *data, struct wl_touch *wl_touch) {}
+
+void touch_shape(void *data, struct wl_touch *wl_touch, int32_t id,
+                 wl_fixed_t major, wl_fixed_t minor) {}
+
+void touch_orientation(void *data, struct wl_touch *wl_touch, int32_t id,
+                       wl_fixed_t orientation) {}
 
 struct samure_callback_data *
 samure_create_callback_data(struct samure_context *ctx, void *data) {

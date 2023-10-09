@@ -108,6 +108,26 @@ extern void screencopy_frame_linux_dmabuf(
 extern void screencopy_frame_buffer_done(
     void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1);
 
+extern void touch_down(void *data, struct wl_touch *wl_touch, uint32_t serial,
+                       uint32_t time, struct wl_surface *surface, int32_t id,
+                       wl_fixed_t x, wl_fixed_t y);
+
+extern void touch_up(void *data, struct wl_touch *wl_touch, uint32_t serial,
+                     uint32_t time, int32_t id);
+
+extern void touch_motion(void *data, struct wl_touch *wl_touch, uint32_t time,
+                         int32_t id, wl_fixed_t x, wl_fixed_t y);
+
+extern void touch_frame(void *data, struct wl_touch *wl_touch);
+
+extern void touch_cancel(void *data, struct wl_touch *wl_touch);
+
+extern void touch_shape(void *data, struct wl_touch *wl_touch, int32_t id,
+                        wl_fixed_t major, wl_fixed_t minor);
+
+extern void touch_orientation(void *data, struct wl_touch *wl_touch, int32_t id,
+                              wl_fixed_t orientation);
+
 static struct wl_registry_listener registry_listener = {
     .global = registry_global,
     .global_remove = registry_global_remove,
@@ -156,6 +176,16 @@ static struct zwlr_screencopy_frame_v1_listener screencopy_frame_listener = {
     .flags = screencopy_frame_flags,
     .linux_dmabuf = screencopy_frame_linux_dmabuf,
     .ready = screencopy_frame_ready,
+};
+
+static struct wl_touch_listener touch_listener = {
+    .cancel = touch_cancel,
+    .down = touch_down,
+    .frame = touch_frame,
+    .motion = touch_motion,
+    .orientation = touch_orientation,
+    .shape = touch_shape,
+    .up = touch_up,
 };
 
 struct samure_callback_data {
