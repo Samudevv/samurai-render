@@ -49,7 +49,7 @@ static void on_event(struct samure_context *ctx, struct samure_event *e,
     }
     break;
   case SAMURE_EVENT_KEYBOARD_KEY:
-    if ((e->key == KEY_ESC || e->key == KEY_ENTER) &&
+    if ((e->button == KEY_ESC || e->button == KEY_ENTER) &&
         e->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
       ctx->running = 0;
     }
