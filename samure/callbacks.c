@@ -201,6 +201,47 @@ void layer_surface_configure(void *data,
 void layer_surface_closed(void *data,
                           struct zwlr_layer_surface_v1 *layer_surface) {}
 
+void output_geometry(void *data, struct wl_output *wl_output, int32_t x,
+                     int32_t y, int32_t physical_width, int32_t physical_height,
+                     int32_t subpixel, const char *make, const char *model,
+                     int32_t transform) {
+  struct samure_output *o = (struct samure_output *)data;
+  o->geo.x = x;
+  o->geo.y = y;
+}
+
+void output_done(void *data, struct wl_output *wl_output) {
+  struct samure_output *o = (struct samure_output *)data;
+  if (o->scale != 0) {
+    o->geo.w /= o->scale;
+    o->geo.h /= o->scale;
+  }
+}
+
+void output_scale(void *data, struct wl_output *wl_output, int32_t factor) {
+  struct samure_output *o = (struct samure_output *)data;
+  o->scale = factor;
+}
+
+void output_name(void *data, struct wl_output *wl_output, const char *name) {
+  struct samure_output *o = (struct samure_output *)data;
+  o->name = strdup(name);
+}
+
+void output_description(void *data, struct wl_output *wl_output,
+                        const char *description) {}
+
+void output_mode(void *data, struct wl_output *wl_output, uint32_t flags,
+                 int32_t width, int32_t height, int32_t refresh) {
+  struct samure_output *o = (struct samure_output *)data;
+  if ((flags & WL_OUTPUT_MODE_CURRENT) == 0) {
+    return;
+  }
+
+  o->geo.w = width;
+  o->geo.h = height;
+}
+
 void xdg_output_logical_position(void *data,
                                  struct zxdg_output_v1 *zxdg_output_v1,
                                  int32_t x, int32_t y) {

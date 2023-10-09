@@ -11,13 +11,16 @@ samure_create_output(struct samure_context *ctx, struct wl_output *output) {
   SAMURE_RESULT_ALLOC(output, o);
 
   o->output = output;
-  o->xdg_output =
-      zxdg_output_manager_v1_get_xdg_output(ctx->output_manager, o->output);
-  if (!o->xdg_output) {
-    samure_destroy_output(ctx, o);
-    SAMURE_RETURN_ERROR(output, SAMURE_ERROR_OUTPUT_INIT);
+  if (ctx->output_manager) {
+    o->xdg_output =
+        zxdg_output_manager_v1_get_xdg_output(ctx->output_manager, o->output);
+    if (o->xdg_output) {
+      zxdg_output_v1_add_listener(o->xdg_output, &xdg_output_listener, o);
+    }
   }
-  zxdg_output_v1_add_listener(o->xdg_output, &xdg_output_listener, o);
+  if (!o->xdg_output) {
+    wl_output_add_listener(o->output, &output_listener, o);
+  }
   wl_display_roundtrip(ctx->display);
 
   SAMURE_RETURN_RESULT(output, o);

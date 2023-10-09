@@ -28,6 +28,7 @@ struct samure_output {
   size_t num_sfc;
   struct samure_rect geo;
   char *name;
+  int32_t scale;
 };
 
 enum samure_screenshot_state {

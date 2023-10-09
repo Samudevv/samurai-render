@@ -43,6 +43,26 @@ extern void layer_surface_configure(void *data,
 extern void layer_surface_closed(void *data,
                                  struct zwlr_layer_surface_v1 *layer_surface);
 
+extern void output_geometry(void *data, struct wl_output *wl_output, int32_t x,
+                            int32_t y, int32_t physical_width,
+                            int32_t physical_height, int32_t subpixel,
+                            const char *make, const char *model,
+                            int32_t transform);
+
+extern void output_done(void *data, struct wl_output *wl_output);
+
+extern void output_scale(void *data, struct wl_output *wl_output,
+                         int32_t factor);
+
+extern void output_name(void *data, struct wl_output *wl_output,
+                        const char *name);
+
+extern void output_description(void *data, struct wl_output *wl_output,
+                               const char *description);
+
+extern void output_mode(void *data, struct wl_output *wl_output, uint32_t flags,
+                        int32_t width, int32_t height, int32_t refresh);
+
 extern void xdg_output_logical_position(void *data,
                                         struct zxdg_output_v1 *zxdg_output_v1,
                                         int32_t x, int32_t y);
@@ -158,6 +178,15 @@ static struct wl_keyboard_listener keyboard_listener = {
 static struct zwlr_layer_surface_v1_listener layer_surface_listener = {
     .configure = layer_surface_configure,
     .closed = layer_surface_closed,
+};
+
+static struct wl_output_listener output_listener = {
+    .description = output_description,
+    .done = output_done,
+    .geometry = output_geometry,
+    .mode = output_mode,
+    .name = output_name,
+    .scale = output_scale,
 };
 
 static struct zxdg_output_v1_listener xdg_output_listener = {
