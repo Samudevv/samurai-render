@@ -59,7 +59,6 @@ samure_create_context(struct samure_context_config *config) {
   if (reg_d.num_outputs == 0)            { error_code |= SAMURE_ERROR_NO_OUTPUTS;              }
   if (ctx->layer_shell == NULL)          { error_code |= SAMURE_ERROR_NO_LAYER_SHELL;          }
   if (ctx->compositor == NULL)           { error_code |= SAMURE_ERROR_NO_COMPOSITOR;           }
-  if (ctx->screencopy_manager == NULL)   { error_code |= SAMURE_ERROR_NO_SCREENCOPY_MANAGER;   }
   // clang-format on
 
   if (SAMURE_IS_ERROR(error_code)) {
