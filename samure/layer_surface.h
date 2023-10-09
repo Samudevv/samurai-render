@@ -3,7 +3,6 @@
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include <wayland-client.h>
 
-#include "error_handling.h"
 #include "shared_memory.h"
 
 #define SAMURE_LAYER_SURFACE_ANCHOR_FILL                                       \

@@ -24,6 +24,7 @@ samure_init_backend_raw(struct samure_context *ctx) {
 
 void samure_destroy_backend_raw(struct samure_context *ctx) {
   free(ctx->backend);
+  ctx->backend = NULL;
 }
 
 void samure_backend_raw_render_end(struct samure_context *ctx,

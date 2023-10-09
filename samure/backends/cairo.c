@@ -23,8 +23,8 @@ samure_init_backend_cairo(struct samure_context *ctx) {
 }
 
 void samure_destroy_backend_cairo(struct samure_context *ctx) {
-  struct samure_backend_cairo *c = (struct samure_backend_cairo *)ctx->backend;
-  free(c);
+  free(ctx->backend);
+  ctx->backend = NULL;
 }
 
 void samure_backend_cairo_render_end(struct samure_context *ctx,

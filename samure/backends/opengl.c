@@ -135,6 +135,7 @@ void samure_destroy_backend_opengl(struct samure_context *ctx) {
   if (gl)
     free(gl->cfg);
   free(gl);
+  ctx->backend = NULL;
 }
 
 void samure_backend_opengl_render_start(
