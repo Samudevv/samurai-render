@@ -142,6 +142,10 @@ void samure_output_attach_layer_surface(struct samure_output *o,
 extern SAMURE_RESULT(shared_buffer)
     samure_output_screenshot(struct samure_context *ctx,
                              struct samure_output *output) {
+  if (!ctx->shm) {
+    SAMURE_RETURN_ERROR(shared_buffer, SAMURE_ERROR_NO_SHM);
+  }
+
   struct samure_screenshot_data data = {0};
   data.ctx = ctx;
   data.output = output;
