@@ -93,8 +93,10 @@ void seat_capabilities(void *data, struct wl_seat *seat,
 
   if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
     s->pointer = wl_seat_get_pointer(seat);
-    s->cursor_shape_device = wp_cursor_shape_manager_v1_get_pointer(
-        ctx->cursor_shape_manager, s->pointer);
+    if (ctx->cursor_shape_manager) {
+      s->cursor_shape_device = wp_cursor_shape_manager_v1_get_pointer(
+          ctx->cursor_shape_manager, s->pointer);
+    }
   }
   if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) {
     s->keyboard = wl_seat_get_keyboard(seat);
@@ -117,7 +119,7 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_seat *seat = (struct samure_seat *)d->data;
   struct samure_context *ctx = d->ctx;
 
-  if (seat->cursor_shape != 0) {
+  if (seat->cursor_shape != 0 && seat->cursor_shape_device) {
     wp_cursor_shape_device_v1_set_shape(seat->cursor_shape_device, serial,
                                         seat->cursor_shape);
   }
