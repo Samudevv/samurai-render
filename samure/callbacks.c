@@ -21,10 +21,13 @@
 #define LAST_EVENT ctx->events[ctx->num_events - 1]
 
 #define OUTPUT_FOR_SURFACE()                                                   \
+  struct samure_output *output = NULL;                                         \
+  struct samure_layer_surface *layer_surface = NULL;                           \
   for (size_t i = 0; i < ctx->num_outputs; i++) {                              \
     for (size_t j = 0; j < ctx->outputs[i]->num_sfc; j++) {                    \
       if (ctx->outputs[i]->sfc[j]->surface == surface) {                       \
         output = ctx->outputs[i];                                              \
+        layer_surface = ctx->outputs[i]->sfc[j];                               \
         break;                                                                 \
       }                                                                        \
     }                                                                          \
@@ -125,9 +128,9 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   }
   seat->last_pointer_enter = serial;
 
-  struct samure_output *output = NULL;
   OUTPUT_FOR_SURFACE();
   seat->pointer_focus.output = output;
+  seat->pointer_focus.surface = layer_surface;
 
   NEW_EVENT();
 
@@ -136,6 +139,7 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   LAST_EVENT.x = wl_fixed_to_double(surface_x);
   LAST_EVENT.y = wl_fixed_to_double(surface_y);
   LAST_EVENT.output = output;
+  LAST_EVENT.surface = layer_surface;
 }
 
 void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
@@ -144,15 +148,16 @@ void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_seat *seat = (struct samure_seat *)d->data;
   struct samure_context *ctx = d->ctx;
 
-  struct samure_output *output = NULL;
   OUTPUT_FOR_SURFACE();
   seat->pointer_focus.output = NULL;
+  seat->pointer_focus.surface = NULL;
 
   NEW_EVENT();
 
   LAST_EVENT.type = SAMURE_EVENT_POINTER_LEAVE;
   LAST_EVENT.seat = seat;
   LAST_EVENT.output = output;
+  LAST_EVENT.surface = layer_surface;
 }
 
 void pointer_motion(void *data, struct wl_pointer *pointer, uint32_t time,
@@ -280,15 +285,16 @@ void keyboard_enter(void *data, struct wl_keyboard *wl_keyboard,
   struct samure_context *ctx = d->ctx;
   struct samure_seat *seat = (struct samure_seat *)d->data;
 
-  struct samure_output *output = NULL;
   OUTPUT_FOR_SURFACE();
   seat->keyboard_focus.output = output;
+  seat->keyboard_focus.surface = layer_surface;
 
   NEW_EVENT();
 
   LAST_EVENT.type = SAMURE_EVENT_KEYBOARD_ENTER;
   LAST_EVENT.seat = seat;
   LAST_EVENT.output = output;
+  LAST_EVENT.surface = layer_surface;
 }
 
 void keyboard_leave(void *data, struct wl_keyboard *wl_keyboard,
@@ -297,9 +303,8 @@ void keyboard_leave(void *data, struct wl_keyboard *wl_keyboard,
   struct samure_context *ctx = d->ctx;
   struct samure_seat *seat = (struct samure_seat *)d->data;
 
-  struct samure_output *output = NULL;
-  OUTPUT_FOR_SURFACE();
   seat->keyboard_focus.output = NULL;
+  seat->keyboard_focus.surface = NULL;
 
   NEW_EVENT();
 
@@ -377,15 +382,16 @@ void touch_down(void *data, struct wl_touch *wl_touch, uint32_t serial,
   struct samure_context *ctx = d->ctx;
   struct samure_seat *seat = (struct samure_seat *)d->data;
 
-  struct samure_output *output = NULL;
   OUTPUT_FOR_SURFACE();
   seat->touch_focus.output = output;
+  seat->touch_focus.surface = layer_surface;
 
   NEW_EVENT();
 
   LAST_EVENT.type = SAMURE_EVENT_TOUCH_DOWN;
   LAST_EVENT.seat = seat;
   LAST_EVENT.output = output;
+  LAST_EVENT.surface = layer_surface;
   LAST_EVENT.x = wl_fixed_to_double(x);
   LAST_EVENT.y = wl_fixed_to_double(y);
   LAST_EVENT.touch_id = id;
@@ -398,6 +404,7 @@ void touch_up(void *data, struct wl_touch *wl_touch, uint32_t serial,
   struct samure_seat *seat = (struct samure_seat *)d->data;
 
   seat->touch_focus.output = NULL;
+  seat->touch_focus.surface = NULL;
 
   NEW_EVENT();
 
