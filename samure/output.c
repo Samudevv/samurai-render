@@ -141,7 +141,7 @@ void samure_output_attach_layer_surface(struct samure_output *o,
 
 extern SAMURE_RESULT(shared_buffer)
     samure_output_screenshot(struct samure_context *ctx,
-                             struct samure_output *output) {
+                             struct samure_output *output, int capture_cursor) {
   uint64_t error_code = SAMURE_ERROR_NONE;
   if (!ctx->shm)
     error_code |= SAMURE_ERROR_NO_SHM;
@@ -157,8 +157,8 @@ extern SAMURE_RESULT(shared_buffer)
   data.buffer_rs.error = SAMURE_ERROR_NOT_IMPLEMENTED;
 
   struct zwlr_screencopy_frame_v1 *frame =
-      zwlr_screencopy_manager_v1_capture_output(ctx->screencopy_manager, 1,
-                                                output->output);
+      zwlr_screencopy_manager_v1_capture_output(ctx->screencopy_manager,
+                                                capture_cursor, output->output);
   if (!frame) {
     SAMURE_RETURN_ERROR(shared_buffer, SAMURE_ERROR_FRAME_INIT);
   };
