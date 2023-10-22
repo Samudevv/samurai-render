@@ -333,9 +333,9 @@ void samure_context_set_input_regions(struct samure_context *ctx,
         }
 
         output_rects[num_output_rects - 1].x =
-            OUT_X2(ctx->outputs[i]->geo, r[i].x);
+            OUT_X2(ctx->outputs[j]->geo, r[i].x);
         output_rects[num_output_rects - 1].y =
-            OUT_Y2(ctx->outputs[i]->geo, r[i].y);
+            OUT_Y2(ctx->outputs[j]->geo, r[i].y);
         output_rects[num_output_rects - 1].w = r[i].w;
         output_rects[num_output_rects - 1].h = r[i].h;
       }
