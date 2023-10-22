@@ -143,7 +143,7 @@ void samure_destroy_cursor_engine(struct samure_cursor_engine *engine) {
 static const char *samure_cursor_shape_name(uint32_t shape) {
   // clang-format off
   switch (shape) {
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CONTEXT_MENU:  return "context_menu";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CONTEXT_MENU:  return "context-menu";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_HELP:          return "help";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_POINTER:       return "pointer";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_PROGRESS:      return "progress";
@@ -151,33 +151,34 @@ static const char *samure_cursor_shape_name(uint32_t shape) {
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CELL:          return "cell";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CROSSHAIR:     return "crosshair";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_TEXT:          return "text";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_VERTICAL_TEXT: return "vertical_text";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_VERTICAL_TEXT: return "vertical-text";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ALIAS:         return "alias";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_COPY:          return "copy";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_MOVE:          return "move";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NO_DROP:       return "no_drop";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NOT_ALLOWED:   return "not_allowed";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NO_DROP:       return "no-drop";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NOT_ALLOWED:   return "not-allowed";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_GRAB:          return "grab";
 	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_GRABBING:      return "grabbing";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_E_RESIZE:      return "e_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_N_RESIZE:      return "n_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NE_RESIZE:     return "ne_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NW_RESIZE:     return "nw_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_S_RESIZE:      return "s_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_SE_RESIZE:     return "se_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_SW_RESIZE:     return "sw_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_W_RESIZE:      return "w_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_EW_RESIZE:     return "ew_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NS_RESIZE:     return "ns_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NESW_RESIZE:   return "nesw_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NWSE_RESIZE:   return "nwse_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_COL_RESIZE:    return "col_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ROW_RESIZE:    return "row_resize";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ALL_SCROLL:    return "all_scroll";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_IN:       return "zoom_in";
-	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_OUT:      return "zoom_out";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_E_RESIZE:      return "e-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_N_RESIZE:      return "n-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NE_RESIZE:     return "ne-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NW_RESIZE:     return "nw-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_S_RESIZE:      return "s-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_SE_RESIZE:     return "se-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_SW_RESIZE:     return "sw-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_W_RESIZE:      return "w-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_EW_RESIZE:     return "ew-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NS_RESIZE:     return "ns-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NESW_RESIZE:   return "nesw-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_NWSE_RESIZE:   return "nwse-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_COL_RESIZE:    return "col-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ROW_RESIZE:    return "row-resize";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ALL_SCROLL:    return "all-scroll";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_IN:       return "zoom-in";
+	case WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_ZOOM_OUT:      return "zoom-out";
   default:                                            return "default";
   }
+  // clang-format on
 }
 
 void samure_cursor_engine_set_shape(struct samure_cursor_engine *engine,
