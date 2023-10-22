@@ -145,6 +145,9 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_context *ctx = d->ctx;
 
   seat->last_pointer_enter = serial;
+  if (ctx->cursor_engine) {
+    samure_cursor_engine_pointer_enter(ctx->cursor_engine, seat);
+  }
 
   OUTPUT_FOR_SURFACE();
   seat->pointer_focus.output = output;

@@ -28,20 +28,48 @@
 
 #include "error_handling.h"
 #include "wayland/cursor-shape-v1-client-protocol.h"
+#include <wayland-cursor.h>
+
+#define SAMURE_DEFAULT_CURSOR_SIZE 24
 
 struct samure_seat;
+struct samure_context;
+
+struct samure_cursor {
+  struct samure_seat *seat;
+  struct wl_cursor *cursor;
+  struct wl_cursor_image *current_cursor_image;
+  struct wl_surface *surface;
+};
+
+extern struct samure_cursor
+samure_init_cursor(struct samure_seat *seat, struct wl_cursor_theme *theme,
+                   struct wl_compositor *compositor);
+extern void samure_destroy_cursor(struct samure_cursor cursor);
+extern void samure_cursor_set_shape(struct samure_cursor *cursor,
+                                    struct wl_cursor_theme *theme,
+                                    const char *name);
 
 struct samure_cursor_engine {
   struct wp_cursor_shape_manager_v1 *manager;
+
+  struct wl_cursor_theme *theme;
+  struct samure_cursor *cursors;
+  size_t num_cursors;
 };
 
 SAMURE_DEFINE_RESULT(cursor_engine);
 
 extern SAMURE_RESULT(cursor_engine)
-    samure_create_cursor_engine(struct wp_cursor_shape_manager_v1 *manager);
+    samure_create_cursor_engine(struct samure_context *ctx,
+                                struct wp_cursor_shape_manager_v1 *manager);
 
 extern void samure_destroy_cursor_engine(struct samure_cursor_engine *engine);
 
 extern void samure_cursor_engine_set_shape(struct samure_cursor_engine *engine,
                                            struct samure_seat *seat,
                                            uint32_t shape);
+
+extern void
+samure_cursor_engine_pointer_enter(struct samure_cursor_engine *engine,
+                                   struct samure_seat *seat);

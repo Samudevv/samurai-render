@@ -104,7 +104,7 @@ samure_create_context(struct samure_context_config *config) {
   free(reg_d.seats);
 
   SAMURE_RESULT(cursor_engine)
-  ce_rs = samure_create_cursor_engine(reg_d.cursor_manager);
+  ce_rs = samure_create_cursor_engine(ctx, reg_d.cursor_manager);
   if (!SAMURE_HAS_ERROR(ce_rs)) {
     ctx->cursor_engine = SAMURE_UNWRAP(cursor_engine, ce_rs);
   }

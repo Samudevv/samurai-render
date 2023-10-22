@@ -126,8 +126,9 @@
 #define SAMURE_ERROR_CAIRO_INIT (1 << 30)
 #define SAMURE_ERROR_SURFACE_INIT ((samure_error)1 << 31)
 #define SAMURE_ERROR_OUTPUT_INIT ((samure_error)1 << 32)
+#define SAMURE_ERROR_CURSOR_THEME ((samure_error)1 << 33)
 
-#define SAMURE_NUM_ERRORS 33
+#define SAMURE_NUM_ERRORS 34
 
 typedef uint64_t samure_error;
 
@@ -168,6 +169,7 @@ static const char *samure_strerror(samure_error error_code) {
   case SAMURE_ERROR_CAIRO_INIT:                return "cairo initialization failed";
   case SAMURE_ERROR_SURFACE_INIT:              return "surface initialization failed";
   case SAMURE_ERROR_OUTPUT_INIT:               return "output initialization failed";
+  case SAMURE_ERROR_CURSOR_THEME:              return "failed to load cursor theme";
   default:                                     return "unknown error";
   }
   // clang-format on
