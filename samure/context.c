@@ -406,6 +406,10 @@ void samure_context_render_output(struct samure_context *ctx,
 void samure_context_update(struct samure_context *ctx,
                            samure_update_callback update_callback,
                            double delta_time) {
+  if (ctx->cursor_engine) {
+    samure_cursor_engine_update(ctx->cursor_engine, delta_time);
+  }
+
   if (update_callback) {
     update_callback(ctx, delta_time, ctx->config.user_data);
   }

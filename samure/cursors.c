@@ -62,7 +62,11 @@ void samure_destroy_cursor(struct samure_cursor cursor) {
 void samure_cursor_set_shape(struct samure_cursor *c,
                              struct wl_cursor_theme *theme, const char *name) {
   c->cursor = wl_cursor_theme_get_cursor(theme, name);
+  c->current_time = 0.0;
+  c->current_image_index = 0;
   if (c->cursor) {
+    const uint32_t old_width = c->current_cursor_image->width;
+    const uint32_t old_height = c->current_cursor_image->height;
     c->current_cursor_image = c->cursor->images[0];
     if (c->surface) {
       // TODO: handle output scale
@@ -74,8 +78,7 @@ void samure_cursor_set_shape(struct samure_cursor *c,
                               c->surface, c->current_cursor_image->hotspot_x,
                               c->current_cursor_image->hotspot_y);
       }
-      wl_surface_damage(c->surface, 0, 0, c->current_cursor_image->width,
-                        c->current_cursor_image->height);
+      wl_surface_damage(c->surface, 0, 0, old_width, old_height);
       wl_surface_commit(c->surface);
     }
   }
@@ -216,6 +219,40 @@ void samure_cursor_engine_pointer_enter(struct samure_cursor_engine *engine,
           wl_pointer_set_cursor(c->seat->pointer, c->seat->last_pointer_enter,
                                 c->surface, c->current_cursor_image->hotspot_x,
                                 c->current_cursor_image->hotspot_y);
+          wl_surface_commit(c->surface);
+        }
+      }
+    }
+  }
+}
+
+void samure_cursor_engine_update(struct samure_cursor_engine *engine,
+                                 double delta_time) {
+  for (size_t i = 0; i < engine->num_cursors; i++) {
+    struct samure_cursor *c = &engine->cursors[i];
+    if (c->cursor) {
+      c->current_time += delta_time * 1000.0;
+      if (c->current_time > (double)c->current_cursor_image->delay) {
+        c->current_time = 0.0;
+        c->current_image_index++;
+        if (c->current_image_index == c->cursor->image_count) {
+          c->current_image_index = 0;
+        }
+        const uint32_t old_width = c->current_cursor_image->width;
+        const uint32_t old_height = c->current_cursor_image->height;
+        c->current_cursor_image = c->cursor->images[c->current_image_index];
+        if (c->surface) {
+          wl_surface_attach(c->surface,
+                            wl_cursor_image_get_buffer(c->current_cursor_image),
+                            0, 0);
+          if (c->seat->pointer) {
+            // TODO: handle output scale
+            wl_pointer_set_cursor(c->seat->pointer, c->seat->last_pointer_enter,
+                                  c->surface,
+                                  c->current_cursor_image->hotspot_x,
+                                  c->current_cursor_image->hotspot_y);
+          }
+          wl_surface_damage(c->surface, 0, 0, old_width, old_height);
           wl_surface_commit(c->surface);
         }
       }

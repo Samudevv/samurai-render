@@ -38,8 +38,10 @@ struct samure_context;
 struct samure_cursor {
   struct samure_seat *seat;
   struct wl_cursor *cursor;
-  struct wl_cursor_image *current_cursor_image;
   struct wl_surface *surface;
+  struct wl_cursor_image *current_cursor_image;
+  unsigned int current_image_index;
+  double current_time;
 };
 
 extern struct samure_cursor
@@ -73,3 +75,6 @@ extern void samure_cursor_engine_set_shape(struct samure_cursor_engine *engine,
 extern void
 samure_cursor_engine_pointer_enter(struct samure_cursor_engine *engine,
                                    struct samure_seat *seat);
+
+extern void samure_cursor_engine_update(struct samure_cursor_engine *engine,
+                                        double delta_time);
