@@ -61,6 +61,10 @@ void samure_destroy_cursor(struct samure_cursor cursor) {
 
 void samure_cursor_set_shape(struct samure_cursor *c,
                              struct wl_cursor_theme *theme, const char *name) {
+  if (c->cursor && strcmp(c->cursor->name, name) == 0) {
+    return;
+  }
+
   c->cursor = wl_cursor_theme_get_cursor(theme, name);
   c->current_time = 0.0;
   c->current_image_index = 0;
