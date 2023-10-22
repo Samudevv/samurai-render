@@ -24,34 +24,41 @@
  * distribution.
  ************************************************************************************/
 
-#pragma once
+#include "cursors.h"
+#include "seat.h"
 
-#include "error_handling.h"
-#include <wayland-client.h>
+SAMURE_DEFINE_RESULT_UNWRAP(cursor_engine);
 
-struct samure_context;
-struct samure_output;
-struct samure_layer_surface;
+SAMURE_RESULT(cursor_engine)
+samure_create_cursor_engine(struct wp_cursor_shape_manager_v1 *manager) {
+  SAMURE_RESULT_ALLOC(cursor_engine, c);
 
-struct samure_focus {
-  struct samure_output *output;
-  struct samure_layer_surface *surface;
-};
+  if (manager) {
+    c->manager = manager;
+  } else {
+  }
 
-struct samure_seat {
-  struct wl_seat *seat;
-  struct wl_pointer *pointer;
-  struct wl_keyboard *keyboard;
-  struct wl_touch *touch;
-  struct samure_focus pointer_focus;
-  struct samure_focus keyboard_focus;
-  struct samure_focus touch_focus;
-  char *name;
-  uint32_t last_pointer_enter;
-};
+  SAMURE_RETURN_RESULT(cursor_engine, c);
+}
 
-SAMURE_DEFINE_RESULT(seat);
+void samure_destroy_cursor_engine(struct samure_cursor_engine *engine) {
+  if (engine->manager) {
+    wp_cursor_shape_manager_v1_destroy(engine->manager);
+  }
+  free(engine);
+}
 
-extern SAMURE_RESULT(seat)
-    samure_create_seat(struct samure_context *ctx, struct wl_seat *seat);
-extern void samure_destroy_seat(struct samure_seat *seat);
+void samure_cursor_engine_set_shape(struct samure_cursor_engine *engine,
+                                    struct samure_seat *seat, uint32_t shape) {
+  if (seat->pointer) {
+    if (engine->manager) {
+      struct wp_cursor_shape_device_v1 *device =
+          wp_cursor_shape_manager_v1_get_pointer(engine->manager,
+                                                 seat->pointer);
+      wp_cursor_shape_device_v1_set_shape(device, seat->last_pointer_enter,
+                                          shape);
+      wp_cursor_shape_device_v1_destroy(device);
+    } else {
+    }
+  }
+}

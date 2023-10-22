@@ -102,12 +102,12 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
         wl_registry_bind(registry, name, &zxdg_output_manager_v1_interface, 2);
   } else if (strcmp(interface, wp_cursor_shape_manager_v1_interface.name) ==
              0) {
-    ctx->cursor_shape_manager = wl_registry_bind(
-        registry, name, &wp_cursor_shape_manager_v1_interface, version);
+    reg_d->cursor_manager = wl_registry_bind(
+        registry, name, &wp_cursor_shape_manager_v1_interface, 1);
   } else if (strcmp(interface, zwlr_screencopy_manager_v1_interface.name) ==
              0) {
     ctx->screencopy_manager = wl_registry_bind(
-        registry, name, &zwlr_screencopy_manager_v1_interface, version);
+        registry, name, &zwlr_screencopy_manager_v1_interface, 3);
   }
 }
 
@@ -122,10 +122,6 @@ void seat_capabilities(void *data, struct wl_seat *seat,
 
   if (capabilities & WL_SEAT_CAPABILITY_POINTER) {
     s->pointer = wl_seat_get_pointer(seat);
-    if (ctx->cursor_shape_manager) {
-      s->cursor_shape_device = wp_cursor_shape_manager_v1_get_pointer(
-          ctx->cursor_shape_manager, s->pointer);
-    }
   }
   if (capabilities & WL_SEAT_CAPABILITY_KEYBOARD) {
     s->keyboard = wl_seat_get_keyboard(seat);
@@ -148,10 +144,6 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_seat *seat = (struct samure_seat *)d->data;
   struct samure_context *ctx = d->ctx;
 
-  if (seat->cursor_shape != 0 && seat->cursor_shape_device) {
-    wp_cursor_shape_device_v1_set_shape(seat->cursor_shape_device, serial,
-                                        seat->cursor_shape);
-  }
   seat->last_pointer_enter = serial;
 
   OUTPUT_FOR_SURFACE();

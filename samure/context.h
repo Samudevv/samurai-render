@@ -33,6 +33,7 @@
 #include <wayland-client.h>
 
 #include "backend.h"
+#include "cursors.h"
 #include "error_handling.h"
 #include "events.h"
 #include "frame_timer.h"
@@ -96,8 +97,8 @@ struct samure_context {
   struct wl_compositor *compositor;
   struct zwlr_layer_shell_v1 *layer_shell;
   struct zxdg_output_manager_v1 *output_manager;
-  struct wp_cursor_shape_manager_v1 *cursor_shape_manager;
   struct zwlr_screencopy_manager_v1 *screencopy_manager;
+  struct samure_cursor_engine *cursor_engine;
 
   struct samure_seat **seats;
   size_t num_seats;
@@ -124,6 +125,7 @@ struct samure_registry_data {
   size_t num_seats;
   struct wl_output **outputs;
   size_t num_outputs;
+  struct wp_cursor_shape_manager_v1 *cursor_manager;
 };
 
 SAMURE_DEFINE_RESULT(context);

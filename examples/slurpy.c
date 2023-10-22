@@ -118,10 +118,8 @@ int main(void) {
   struct samure_context *ctx =
       SAMURE_UNWRAP(context, samure_create_context(&cfg));
 
-  for (size_t i = 0; i < ctx->num_seats; i++) {
-    samure_seat_set_pointer_shape(ctx->seats[i],
-                                  WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CROSSHAIR);
-  }
+  samure_context_set_pointer_shape(ctx,
+                                   WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CROSSHAIR);
 
   ctx->render_state = SAMURE_RENDER_STATE_ONCE;
   samure_context_run(ctx);

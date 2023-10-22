@@ -103,6 +103,12 @@ samure_create_context(struct samure_context_config *config) {
   }
   free(reg_d.seats);
 
+  SAMURE_RESULT(cursor_engine)
+  ce_rs = samure_create_cursor_engine(reg_d.cursor_manager);
+  if (!SAMURE_HAS_ERROR(ce_rs)) {
+    ctx->cursor_engine = SAMURE_UNWRAP(cursor_engine, ce_rs);
+  }
+
   switch (ctx->config.backend) {
   case SAMURE_BACKEND_OPENGL: {
 #ifdef BACKEND_OPENGL
@@ -231,8 +237,8 @@ void samure_destroy_context(struct samure_context *ctx) {
     zwlr_layer_shell_v1_destroy(ctx->layer_shell);
   if (ctx->output_manager)
     zxdg_output_manager_v1_destroy(ctx->output_manager);
-  if (ctx->cursor_shape_manager)
-    wp_cursor_shape_manager_v1_destroy(ctx->cursor_shape_manager);
+  if (ctx->cursor_engine)
+    samure_destroy_cursor_engine(ctx->cursor_engine);
   if (ctx->screencopy_manager)
     zwlr_screencopy_manager_v1_destroy(ctx->screencopy_manager);
 
@@ -430,7 +436,9 @@ samure_context_create_output_layer_surfaces(struct samure_context *ctx) {
 
 void samure_context_set_pointer_shape(struct samure_context *ctx,
                                       uint32_t shape) {
-  for (size_t i = 0; i < ctx->num_seats; i++) {
-    samure_seat_set_pointer_shape(ctx->seats[i], shape);
+  if (ctx->cursor_engine) {
+    for (size_t i = 0; i < ctx->num_seats; i++) {
+      samure_cursor_engine_set_shape(ctx->cursor_engine, ctx->seats[i], shape);
+    }
   }
 }
