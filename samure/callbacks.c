@@ -465,6 +465,10 @@ void frame_done(void *data, struct wl_callback *wl_callback,
   struct samure_context *ctx = d->ctx;
   struct samure_output *output = d->output;
   struct samure_layer_surface *sfc = d->layer_surface;
+  const uint32_t delta_frame_time =
+      milliseconds - ((sfc->last_frame_time == 0) ? (milliseconds - 16)
+                                                  : sfc->last_frame_time);
+  sfc->last_frame_time = milliseconds;
 
   wl_callback_destroy(wl_callback);
   if (ctx->render_state == SAMURE_RENDER_STATE_ALWAYS) {
@@ -480,7 +484,8 @@ void frame_done(void *data, struct wl_callback *wl_callback,
   }
 
   if (ctx->app.on_render) {
-    ctx->app.on_render(ctx, sfc, output->geo, ctx->frame_timer.delta_time,
+    ctx->app.on_render(ctx, sfc, output->geo,
+                       ((double)delta_frame_time) / 1000.0,
                        ctx->config.user_data);
   }
 
