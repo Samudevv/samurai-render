@@ -259,6 +259,8 @@ void samure_context_run(struct samure_context *ctx) {
     }
   }
 
+  // TODO: Consider using wl_display_dispatch in a loop (may result in better
+  // delta time)
   ctx->running = 1;
   while (ctx->running) {
     samure_frame_timer_start_frame(&ctx->frame_timer);
