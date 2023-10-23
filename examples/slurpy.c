@@ -29,7 +29,6 @@
 
 #include <samure/backends/cairo.h>
 #include <samure/context.h>
-#include <samure/layer_surface.h>
 
 enum slurpy_state {
   STATE_NONE,

@@ -31,7 +31,6 @@
 
 #include <samure/backends/cairo.h>
 #include <samure/context.h>
-#include <samure/layer_surface.h>
 
 struct cairo_data {
   double qx, qy;

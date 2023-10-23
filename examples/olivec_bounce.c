@@ -35,7 +35,6 @@
 
 #include <samure/backends/raw.h>
 #include <samure/context.h>
-#include <samure/layer_surface.h>
 
 struct olivec_surface {
   struct samure_shared_buffer *buffer;

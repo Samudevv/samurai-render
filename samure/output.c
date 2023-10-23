@@ -27,7 +27,6 @@
 #include "output.h"
 #include "callbacks.h"
 #include "context.h"
-#include "layer_surface.h"
 #include <assert.h>
 #include <stdlib.h>
 
@@ -65,47 +64,6 @@ void samure_destroy_output(struct samure_context *ctx,
   if (o->output)
     wl_output_destroy(o->output);
   free(o);
-}
-
-int samure_circle_in_output(struct samure_rect o, int32_t x, int32_t y,
-                            int32_t r) {
-  // Middle of the output
-  const int32_t ox = o.x + o.w / 2;
-  const int32_t oy = o.y + o.h / 2;
-
-  // Distance between the middle of the circle and the middle of the output
-  const int32_t dx = abs(x - ox);
-  const int32_t dy = abs(y - oy);
-
-  if ((dx > (o.w / 2 + r)) || (dy > (o.h / 2 + r)))
-    return 0;
-
-  if ((dx <= (o.w / 2)) || (dy <= (o.h / 2)))
-    return 1;
-
-  return (dx - o.w / 2) * (dx - o.w / 2) + (dy - o.h / 2) * (dy - o.h / 2) <=
-         (r * r);
-}
-
-int samure_rect_in_output(struct samure_rect o, int32_t x, int32_t y, int32_t w,
-                          int32_t h) {
-  return (x < (o.x + o.w)) && ((x + w) > o.x) && (y < (o.y + o.h)) &&
-         ((y + h) > o.y);
-}
-
-int samure_square_in_output(struct samure_rect o, int32_t square_x,
-                            int32_t square_y, int32_t square_size) {
-  return samure_rect_in_output(o, square_x, square_y, square_size, square_size);
-}
-
-int samure_point_in_output(struct samure_rect o, int32_t x, int32_t y) {
-  return (x > o.x) && (x < (o.x + o.w)) && (y > o.y) && (y < o.y + o.h);
-}
-
-int samure_triangle_in_output(struct samure_rect o, int32_t x1, int32_t y1,
-                              int32_t x2, int32_t y2, int32_t x3, int32_t y3) {
-  return samure_point_in_output(o, x1, y1) ||
-         samure_point_in_output(o, x2, y2) || samure_point_in_output(o, x3, y3);
 }
 
 void samure_output_set_pointer_interaction(struct samure_context *ctx,

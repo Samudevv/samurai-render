@@ -30,7 +30,6 @@
 
 #include "callbacks.h"
 #include "context.h"
-#include "layer_surface.h"
 
 #define NEW_EVENT()                                                            \
   ctx->num_events++;                                                           \

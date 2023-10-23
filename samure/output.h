@@ -27,6 +27,8 @@
 #pragma once
 
 #include "error_handling.h"
+#include "layer_surface.h"
+#include "rect.h"
 #include "shared_memory.h"
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include "wayland/xdg-output-unstable-v1.h"
@@ -38,14 +40,6 @@
 #define OUT_Y(val) OUT_Y2(output_geo, val)
 
 struct samure_context;
-struct samure_layer_surface;
-
-struct samure_rect {
-  int32_t x;
-  int32_t y;
-  int32_t w;
-  int32_t h;
-};
 
 struct samure_output {
   struct wl_output *output;
@@ -77,21 +71,6 @@ extern SAMURE_RESULT(output)
     samure_create_output(struct samure_context *ctx, struct wl_output *output);
 extern void samure_destroy_output(struct samure_context *ctx,
                                   struct samure_output *output);
-extern int samure_circle_in_output(struct samure_rect output_geo,
-                                   int32_t circle_x, int32_t circle_y,
-                                   int32_t radius);
-extern int samure_rect_in_output(struct samure_rect output_geo, int32_t rect_x,
-                                 int32_t rect_y, int32_t rect_w,
-                                 int32_t rect_h);
-extern int samure_square_in_output(struct samure_rect output_geo,
-                                   int32_t square_x, int32_t square_y,
-                                   int32_t square_size);
-extern int samure_point_in_output(struct samure_rect output_geo,
-                                  int32_t point_x, int32_t point_y);
-extern int samure_triangle_in_output(struct samure_rect output_geo,
-                                     int32_t tri_x1, int32_t tri_y1,
-                                     int32_t tri_x2, int32_t tri_y2,
-                                     int32_t tri_x3, int32_t tri_y3);
 
 extern void samure_output_set_pointer_interaction(struct samure_context *ctx,
                                                   struct samure_output *output,
