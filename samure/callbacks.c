@@ -467,8 +467,13 @@ void frame_done(void *data, struct wl_callback *wl_callback,
   struct samure_layer_surface *sfc = d->layer_surface;
 
   wl_callback_destroy(wl_callback);
-  wl_callback = wl_surface_frame(sfc->surface);
-  wl_callback_add_listener(wl_callback, &frame_listener, d);
+  if (ctx->render_state == SAMURE_RENDER_STATE_ALWAYS) {
+    wl_callback = wl_surface_frame(sfc->surface);
+    wl_callback_add_listener(wl_callback, &frame_listener, d);
+  } else {
+    ctx->render_state = SAMURE_RENDER_STATE_NONE;
+    sfc->requested_frame = 0;
+  }
 
   if (ctx->backend && ctx->backend->render_start) {
     ctx->backend->render_start(ctx, sfc);

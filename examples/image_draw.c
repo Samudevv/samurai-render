@@ -53,7 +53,7 @@ static void event_callback(struct samure_context *ctx, struct samure_event *e,
     d->x = e->x + e->seat->pointer_focus.output->geo.x;
     d->y = e->y + e->seat->pointer_focus.output->geo.y;
     if (d->pressed) {
-      ctx->render_state = SAMURE_RENDER_STATE_ONCE;
+      samure_context_set_render_state(ctx, SAMURE_RENDER_STATE_ONCE);
     }
     break;
   case SAMURE_EVENT_KEYBOARD_KEY:
@@ -145,7 +145,7 @@ int main(int args, char *argv[]) {
 
   samure_context_create_output_layer_surfaces(ctx);
 
-  ctx->render_state = SAMURE_RENDER_STATE_ONCE;
+  samure_context_set_render_state(ctx, SAMURE_RENDER_STATE_ONCE);
   samure_context_run(ctx);
 
   if (bgs) {

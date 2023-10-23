@@ -169,3 +169,7 @@ samure_context_create_output_layer_surfaces(struct samure_context *ctx);
 
 extern void samure_context_set_pointer_shape(struct samure_context *ctx,
                                              uint32_t shape);
+
+extern void
+samure_context_set_render_state(struct samure_context *ctx,
+                                enum samure_render_state render_state);

@@ -253,10 +253,10 @@ void samure_destroy_context(struct samure_context *ctx) {
 }
 
 void samure_context_run(struct samure_context *ctx) {
-  for (size_t i = 0; i < ctx->num_outputs; i++) {
-    samure_output_request_frame(ctx, ctx->outputs[i]);
-    samure_context_render_output(ctx, ctx->outputs[i],
-                                 ctx->frame_timer.delta_time);
+  if (ctx->render_state != SAMURE_RENDER_STATE_NONE) {
+    for (size_t i = 0; i < ctx->num_outputs; i++) {
+      samure_output_request_frame(ctx, ctx->outputs[i]);
+    }
   }
 
   ctx->running = 1;
@@ -436,5 +436,19 @@ void samure_context_set_pointer_shape(struct samure_context *ctx,
     for (size_t i = 0; i < ctx->num_seats; i++) {
       samure_cursor_engine_set_shape(ctx->cursor_engine, ctx->seats[i], shape);
     }
+  }
+}
+
+void samure_context_set_render_state(struct samure_context *ctx,
+                                     enum samure_render_state render_state) {
+  if (ctx->render_state == SAMURE_RENDER_STATE_NONE) {
+    for (size_t i = 0; i < ctx->num_outputs; i++) {
+      samure_output_request_frame(ctx, ctx->outputs[i]);
+    }
+    if (ctx->render_state != SAMURE_RENDER_STATE_ONCE) {
+      ctx->render_state = render_state;
+    }
+  } else {
+    ctx->render_state = render_state;
   }
 }

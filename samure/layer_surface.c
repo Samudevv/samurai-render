@@ -120,7 +120,13 @@ void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
 void samure_layer_surface_request_frame(struct samure_context *ctx,
                                         struct samure_output *output,
                                         struct samure_layer_surface *sfc) {
+  if (sfc->requested_frame) {
+    return;
+  }
+
   struct wl_callback *cb = wl_surface_frame(sfc->surface);
   wl_callback_add_listener(cb, &frame_listener,
                            samure_create_frame_data(ctx, output, sfc));
+  wl_surface_commit(sfc->surface);
+  sfc->requested_frame = 1;
 }

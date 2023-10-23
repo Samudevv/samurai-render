@@ -47,6 +47,7 @@ struct samure_layer_surface {
   uint32_t h;
 
   struct samure_callback_data *callback_data;
+  int requested_frame;
 };
 
 SAMURE_DEFINE_RESULT(layer_surface);

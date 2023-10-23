@@ -70,7 +70,7 @@ static void on_event(struct samure_context *ctx, struct samure_event *e,
     case STATE_CHANGE:
       d->end.x = e->x + e->seat->pointer_focus.output->geo.x;
       d->end.y = e->y + e->seat->pointer_focus.output->geo.y;
-      ctx->render_state = SAMURE_RENDER_STATE_ONCE;
+      samure_context_set_render_state(ctx, SAMURE_RENDER_STATE_ONCE);
       break;
     }
     break;
@@ -121,7 +121,7 @@ int main(void) {
   samure_context_set_pointer_shape(ctx,
                                    WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_CROSSHAIR);
 
-  ctx->render_state = SAMURE_RENDER_STATE_ONCE;
+  samure_context_set_render_state(ctx, SAMURE_RENDER_STATE_ONCE);
   samure_context_run(ctx);
 
   struct slurpy_point start;
