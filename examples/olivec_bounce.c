@@ -202,13 +202,13 @@ int main(void) {
                             olivec_backend_associate_layer_surface,
                             olivec_backend_unassociate_layer_surface));
 
-  struct samure_context_config context_config = samure_create_context_config(
+  struct samure_context_config cfg = samure_create_context_config(
       event_callback, render_callback, update_callback, &d);
-  context_config.backend = SAMURE_BACKEND_NONE;
-  context_config.pointer_interaction = 1;
+  cfg.backend = SAMURE_BACKEND_NONE;
+  cfg.pointer_interaction = 1;
 
   SAMURE_RESULT(context)
-  ctx_rs = samure_create_context_with_backend(&context_config, olivec_backend);
+  ctx_rs = samure_create_context_with_backend(&cfg, olivec_backend);
   SAMURE_RETURN_AND_PRINT_ON_ERROR(ctx_rs, "Failed to create context",
                                    EXIT_FAILURE);
   struct samure_context *ctx = SAMURE_UNWRAP(context, ctx_rs);
