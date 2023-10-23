@@ -29,6 +29,7 @@
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include <wayland-client.h>
 
+#include "output.h"
 #include "shared_memory.h"
 
 #define SAMURE_LAYER_SURFACE_ANCHOR_FILL                                       \
@@ -47,8 +48,8 @@ struct samure_layer_surface {
   uint32_t h;
 
   struct samure_callback_data *callback_data;
-  int requested_frame;
-  uint32_t last_frame_time;
+  int not_ready;
+  int dirty;
 };
 
 SAMURE_DEFINE_RESULT(layer_surface);
@@ -66,7 +67,6 @@ extern void samure_destroy_layer_surface(struct samure_context *ctx,
 extern void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
                                              struct samure_shared_buffer *buf);
 
-extern void
-samure_layer_surface_request_frame(struct samure_context *ctx,
-                                   struct samure_output *output,
-                                   struct samure_layer_surface *sfc);
+extern void samure_layer_surface_request_frame(struct samure_context *ctx,
+                                               struct samure_layer_surface *sfc,
+                                               struct samure_rect geo);

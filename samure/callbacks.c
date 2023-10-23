@@ -30,6 +30,7 @@
 
 #include "callbacks.h"
 #include "context.h"
+#include "layer_surface.h"
 
 #define NEW_EVENT()                                                            \
   ctx->num_events++;                                                           \
@@ -463,34 +464,16 @@ void frame_done(void *data, struct wl_callback *wl_callback,
                 uint32_t milliseconds) {
   struct samure_frame_data *d = (struct samure_frame_data *)data;
   struct samure_context *ctx = d->ctx;
-  struct samure_output *output = d->output;
+  struct samure_rect geo = d->geo;
   struct samure_layer_surface *sfc = d->layer_surface;
-  const uint32_t delta_frame_time =
-      milliseconds - ((sfc->last_frame_time == 0) ? (milliseconds - 16)
-                                                  : sfc->last_frame_time);
-  sfc->last_frame_time = milliseconds;
+  free(d);
 
   wl_callback_destroy(wl_callback);
-  if (ctx->render_state == SAMURE_RENDER_STATE_ALWAYS) {
-    wl_callback = wl_surface_frame(sfc->surface);
-    wl_callback_add_listener(wl_callback, &frame_listener, d);
-  } else {
-    ctx->render_state = SAMURE_RENDER_STATE_NONE;
-    sfc->requested_frame = 0;
-  }
+  sfc->not_ready = 0;
 
-  if (ctx->backend && ctx->backend->render_start) {
-    ctx->backend->render_start(ctx, sfc);
-  }
-
-  if (ctx->app.on_render) {
-    ctx->app.on_render(ctx, sfc, output->geo,
-                       ((double)delta_frame_time) / 1000.0,
-                       ctx->config.user_data);
-  }
-
-  if (ctx->backend && ctx->backend->render_end) {
-    ctx->backend->render_end(ctx, sfc);
+  if (sfc->dirty) {
+    samure_context_render_layer_surface(ctx, sfc, geo,
+                                        ctx->frame_timer.delta_time);
   }
 }
 
@@ -507,15 +490,14 @@ samure_create_callback_data(struct samure_context *ctx, void *data) {
 }
 
 struct samure_frame_data *
-samure_create_frame_data(struct samure_context *ctx,
-                         struct samure_output *output,
+samure_create_frame_data(struct samure_context *ctx, struct samure_rect geo,
                          struct samure_layer_surface *layer_surface) {
   struct samure_frame_data *d =
       (struct samure_frame_data *)malloc(sizeof(struct samure_frame_data));
   assert(d != NULL);
 
   d->ctx = ctx;
-  d->output = output;
+  d->geo = geo;
   d->layer_surface = layer_surface;
 
   return d;

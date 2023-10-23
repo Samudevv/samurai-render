@@ -32,6 +32,7 @@
 
 #include <samure/backends/cairo.h>
 #include <samure/context.h>
+#include <samure/layer_surface.h>
 
 struct screenshot_draw_data {
   double x;

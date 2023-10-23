@@ -157,6 +157,11 @@ extern void samure_context_set_keyboard_interaction(struct samure_context *ctx,
 
 extern void samure_context_process_events(struct samure_context *ctx);
 
+extern void
+samure_context_render_layer_surface(struct samure_context *ctx,
+                                    struct samure_layer_surface *sfc,
+                                    struct samure_rect geo, double delta_time);
+
 extern void samure_context_render_output(struct samure_context *ctx,
                                          struct samure_output *output,
                                          double delta_time);

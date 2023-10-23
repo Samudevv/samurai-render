@@ -31,6 +31,8 @@
 #include "wayland/xdg-output-unstable-v1.h"
 #include <wayland-client.h>
 
+#include "output.h"
+
 extern void registry_global(void *data, struct wl_registry *registry,
                             uint32_t name, const char *interface,
                             uint32_t version);
@@ -257,7 +259,7 @@ struct samure_callback_data {
 
 struct samure_frame_data {
   struct samure_context *ctx;
-  struct samure_output *output;
+  struct samure_rect geo;
   struct samure_layer_surface *layer_surface;
 };
 
@@ -265,6 +267,5 @@ extern struct samure_callback_data *
 samure_create_callback_data(struct samure_context *ctx, void *data);
 
 extern struct samure_frame_data *
-samure_create_frame_data(struct samure_context *ctx,
-                         struct samure_output *output,
+samure_create_frame_data(struct samure_context *ctx, struct samure_rect geo,
                          struct samure_layer_surface *layer_surface);

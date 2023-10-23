@@ -32,6 +32,7 @@
 
 #include <samure/backends/opengl.h>
 #include <samure/context.h>
+#include <samure/layer_surface.h>
 
 struct opengl_data {
   double qx, qy;

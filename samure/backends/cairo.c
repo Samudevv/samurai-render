@@ -26,6 +26,7 @@
 
 #include "cairo.h"
 #include "../context.h"
+#include "../layer_surface.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

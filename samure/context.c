@@ -255,7 +255,6 @@ void samure_destroy_context(struct samure_context *ctx) {
 void samure_context_run(struct samure_context *ctx) {
   if (ctx->render_state != SAMURE_RENDER_STATE_NONE) {
     for (size_t i = 0; i < ctx->num_outputs; i++) {
-      samure_output_request_frame(ctx, ctx->outputs[i]);
       samure_context_render_output(ctx, ctx->outputs[i],
                                    ctx->frame_timer.delta_time);
     }
@@ -268,6 +267,11 @@ void samure_context_run(struct samure_context *ctx) {
     samure_context_process_events(ctx);
 
     samure_context_update(ctx, ctx->frame_timer.delta_time);
+
+    for (size_t i = 0; i < ctx->num_outputs; i++) {
+      samure_context_render_output(ctx, ctx->outputs[i],
+                                   ctx->frame_timer.delta_time);
+    }
 
     samure_frame_timer_end_frame(&ctx->frame_timer);
   }
@@ -380,22 +384,38 @@ void samure_context_process_events(struct samure_context *ctx) {
   ctx->num_events = 0;
 }
 
+void samure_context_render_layer_surface(struct samure_context *ctx,
+                                         struct samure_layer_surface *sfc,
+                                         struct samure_rect geo,
+                                         double delta_time) {
+  if (sfc->not_ready) {
+    sfc->dirty = 1;
+    return;
+  }
+
+  samure_layer_surface_request_frame(ctx, sfc, geo);
+
+  if (ctx->backend && ctx->backend->render_start) {
+    ctx->backend->render_start(ctx, sfc);
+  }
+
+  if (ctx->app.on_render) {
+    ctx->app.on_render(ctx, sfc, geo, delta_time, ctx->config.user_data);
+  }
+
+  if (ctx->backend && ctx->backend->render_end) {
+    ctx->backend->render_end(ctx, sfc);
+  }
+
+  sfc->dirty = 0;
+}
+
 void samure_context_render_output(struct samure_context *ctx,
                                   struct samure_output *output,
                                   double delta_time) {
   for (size_t i = 0; i < output->num_sfc; i++) {
-    if (ctx->backend && ctx->backend->render_start) {
-      ctx->backend->render_start(ctx, output->sfc[i]);
-    }
-
-    if (ctx->app.on_render) {
-      ctx->app.on_render(ctx, output->sfc[i], output->geo, delta_time,
-                         ctx->config.user_data);
-    }
-
-    if (ctx->backend && ctx->backend->render_end) {
-      ctx->backend->render_end(ctx, output->sfc[i]);
-    }
+    samure_context_render_layer_surface(ctx, output->sfc[i], output->geo,
+                                        delta_time);
   }
 }
 
@@ -445,7 +465,8 @@ void samure_context_set_render_state(struct samure_context *ctx,
                                      enum samure_render_state render_state) {
   if (ctx->render_state == SAMURE_RENDER_STATE_NONE) {
     for (size_t i = 0; i < ctx->num_outputs; i++) {
-      samure_output_request_frame(ctx, ctx->outputs[i]);
+      samure_context_render_output(ctx, ctx->outputs[i],
+                                   ctx->frame_timer.delta_time);
     }
     if (ctx->render_state != SAMURE_RENDER_STATE_ONCE) {
       ctx->render_state = render_state;

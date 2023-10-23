@@ -27,7 +27,6 @@
 #pragma once
 
 #include "error_handling.h"
-#include "layer_surface.h"
 #include "shared_memory.h"
 #include "wayland/wlr-layer-shell-unstable-v1.h"
 #include "wayland/xdg-output-unstable-v1.h"
@@ -39,6 +38,7 @@
 #define OUT_Y(val) OUT_Y2(output_geo, val)
 
 struct samure_context;
+struct samure_layer_surface;
 
 struct samure_rect {
   int32_t x;
@@ -112,6 +112,3 @@ samure_output_attach_layer_surface(struct samure_output *output,
 extern SAMURE_RESULT(shared_buffer)
     samure_output_screenshot(struct samure_context *ctx,
                              struct samure_output *output, int capture_cursor);
-
-extern void samure_output_request_frame(struct samure_context *ctx,
-                                        struct samure_output *output);

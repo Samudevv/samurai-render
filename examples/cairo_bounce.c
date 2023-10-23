@@ -31,6 +31,7 @@
 
 #include <samure/backends/cairo.h>
 #include <samure/context.h>
+#include <samure/layer_surface.h>
 
 struct cairo_data {
   double qx, qy;
@@ -80,7 +81,7 @@ static void render_callback(struct samure_context *ctx,
   cairo_set_source_rgba(cairo, 1.0, 1.0, 0.0, 1.0);
 
   char buffer[1024];
-  snprintf(buffer, 1024, "FPS: %d", (int)(1.0 / delta_time));
+  snprintf(buffer, 1024, "FPS: %d", ctx->frame_timer.fps);
 
   cairo_text_extents_t text_size;
   cairo_text_extents(cairo, buffer, &text_size);
@@ -115,13 +116,14 @@ static void update_callback(struct samure_context *ctx, double delta_time,
 int main(void) {
   struct cairo_data d = {0};
 
-  struct samure_context_config context_config = samure_create_context_config(
+  struct samure_context_config cfg = samure_create_context_config(
       event_callback, render_callback, update_callback, &d);
-  context_config.backend = SAMURE_BACKEND_CAIRO;
-  context_config.pointer_interaction = 1;
+  cfg.backend = SAMURE_BACKEND_CAIRO;
+  cfg.pointer_interaction = 1;
+  cfg.max_fps = 120;
 
   struct samure_context *ctx =
-      SAMURE_UNWRAP(context, samure_create_context(&context_config));
+      SAMURE_UNWRAP(context, samure_create_context(&cfg));
 
   const struct samure_rect r = samure_context_get_output_rect(ctx);
 

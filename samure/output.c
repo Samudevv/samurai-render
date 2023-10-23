@@ -27,6 +27,7 @@
 #include "output.h"
 #include "callbacks.h"
 #include "context.h"
+#include "layer_surface.h"
 #include <assert.h>
 #include <stdlib.h>
 
@@ -223,11 +224,4 @@ extern SAMURE_RESULT(shared_buffer)
   }
 
   SAMURE_RETURN_RESULT(shared_buffer, buffer);
-}
-
-void samure_output_request_frame(struct samure_context *ctx,
-                                 struct samure_output *output) {
-  for (size_t i = 0; i < output->num_sfc; i++) {
-    samure_layer_surface_request_frame(ctx, output, output->sfc[i]);
-  }
 }
