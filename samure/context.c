@@ -250,23 +250,18 @@ void samure_destroy_context(struct samure_context *ctx) {
 }
 
 void samure_context_run(struct samure_context *ctx) {
+  for (size_t i = 0; i < ctx->num_outputs; i++) {
+    samure_output_request_frame(ctx, ctx->outputs[i]);
+    samure_context_render_output(ctx, ctx->outputs[i],
+                                 ctx->config.render_callback,
+                                 ctx->frame_timer.delta_time);
+  }
+
   ctx->running = 1;
   while (ctx->running) {
     samure_frame_timer_start_frame(&ctx->frame_timer);
 
     samure_context_process_events(ctx, ctx->config.event_callback);
-
-    if (ctx->render_state != SAMURE_RENDER_STATE_NONE) {
-      for (size_t i = 0; i < ctx->num_outputs; i++) {
-        samure_context_render_output(ctx, ctx->outputs[i],
-                                     ctx->config.render_callback,
-                                     ctx->frame_timer.delta_time);
-      }
-
-      if (ctx->render_state == SAMURE_RENDER_STATE_ONCE) {
-        ctx->render_state = SAMURE_RENDER_STATE_NONE;
-      }
-    }
 
     samure_context_update(ctx, ctx->config.update_callback,
                           ctx->frame_timer.delta_time);

@@ -63,3 +63,8 @@ extern void samure_destroy_layer_surface(struct samure_context *ctx,
 
 extern void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
                                              struct samure_shared_buffer *buf);
+
+extern void
+samure_layer_surface_request_frame(struct samure_context *ctx,
+                                   struct samure_output *output,
+                                   struct samure_layer_surface *sfc);

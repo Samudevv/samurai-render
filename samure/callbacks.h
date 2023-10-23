@@ -174,6 +174,9 @@ extern void touch_shape(void *data, struct wl_touch *wl_touch, int32_t id,
 extern void touch_orientation(void *data, struct wl_touch *wl_touch, int32_t id,
                               wl_fixed_t orientation);
 
+extern void frame_done(void *data, struct wl_callback *wl_callback,
+                       uint32_t callback_data);
+
 static struct wl_registry_listener registry_listener = {
     .global = registry_global,
     .global_remove = registry_global_remove,
@@ -243,10 +246,25 @@ static struct wl_touch_listener touch_listener = {
     .up = touch_up,
 };
 
+static struct wl_callback_listener frame_listener = {
+    .done = frame_done,
+};
+
 struct samure_callback_data {
   struct samure_context *ctx;
   void *data;
 };
 
+struct samure_frame_data {
+  struct samure_context *ctx;
+  struct samure_output *output;
+  struct samure_layer_surface *layer_surface;
+};
+
 extern struct samure_callback_data *
 samure_create_callback_data(struct samure_context *ctx, void *data);
+
+extern struct samure_frame_data *
+samure_create_frame_data(struct samure_context *ctx,
+                         struct samure_output *output,
+                         struct samure_layer_surface *layer_surface);
