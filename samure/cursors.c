@@ -104,10 +104,12 @@ samure_create_cursor_engine(struct samure_context *ctx,
     }
 
     const char *cursor_size_str = getenv("XCURSOR_SIZE");
-    int cursor_size = SAMURE_DEFAULT_CURSOR_SIZE;
+    int cursor_size = 0;
     if (cursor_size_str) {
-      // TODO: Error checking
       cursor_size = atoi(cursor_size_str);
+    }
+    if (cursor_size == 0) {
+      cursor_size = SAMURE_DEFAULT_CURSOR_SIZE;
     }
 
     // TODO: Respect output scale
