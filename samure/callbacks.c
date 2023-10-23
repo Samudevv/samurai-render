@@ -474,10 +474,9 @@ void frame_done(void *data, struct wl_callback *wl_callback,
     ctx->backend->render_start(ctx, sfc);
   }
 
-  if (ctx->config.render_callback) {
-    ctx->config.render_callback(ctx, sfc, output->geo,
-                                ctx->frame_timer.delta_time,
-                                ctx->config.user_data);
+  if (ctx->app.on_render) {
+    ctx->app.on_render(ctx, sfc, output->geo, ctx->frame_timer.delta_time,
+                       ctx->config.user_data);
   }
 
   if (ctx->backend && ctx->backend->render_end) {

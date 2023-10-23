@@ -68,6 +68,12 @@ typedef void (*samure_render_callback)(
 typedef void (*samure_update_callback)(struct samure_context *ctx,
                                        double delta_time, void *user_data);
 
+struct samure_app {
+  samure_event_callback on_event;
+  samure_render_callback on_render;
+  samure_update_callback on_update;
+};
+
 struct samure_context_config {
   enum samure_backend_type backend;
   int pointer_interaction;
@@ -77,9 +83,9 @@ struct samure_context_config {
   struct samure_opengl_config *gl;
   int not_create_output_layer_surfaces;
 
-  samure_event_callback event_callback;
-  samure_render_callback render_callback;
-  samure_update_callback update_callback;
+  samure_event_callback on_event;
+  samure_render_callback on_render;
+  samure_update_callback on_update;
 
   void *user_data;
 };
@@ -116,6 +122,7 @@ struct samure_context {
   struct samure_backend *backend;
 
   struct samure_context_config config;
+  struct samure_app app;
 
   struct samure_frame_timer frame_timer;
 };
@@ -148,16 +155,13 @@ extern void samure_context_set_input_regions(struct samure_context *ctx,
 extern void samure_context_set_keyboard_interaction(struct samure_context *ctx,
                                                     int enable);
 
-extern void samure_context_process_events(struct samure_context *ctx,
-                                          samure_event_callback event_callback);
+extern void samure_context_process_events(struct samure_context *ctx);
 
 extern void samure_context_render_output(struct samure_context *ctx,
                                          struct samure_output *output,
-                                         samure_render_callback render_callback,
                                          double delta_time);
 
 extern void samure_context_update(struct samure_context *ctx,
-                                  samure_update_callback update_callback,
                                   double delta_time);
 
 extern samure_error
