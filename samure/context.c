@@ -267,9 +267,14 @@ void samure_context_run(struct samure_context *ctx) {
 
     samure_context_update(ctx, ctx->frame_timer.delta_time);
 
-    for (size_t i = 0; i < ctx->num_outputs; i++) {
-      samure_context_render_output(ctx, ctx->outputs[i],
-                                   ctx->frame_timer.delta_time);
+    if (ctx->render_state != SAMURE_RENDER_STATE_NONE) {
+      for (size_t i = 0; i < ctx->num_outputs; i++) {
+        samure_context_render_output(ctx, ctx->outputs[i],
+                                     ctx->frame_timer.delta_time);
+      }
+      if (ctx->render_state == SAMURE_RENDER_STATE_ONCE) {
+        ctx->render_state = SAMURE_RENDER_STATE_NONE;
+      }
     }
 
     samure_frame_timer_end_frame(&ctx->frame_timer);
@@ -462,15 +467,12 @@ void samure_context_set_pointer_shape(struct samure_context *ctx,
 
 void samure_context_set_render_state(struct samure_context *ctx,
                                      enum samure_render_state render_state) {
-  if (ctx->render_state == SAMURE_RENDER_STATE_NONE) {
+  if (ctx->render_state == SAMURE_RENDER_STATE_NONE &&
+      render_state != SAMURE_RENDER_STATE_NONE) {
     for (size_t i = 0; i < ctx->num_outputs; i++) {
       samure_context_render_output(ctx, ctx->outputs[i],
                                    ctx->frame_timer.delta_time);
     }
-    if (ctx->render_state != SAMURE_RENDER_STATE_ONCE) {
-      ctx->render_state = render_state;
-    }
-  } else {
-    ctx->render_state = render_state;
   }
+  ctx->render_state = render_state;
 }
