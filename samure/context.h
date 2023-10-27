@@ -82,6 +82,7 @@ struct samure_context_config {
   uint32_t max_fps;
   struct samure_opengl_config *gl;
   int not_create_output_layer_surfaces;
+  int not_request_frame;
 
   samure_event_callback on_event;
   samure_render_callback on_render;

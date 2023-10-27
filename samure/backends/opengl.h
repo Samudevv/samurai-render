@@ -34,9 +34,6 @@
 
 #define EGL_PLATFORM_WAYLAND_KHR 0x31D8
 
-// TODO: Handle not using frame callback at all so that opengl backend can work
-// better
-
 typedef EGLDisplay (*eglGetPlatformDisplayEXT_t)(EGLenum, EGLNativeDisplayType,
                                                  const EGLint *);
 typedef EGLSurface (*eglCreatePlatformWindowSurfaceEXT_t)(EGLDisplay, EGLConfig,

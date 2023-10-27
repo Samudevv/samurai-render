@@ -146,6 +146,8 @@ samure_init_backend_opengl(struct samure_context *ctx,
   gl->base.unassociate_layer_surface =
       samure_backend_opengl_unassociate_layer_surface;
 
+  ctx->config.not_request_frame = 1;
+
   SAMURE_RETURN_RESULT(backend_opengl, gl);
 }
 
