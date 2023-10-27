@@ -259,8 +259,6 @@ void samure_context_run(struct samure_context *ctx) {
     }
   }
 
-  // TODO: Maybe add another function (samure_context_dispatch?) that works
-  // entirely using the frame callback and events
   ctx->running = 1;
   while (ctx->running) {
     samure_frame_timer_start_frame(&ctx->frame_timer);
