@@ -75,7 +75,6 @@ target_end()
 add_rules("mode.debug", "mode.release")
 target("samurai-render")
     set_kind("$(kind)")
-    add_deps("wayland-protocols")
     add_packages("wayland")
     add_options(
         "backend_cairo",
