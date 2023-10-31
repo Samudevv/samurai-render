@@ -30,8 +30,7 @@
 #include "layer_surface.h"
 #include "rect.h"
 #include "shared_memory.h"
-#include "wayland/wlr-layer-shell-unstable-v1.h"
-#include "wayland/xdg-output-unstable-v1.h"
+#include "wayland/xdg-output.h"
 #include <wayland-client.h>
 
 #define OUT_X2(geo, val) (val - geo.x)

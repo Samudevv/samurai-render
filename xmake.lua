@@ -22,9 +22,60 @@ if get_config("backend_opengl") then
     add_requires("libglvnd")
 end
 
+rule("wayland-protocol")
+    set_extensions(".protocol")
+    on_buildcmd_file(function (target, batchcmds, sourcefile, opt)
+        function string.startswith(String, Start)
+            return string.sub(String, 1, string.len(Start)) == Start
+        end
+
+        import("lib.detect.find_program")
+
+        local scanner = find_program("wayland-scanner")
+        if scanner == nil then
+            print("error: wayland-scanner is required to generate c code for wayland-protocols")
+            return
+        end
+
+
+        local lines = io.lines(sourcefile)
+        local source = lines(0)
+        local h_file = path.join("samure/wayland", lines(1))
+        local c_file = path.join("samure/wayland", lines(2))
+
+        if string.startswith(source, "https") then
+            local curl = find_program("curl")
+            if curl == nil then
+                printf("error: curl is required to generate %s protocol\n", path.basename(sourcefile))
+                return
+            end
+            local output = os.tmpfile()
+            os.vrunv(curl, {"-o", output, source})
+            source = output
+        end
+
+        batchcmds:show_progress(opt.progress, "${color.build.object}wayland-scanner.header %s", path.basename(sourcefile))
+        batchcmds:vrunv("wayland-scanner", {"client-header", source, h_file})
+
+        batchcmds:show_progress(opt.progress, "${color.build.object}wayland-scanner.source %s", path.basename(sourcefile))
+        batchcmds:vrunv("wayland-scanner", {"private-code", source, c_file})
+
+        batchcmds:add_depfiles(sourcefile)
+        batchcmds:set_depmtime(os.mtime(c_file))
+        batchcmds:set_depcache(target:dependfile(c_file))
+    end)
+rule_end()
+
+target("wayland-protocols")
+    set_kind("object")
+    add_rules("wayland-protocol")
+    add_files("samure/wayland/*.protocol")
+target_end()
+
 add_rules("mode.debug", "mode.release")
 target("samurai-render")
     set_kind("$(kind)")
+    add_deps("wayland-protocols")
     add_packages("wayland")
     add_options(
         "backend_cairo",

@@ -1,0 +1,3 @@
+/usr/share/wayland-protocols/unstable/tablet/tablet-unstable-v2.xml
+tablet.h
+tablet.c

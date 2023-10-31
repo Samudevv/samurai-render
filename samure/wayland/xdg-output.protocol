@@ -1,0 +1,3 @@
+/usr/share/wayland-protocols/unstable/xdg-output/xdg-output-unstable-v1.xml
+xdg-output.h
+xdg-output.c

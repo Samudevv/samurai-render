@@ -9,3 +9,7 @@ build/
 .DS_Store
 
 compile_commands.json
+
+# Wayland protocols
+samure/wayland/*.c
+samure/wayland/*.h

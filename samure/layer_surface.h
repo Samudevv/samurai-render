@@ -26,7 +26,7 @@
 
 #pragma once
 
-#include "wayland/wlr-layer-shell-unstable-v1.h"
+#include "wayland/layer-shell.h"
 #include <wayland-client.h>
 
 #include "rect.h"

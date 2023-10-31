@@ -25,10 +25,10 @@
  ************************************************************************************/
 
 #pragma once
-#include "wayland/cursor-shape-v1-client-protocol.h"
-#include "wayland/wlr-layer-shell-unstable-v1.h"
-#include "wayland/wlr-screencopy-unstable-v1.h"
-#include "wayland/xdg-output-unstable-v1.h"
+#include "wayland/cursor-shape.h"
+#include "wayland/layer-shell.h"
+#include "wayland/screencopy.h"
+#include "wayland/xdg-output.h"
 #include <wayland-client.h>
 
 #include "output.h"

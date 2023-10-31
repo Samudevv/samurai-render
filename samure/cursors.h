@@ -27,7 +27,7 @@
 #pragma once
 
 #include "error_handling.h"
-#include "wayland/cursor-shape-v1-client-protocol.h"
+#include "wayland/cursor-shape.h"
 #include <wayland-cursor.h>
 
 #define SAMURE_DEFAULT_CURSOR_SIZE 24
