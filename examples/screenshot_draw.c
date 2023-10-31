@@ -90,7 +90,6 @@ int main(int args, char *argv[]) {
   context_config.backend = SAMURE_BACKEND_CAIRO;
   context_config.pointer_interaction = 1;
   context_config.keyboard_interaction = 1;
-  context_config.not_create_output_layer_surfaces = 1;
 
   struct samure_context *ctx =
       SAMURE_UNWRAP(context, samure_create_context(&context_config));
@@ -103,7 +102,7 @@ int main(int args, char *argv[]) {
   for (size_t i = 0; i < ctx->num_outputs; i++) {
     bgs[i] = SAMURE_UNWRAP(
         layer_surface,
-        samure_create_layer_surface(ctx, ctx->outputs[i], SAMURE_LAYER_OVERLAY,
+        samure_create_layer_surface(ctx, ctx->outputs[i], SAMURE_LAYER_TOP,
                                     SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 0));
 
     struct samure_shared_buffer *screenshot = SAMURE_UNWRAP(
@@ -111,8 +110,6 @@ int main(int args, char *argv[]) {
     samure_layer_surface_draw_buffer(bgs[i], screenshot);
     samure_destroy_shared_buffer(screenshot);
   }
-
-  samure_context_create_output_layer_surfaces(ctx);
 
   samure_context_set_render_state(ctx, SAMURE_RENDER_STATE_ONCE);
   samure_context_run(ctx);
