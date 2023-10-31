@@ -18,6 +18,9 @@ add_requires("wayland")
 if get_config("backend_cairo") then
     add_requires("cairo")
 end
+if get_config("backend_opengl") then
+    add_requires("libglvnd")
+end
 
 add_rules("mode.debug", "mode.release")
 target("samurai-render")
@@ -32,6 +35,7 @@ target("samurai-render")
     end
     if get_config("backend_opengl") then
         add_links("EGL", "wayland-egl")
+        add_packages("libglvnd")
     end
     add_headerfiles(
         "samure/*.h",
@@ -121,13 +125,12 @@ if get_config("build_examples") then
     if get_config("backend_opengl") then
         target("opengl_bounce")
             set_kind("binary")
-            add_packages("wayland")
+            add_packages("wayland", "libglvnd")
             add_options(
                 "backend_cairo",
                 "backend_opengl"
             )
             add_includedirs(os.scriptdir())
-            add_links("GL")
             add_deps("samurai-render")
             add_files("examples/opengl_bounce.c")
     end
