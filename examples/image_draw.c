@@ -116,7 +116,6 @@ int main(int args, char *argv[]) {
   context_config.pointer_interaction = 1;
   context_config.keyboard_interaction = 1;
   context_config.not_create_output_layer_surfaces = 1;
-  context_config.max_fps = 60;
 
   struct samure_context *ctx =
       SAMURE_UNWRAP(context, samure_create_context(&context_config));

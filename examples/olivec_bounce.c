@@ -152,7 +152,7 @@ static void render_callback(struct samure_context *ctx,
     olivec_circle(os->canvas, OUT_X(d->qx), OUT_Y(d->qy), 100, 0xFF00FF00);
 
     char buffer[1024];
-    snprintf(buffer, 1024, "%d", ctx->frame_timer.fps);
+    snprintf(buffer, 1024, "%d", ctx->frame_timer.update_frequency);
 
     olivec_text(os->canvas, buffer, 5, 5, olivec_default_font, 5, 0xFFAAAAAA);
   }

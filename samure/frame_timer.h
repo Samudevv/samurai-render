@@ -33,8 +33,8 @@
 #define SAMURE_NUM_TAKEAWAYS 2
 
 struct samure_frame_timer {
-  uint32_t max_fps;
-  uint32_t fps;
+  uint32_t max_update_frequency;
+  uint32_t update_frequency;
   double delta_time;
 
   double start_time;

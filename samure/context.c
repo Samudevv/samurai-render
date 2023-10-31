@@ -37,18 +37,12 @@
 
 SAMURE_DEFINE_RESULT_UNWRAP(context);
 
-struct samure_context_config samure_default_context_config() {
-  struct samure_context_config c = {0};
-  c.max_fps = SAMURE_MAX_FPS;
-  return c;
-}
-
 struct samure_context_config
 samure_create_context_config(samure_event_callback event_callback,
                              samure_render_callback render_callback,
                              samure_update_callback update_callback,
                              void *user_data) {
-  struct samure_context_config c = samure_default_context_config();
+  struct samure_context_config c = {0};
   c.on_event = event_callback;
   c.on_render = render_callback;
   c.on_update = update_callback;
@@ -63,7 +57,7 @@ samure_create_context(struct samure_context_config *config) {
   if (config) {
     ctx->config = *config;
   } else {
-    ctx->config = samure_default_context_config();
+    memset(&ctx->config, 0, sizeof(struct samure_context_config));
   }
   ctx->app.on_event = ctx->config.on_event;
   ctx->app.on_update = ctx->config.on_update;
@@ -163,7 +157,18 @@ samure_create_context(struct samure_context_config *config) {
   }
   free(reg_d.outputs);
 
-  ctx->frame_timer = samure_init_frame_timer(ctx->config.max_fps);
+  if (ctx->config.max_update_frequency == 0) {
+    // Use double the maximum output refresh rate as update frequency by default
+    int32_t max_refresh_rate = ctx->outputs[0]->refresh_rate;
+    for (size_t i = 1; i < ctx->num_outputs; i++) {
+      if (ctx->outputs[i]->refresh_rate > max_refresh_rate) {
+        max_refresh_rate = ctx->outputs[i]->refresh_rate;
+      }
+    }
+    ctx->config.max_update_frequency = 2 * max_refresh_rate;
+  }
+
+  ctx->frame_timer = samure_init_frame_timer(ctx->config.max_update_frequency);
 
   if (!ctx->config.not_create_output_layer_surfaces) {
     const samure_error err = samure_context_create_output_layer_surfaces(ctx);
@@ -178,12 +183,10 @@ samure_create_context(struct samure_context_config *config) {
 SAMURE_RESULT(context)
 samure_create_context_with_backend(struct samure_context_config *config,
                                    struct samure_backend *backend) {
-  struct samure_context_config cfg;
+  struct samure_context_config cfg = {0};
 
   if (config) {
     cfg = *config;
-  } else {
-    cfg = samure_default_context_config();
   }
 
   const int not_create_output_layer_surfaces =

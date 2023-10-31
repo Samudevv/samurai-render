@@ -38,8 +38,8 @@
 
 struct samure_frame_timer samure_init_frame_timer(uint32_t max_fps) {
   struct samure_frame_timer f = {0};
-  f.max_fps = max_fps;
-  f.fps = max_fps;
+  f.max_update_frequency = max_fps;
+  f.update_frequency = max_fps;
   f.delta_time = 1.0 / (double)max_fps;
   return f;
 }
@@ -53,7 +53,7 @@ void samure_frame_timer_end_frame(struct samure_frame_timer *f) {
   f->raw_delta_time = end_time - f->start_time;
 
   // Limit FPS
-  const double max_delta_time = 1.0 / (double)f->max_fps;
+  const double max_delta_time = 1.0 / (double)f->max_update_frequency;
   if (f->raw_delta_time < max_delta_time) {
     const double max_sleep_time = max_delta_time - f->raw_delta_time;
 
@@ -126,7 +126,7 @@ void samure_frame_timer_end_frame(struct samure_frame_timer *f) {
   }
 
   f->delta_time = f->mean_delta_time;
-  f->fps = (uint32_t)(1.0 / f->delta_time);
+  f->update_frequency = (uint32_t)(1.0 / f->delta_time);
 }
 
 double samure_get_time() {

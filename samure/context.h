@@ -41,7 +41,6 @@
 #include "seat.h"
 
 #define SAMURE_NO_CONTEXT_CONFIG NULL
-#define SAMURE_MAX_FPS 60
 
 struct samure_context;
 struct samure_opengl_config;
@@ -79,7 +78,7 @@ struct samure_context_config {
   int pointer_interaction;
   int keyboard_interaction;
   int touch_interaction;
-  uint32_t max_fps;
+  uint32_t max_update_frequency;
   struct samure_opengl_config *gl;
   int not_create_output_layer_surfaces;
   int not_request_frame;
@@ -91,7 +90,6 @@ struct samure_context_config {
   void *user_data;
 };
 
-extern struct samure_context_config samure_default_context_config();
 extern struct samure_context_config
 samure_create_context_config(samure_event_callback event_callback,
                              samure_render_callback render_callback,

@@ -80,7 +80,8 @@ static void render_callback(struct samure_context *ctx,
   cairo_set_source_rgba(cairo, 1.0, 1.0, 0.0, 1.0);
 
   char buffer[1024];
-  snprintf(buffer, 1024, "FPS: %d", ctx->frame_timer.fps);
+  snprintf(buffer, 1024, "Update Frequency: %d Hz",
+           ctx->frame_timer.update_frequency);
 
   cairo_text_extents_t text_size;
   cairo_text_extents(cairo, buffer, &text_size);
@@ -119,7 +120,6 @@ int main(void) {
       event_callback, render_callback, update_callback, &d);
   cfg.backend = SAMURE_BACKEND_CAIRO;
   cfg.pointer_interaction = 1;
-  cfg.max_fps = 120;
 
   struct samure_context *ctx =
       SAMURE_UNWRAP(context, samure_create_context(&cfg));

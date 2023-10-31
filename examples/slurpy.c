@@ -114,7 +114,6 @@ int main(void) {
   cfg.backend = SAMURE_BACKEND_CAIRO;
   cfg.pointer_interaction = 1;
   cfg.keyboard_interaction = 1;
-  cfg.max_fps = 120;
 
   struct samure_context *ctx =
       SAMURE_UNWRAP(context, samure_create_context(&cfg));
