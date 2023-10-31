@@ -44,10 +44,13 @@ samure_create_output(struct samure_context *ctx, struct wl_output *output) {
       zxdg_output_v1_add_listener(o->xdg_output, &xdg_output_listener, o);
     }
   }
-  if (!o->xdg_output) {
-    wl_output_add_listener(o->output, &output_listener, o);
-  }
+  wl_output_add_listener(o->output, &output_listener, o);
   wl_display_roundtrip(ctx->display);
+
+  if (o->refresh_rate == 0) {
+    // If no refresh rate could be retrieved assume 60Hz
+    o->refresh_rate = 60;
+  }
 
   SAMURE_RETURN_RESULT(output, o);
 }

@@ -46,9 +46,11 @@ struct samure_output {
   struct zxdg_output_v1 *xdg_output;
   struct samure_layer_surface **sfc;
   size_t num_sfc;
+
   struct samure_rect geo;
   char *name;
   int32_t scale;
+  int32_t refresh_rate;
 };
 
 enum samure_screenshot_state {

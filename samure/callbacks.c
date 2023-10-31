@@ -234,13 +234,15 @@ void output_geometry(void *data, struct wl_output *wl_output, int32_t x,
                      int32_t subpixel, const char *make, const char *model,
                      int32_t transform) {
   struct samure_output *o = (struct samure_output *)data;
-  o->geo.x = x;
-  o->geo.y = y;
+  if (!o->xdg_output) {
+    o->geo.x = x;
+    o->geo.y = y;
+  }
 }
 
 void output_done(void *data, struct wl_output *wl_output) {
   struct samure_output *o = (struct samure_output *)data;
-  if (o->scale != 0) {
+  if (!o->xdg_output && o->scale != 0) {
     o->geo.w /= o->scale;
     o->geo.h /= o->scale;
   }
@@ -253,7 +255,9 @@ void output_scale(void *data, struct wl_output *wl_output, int32_t factor) {
 
 void output_name(void *data, struct wl_output *wl_output, const char *name) {
   struct samure_output *o = (struct samure_output *)data;
-  o->name = strdup(name);
+  if (!o->xdg_output) {
+    o->name = strdup(name);
+  }
 }
 
 void output_description(void *data, struct wl_output *wl_output,
@@ -266,8 +270,13 @@ void output_mode(void *data, struct wl_output *wl_output, uint32_t flags,
     return;
   }
 
-  o->geo.w = width;
-  o->geo.h = height;
+  // Only retrieve geometry from "normal" output if no xdg output could be
+  // created
+  if (!o->xdg_output) {
+    o->geo.w = width;
+    o->geo.h = height;
+  }
+  o->refresh_rate = refresh;
 }
 
 void xdg_output_logical_position(void *data,

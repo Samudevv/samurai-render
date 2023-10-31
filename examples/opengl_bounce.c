@@ -24,7 +24,6 @@
  * distribution.
  ************************************************************************************/
 
-#include <EGL/egl.h>
 #include <GL/gl.h>
 #include <linux/input-event-codes.h>
 #include <stdio.h>
