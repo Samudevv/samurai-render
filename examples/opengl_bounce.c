@@ -50,8 +50,7 @@ static void event_callback(struct samure_context *ctx, struct samure_event *e,
 
 static void render_callback(struct samure_context *ctx,
                             struct samure_layer_surface *sfc,
-                            struct samure_rect output_geo, double delta_time,
-                            void *data) {
+                            struct samure_rect output_geo, void *data) {
   struct opengl_data *d = (struct opengl_data *)data;
 
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

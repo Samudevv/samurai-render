@@ -480,8 +480,7 @@ void frame_done(void *data, struct wl_callback *wl_callback,
   sfc->not_ready = 0;
 
   if (sfc->dirty) {
-    samure_context_render_layer_surface(ctx, sfc, geo,
-                                        ctx->frame_timer.delta_time);
+    samure_context_render_layer_surface(ctx, sfc, geo);
   }
 }
 

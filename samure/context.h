@@ -63,7 +63,7 @@ typedef void (*samure_event_callback)(struct samure_context *ctx,
                                       void *user_data);
 typedef void (*samure_render_callback)(
     struct samure_context *ctx, struct samure_layer_surface *layer_surface,
-    struct samure_rect output_geo, double delta_time, void *user_data);
+    struct samure_rect output_geo, void *user_data);
 typedef void (*samure_update_callback)(struct samure_context *ctx,
                                        double delta_time, void *user_data);
 
@@ -159,11 +159,10 @@ extern void samure_context_process_events(struct samure_context *ctx);
 extern void
 samure_context_render_layer_surface(struct samure_context *ctx,
                                     struct samure_layer_surface *sfc,
-                                    struct samure_rect geo, double delta_time);
+                                    struct samure_rect geo);
 
 extern void samure_context_render_output(struct samure_context *ctx,
-                                         struct samure_output *output,
-                                         double delta_time);
+                                         struct samure_output *output);
 
 extern void samure_context_update(struct samure_context *ctx,
                                   double delta_time);

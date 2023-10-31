@@ -92,6 +92,8 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
     }
   }
 
+  s->frame_start_time = samure_get_time();
+
   SAMURE_RETURN_RESULT(layer_surface, s);
 }
 

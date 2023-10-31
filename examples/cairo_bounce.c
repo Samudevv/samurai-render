@@ -50,8 +50,7 @@ static void event_callback(struct samure_context *ctx, struct samure_event *e,
 
 static void render_callback(struct samure_context *ctx,
                             struct samure_layer_surface *sfc,
-                            struct samure_rect output_geo, double delta_time,
-                            void *data) {
+                            struct samure_rect output_geo, void *data) {
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)sfc->backend_data;
   struct cairo_data *d = (struct cairo_data *)data;

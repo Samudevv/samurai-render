@@ -85,8 +85,7 @@ static void on_event(struct samure_context *ctx, struct samure_event *e,
 
 static void on_render(struct samure_context *ctx,
                       struct samure_layer_surface *sfc,
-                      struct samure_rect output_geo, double delta_time,
-                      void *user_data) {
+                      struct samure_rect output_geo, void *user_data) {
   struct slurpy_data *d = (struct slurpy_data *)user_data;
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)sfc->backend_data;

@@ -51,8 +51,7 @@ The binaries will be under the specific platform folder in the build folder.
 #include <samure/context.h>
 
 static void render(struct samure_context *ctx, struct samure_layer_surface *sfc,
-                   struct samure_rect output_geo, double delta_time,
-                   void *user_data) {
+                   struct samure_rect output_geo, void *user_data) {
 
   struct samure_raw_surface *r = samure_get_raw_surface(sfc);
 
