@@ -80,8 +80,7 @@ static void render_callback(struct samure_context *ctx,
   cairo_set_source_rgba(cairo, 1.0, 1.0, 0.0, 1.0);
 
   char buffer[1024];
-  snprintf(buffer, 1024, "Update Frequency: %d Hz",
-           ctx->frame_timer.update_frequency);
+  snprintf(buffer, 1024, "FPS: %d Hz", (int)(1.0 / sfc->frame_delta_time));
 
   cairo_text_extents_t text_size;
   cairo_text_extents(cairo, buffer, &text_size);

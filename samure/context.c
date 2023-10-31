@@ -413,6 +413,15 @@ void samure_context_render_layer_surface(struct samure_context *ctx,
     samure_layer_surface_request_frame(ctx, sfc, geo);
   }
 
+  if (sfc->frame_start_time == 0.0) {
+    sfc->frame_delta_time = delta_time * 2.0;
+    sfc->frame_start_time = samure_get_time();
+  } else {
+    const double end_time = samure_get_time();
+    sfc->frame_delta_time = end_time - sfc->frame_start_time;
+    sfc->frame_start_time = end_time;
+  }
+
   if (ctx->backend && ctx->backend->render_start) {
     ctx->backend->render_start(ctx, sfc);
   }

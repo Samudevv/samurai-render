@@ -54,6 +54,10 @@ struct samure_layer_surface {
   int not_ready;
   int dirty;
   int configured;
+
+  double frame_start_time; // Absolute time of the last frame (for internal use)
+  double frame_delta_time; // The actual time that passes between each call to
+                           // samure_context_render_layer_surface in seconds
 };
 
 SAMURE_DEFINE_RESULT(layer_surface);
