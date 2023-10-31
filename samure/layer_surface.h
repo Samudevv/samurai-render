@@ -50,6 +50,7 @@ struct samure_layer_surface {
   struct samure_callback_data *callback_data;
   int not_ready;
   int dirty;
+  int configured;
 };
 
 SAMURE_DEFINE_RESULT(layer_surface);

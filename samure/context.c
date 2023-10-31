@@ -252,6 +252,8 @@ void samure_destroy_context(struct samure_context *ctx) {
 }
 
 void samure_context_run(struct samure_context *ctx) {
+  samure_context_process_events(ctx);
+
   if (ctx->render_state != SAMURE_RENDER_STATE_NONE) {
     for (size_t i = 0; i < ctx->num_outputs; i++) {
       samure_context_render_output(ctx, ctx->outputs[i],
@@ -376,6 +378,9 @@ void samure_context_process_events(struct samure_context *ctx) {
         ctx->backend->on_layer_surface_configure(ctx, e->surface, e->width,
                                                  e->height);
       }
+
+      e->surface->configured = 1;
+
       break;
     default:
       if (ctx->app.on_event) {
@@ -392,6 +397,10 @@ void samure_context_render_layer_surface(struct samure_context *ctx,
                                          struct samure_layer_surface *sfc,
                                          struct samure_rect geo,
                                          double delta_time) {
+  if (!sfc->configured) {
+    return;
+  }
+
   if (!ctx->config.not_request_frame) {
     if (sfc->not_ready) {
       sfc->dirty = 1;
