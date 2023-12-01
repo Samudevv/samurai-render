@@ -87,6 +87,11 @@ samure_create_context(struct samure_context_config *config) {
     SAMURE_DESTROY_ERROR(context, ctx, error_code);
   }
 
+  if (ctx->config.force_client_cursors && reg_d.cursor_manager) {
+    wp_cursor_shape_manager_v1_destroy(reg_d.cursor_manager);
+    reg_d.cursor_manager = NULL;
+  }
+
   if (reg_d.num_seats != 0) {
     ctx->seats = malloc(ctx->num_seats * sizeof(struct samure_seat *));
     for (size_t i = 0; i < reg_d.num_seats; i++) {
