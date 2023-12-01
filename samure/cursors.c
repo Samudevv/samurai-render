@@ -130,6 +130,11 @@ samure_create_cursor_engine(struct samure_context *ctx,
     }
   }
 
+  for (size_t i = 0; i < ctx->num_seats; i++) {
+    samure_cursor_engine_set_shape(c, ctx->seats[i],
+                                   WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT);
+  }
+
   SAMURE_RETURN_RESULT(cursor_engine, c);
 }
 
@@ -194,6 +199,7 @@ void samure_cursor_engine_set_shape(struct samure_cursor_engine *engine,
                                     struct samure_seat *seat, uint32_t shape) {
   if (seat->pointer) {
     if (engine->manager) {
+      engine->cursor_shape = shape;
       struct wp_cursor_shape_device_v1 *device =
           wp_cursor_shape_manager_v1_get_pointer(engine->manager,
                                                  seat->pointer);
@@ -228,6 +234,15 @@ void samure_cursor_engine_pointer_enter(struct samure_cursor_engine *engine,
           wl_surface_commit(c->surface);
         }
       }
+    }
+  } else {
+    if (seat->pointer) {
+      struct wp_cursor_shape_device_v1 *device =
+          wp_cursor_shape_manager_v1_get_pointer(engine->manager,
+                                                 seat->pointer);
+      wp_cursor_shape_device_v1_set_shape(device, seat->last_pointer_enter,
+                                          engine->cursor_shape);
+      wp_cursor_shape_device_v1_destroy(device);
     }
   }
 }

@@ -58,6 +58,9 @@ struct samure_cursor_engine {
   struct wl_cursor_theme *theme;
   struct samure_cursor *cursors;
   size_t num_cursors;
+
+  // TODO: cursor_shape for every seat
+  uint32_t cursor_shape;
 };
 
 SAMURE_DEFINE_RESULT(cursor_engine);
