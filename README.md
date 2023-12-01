@@ -2,11 +2,11 @@
 
 Easy to use library to render into the Layer Shell of wayland compositors.
 
-There are also [bindings to go](https://github.com/PucklaJ/samurai-render-go) available.
+There are also [bindings to go](https://github.com/Samudevv/samurai-render-go) available.
 
 ## SamuraiSelect
 
-There is a proper application written using this library: [SamuraiSelect](https://github.com/PucklaJ/samurai-select). It is a tool for selecting a region on the screen(s) and (optionally) taking a screenshot.
+There is a proper application written using this library: [SamuraiSelect](https://github.com/Samudevv/samurai-select). It is a tool for selecting a region on the screen(s) and (optionally) taking a screenshot.
 
 ## Compositor Support
 
