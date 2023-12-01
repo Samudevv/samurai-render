@@ -101,6 +101,8 @@ void samure_output_set_input_regions(struct samure_context *ctx,
   }
 
   for (size_t i = 0; i < o->num_sfc; i++) {
+    zwlr_layer_surface_v1_set_keyboard_interactivity(o->sfc[i]->layer_surface,
+                                                     0);
     wl_surface_set_input_region(o->sfc[i]->surface, reg);
     wl_surface_commit(o->sfc[i]->surface);
   }
