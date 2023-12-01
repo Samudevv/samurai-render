@@ -42,15 +42,19 @@ struct samure_cursor {
   struct wl_cursor_image *current_cursor_image;
   unsigned int current_image_index;
   double current_time;
+  uint32_t current_shape;
 };
+
+struct samure_cursor_engine;
 
 extern struct samure_cursor
 samure_init_cursor(struct samure_seat *seat, struct wl_cursor_theme *theme,
                    struct wl_compositor *compositor);
 extern void samure_destroy_cursor(struct samure_cursor cursor);
-extern void samure_cursor_set_shape(struct samure_cursor *cursor,
+extern void samure_cursor_set_shape(struct samure_cursor_engine *engine,
+                                    struct samure_cursor *cursor,
                                     struct wl_cursor_theme *theme,
-                                    const char *name);
+                                    uint32_t shape);
 
 struct samure_cursor_engine {
   struct wp_cursor_shape_manager_v1 *manager;
@@ -58,9 +62,6 @@ struct samure_cursor_engine {
   struct wl_cursor_theme *theme;
   struct samure_cursor *cursors;
   size_t num_cursors;
-
-  // TODO: cursor_shape for every seat
-  uint32_t cursor_shape;
 };
 
 SAMURE_DEFINE_RESULT(cursor_engine);
