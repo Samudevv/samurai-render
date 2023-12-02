@@ -1,6 +1,6 @@
 /***********************************************************************************
  *                         This file is part of samurai-render
- *                    https://github.com/PucklaJ/samurai-render
+ *                    https://github.com/Samudevv/samurai-render
  ***********************************************************************************
  * Copyright (c) 2023 Jonas Pucher
  *
