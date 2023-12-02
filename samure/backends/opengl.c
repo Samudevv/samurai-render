@@ -55,7 +55,9 @@ struct samure_opengl_config *samure_default_opengl_config() {
 
 #define SAMURE_BACKEND_OPENGL_DESTROY_ERROR(error_code)                        \
   {                                                                            \
+    ctx->backend = gl;                                                         \
     samure_destroy_backend_opengl(ctx);                                        \
+    ctx->backend = NULL;                                                       \
     SAMURE_RETURN_ERROR(backend_opengl, error_code);                           \
   }
 
