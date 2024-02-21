@@ -130,6 +130,14 @@
 
 #define SAMURE_NUM_ERRORS 34
 
+#ifndef NDEBUG
+#define DEBUG_PRINTF(format, ...) printf("DEBUG " format, __VA_ARGS__);
+#define DEBUG_PRINT(format) printf("DEBUG " format);
+#else
+#define DEBUG_PRINTF(format, ...) ;
+#define DEBUG_PRINT(format) ;
+#endif
+
 typedef uint64_t samure_error;
 
 static const char *samure_strerror(samure_error error_code) {
