@@ -1,0 +1,3 @@
+/usr/share/wayland-protocols/stable/viewporter/viewporter.xml
+viewporter.h
+viewporter.c

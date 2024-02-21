@@ -1,0 +1,3 @@
+/usr/share/wayland-protocols/staging/fractional-scale/fractional-scale-v1.xml
+fractional-scale.h
+fractional-scale.c
