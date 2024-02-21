@@ -34,14 +34,14 @@
 #include <wayland-client.h>
 
 #define GLOBAL_TO_LOCAL(output_geo, sfc, member, var)                          \
-  (((double)var - (double)output_geo.member) *                                 \
+  (((double)(var) - (double)output_geo.member) *                               \
    (double)(sfc->preferred_buffer_scale))
 #define GLOBAL_TO_LOCAL_X(output_geo, sfc, global_x)                           \
   GLOBAL_TO_LOCAL(output_geo, sfc, x, global_x)
 #define GLOBAL_TO_LOCAL_Y(output_geo, sfc, global_y)                           \
   GLOBAL_TO_LOCAL(output_geo, sfc, y, global_y)
 #define GLOBAL_TO_LOCAL_SCALE(sfc, global)                                     \
-  ((double)global * (double)sfc->preferred_buffer_scale)
+  ((double)(global) * (double)sfc->preferred_buffer_scale)
 #define RENDER_X(x) GLOBAL_TO_LOCAL_X(output_geo, sfc, x)
 #define RENDER_Y(y) GLOBAL_TO_LOCAL_Y(output_geo, sfc, y)
 #define RENDER_SCALE(var) GLOBAL_TO_LOCAL_SCALE(sfc, var)
