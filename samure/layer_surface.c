@@ -27,6 +27,7 @@
 #include "layer_surface.h"
 #include "callbacks.h"
 #include "context.h"
+#include "wayland/fractional-scale.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -84,13 +85,25 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
       wl_region_destroy(reg);
     }
   }
+
+  if (ctx->fractional_scale_manager) {
+    s->fractional_scale = wp_fractional_scale_manager_v1_get_fractional_scale(
+        ctx->fractional_scale_manager, s->surface);
+    if (!s->fractional_scale) {
+      SAMURE_LAYER_SURFACE_DESTROY_ERROR(SAMURE_ERROR_FRACTIONAL_SCALE_INIT);
+    }
+    wp_fractional_scale_v1_add_listener(
+        s->fractional_scale, &fractional_scale_listener, s->callback_data);
+  }
+
   wl_surface_add_listener(s->surface, &surface_listener, s->callback_data);
   wl_surface_commit(s->surface);
   wl_display_roundtrip(ctx->display);
 
-  s->scale = (double)s->preferred_buffer_scale;
-
-  wl_surface_set_buffer_scale(s->surface, (int32_t)s->scale);
+  if (!s->fractional_scale) {
+    s->scale = (double)s->preferred_buffer_scale;
+    wl_surface_set_buffer_scale(s->surface, (int32_t)s->scale);
+  }
 
   if (backend_association && ctx->backend &&
       ctx->backend->associate_layer_surface) {
@@ -113,6 +126,8 @@ void samure_destroy_layer_surface(struct samure_context *ctx,
 
   if (sfc->layer_surface)
     zwlr_layer_surface_v1_destroy(sfc->layer_surface);
+  if (sfc->fractional_scale)
+    wp_fractional_scale_v1_destroy(sfc->fractional_scale);
   if (sfc->surface)
     wl_surface_destroy(sfc->surface);
   if (sfc->callback_data)

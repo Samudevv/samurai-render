@@ -104,6 +104,7 @@ struct samure_context {
   struct zwlr_layer_shell_v1 *layer_shell;
   struct zxdg_output_manager_v1 *output_manager;
   struct zwlr_screencopy_manager_v1 *screencopy_manager;
+  struct wp_fractional_scale_manager_v1 *fractional_scale_manager;
   struct samure_cursor_engine *cursor_engine;
 
   struct samure_seat **seats;

@@ -127,6 +127,7 @@
 #define SAMURE_ERROR_SURFACE_INIT ((samure_error)1 << 31)
 #define SAMURE_ERROR_OUTPUT_INIT ((samure_error)1 << 32)
 #define SAMURE_ERROR_CURSOR_THEME ((samure_error)1 << 33)
+#define SAMURE_ERROR_FRACTIONAL_SCALE_INIT ((samure_error)1 << 34)
 
 #define SAMURE_NUM_ERRORS 34
 

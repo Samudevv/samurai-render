@@ -26,7 +26,6 @@
 
 #pragma once
 
-#include "wayland/layer-shell.h"
 #include <wayland-client.h>
 
 #include "rect.h"
@@ -42,10 +41,13 @@
 
 struct samure_context;
 struct samure_output;
+struct zwlr_layer_surface_v1;
+struct wp_fractional_scale_v1;
 
 struct samure_layer_surface {
   struct wl_surface *surface;
   struct zwlr_layer_surface_v1 *layer_surface;
+  struct wp_fractional_scale_v1 *fractional_scale;
   void *backend_data;
   uint32_t w;
   uint32_t h;

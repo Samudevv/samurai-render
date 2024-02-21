@@ -26,6 +26,7 @@
 
 #pragma once
 #include "wayland/cursor-shape.h"
+#include "wayland/fractional-scale.h"
 #include "wayland/layer-shell.h"
 #include "wayland/screencopy.h"
 #include "wayland/xdg-output.h"
@@ -193,6 +194,10 @@ extern void touch_orientation(void *data, struct wl_touch *wl_touch, int32_t id,
 extern void frame_done(void *data, struct wl_callback *wl_callback,
                        uint32_t callback_data);
 
+extern void fractional_scale_preferred_scale(
+    void *data, struct wp_fractional_scale_v1 *wp_fractional_scale_v1,
+    uint32_t scale);
+
 static struct wl_registry_listener registry_listener = {
     .global = registry_global,
     .global_remove = registry_global_remove,
@@ -271,6 +276,10 @@ static struct wl_touch_listener touch_listener = {
 
 static struct wl_callback_listener frame_listener = {
     .done = frame_done,
+};
+
+static struct wp_fractional_scale_v1_listener fractional_scale_listener = {
+    .preferred_scale = fractional_scale_preferred_scale,
 };
 
 struct samure_callback_data {

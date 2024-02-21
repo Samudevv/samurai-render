@@ -112,6 +112,10 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
              0) {
     ctx->screencopy_manager = wl_registry_bind(
         registry, name, &zwlr_screencopy_manager_v1_interface, 3);
+  } else if (strcmp(interface, wp_fractional_scale_manager_v1_interface.name) ==
+             0) {
+    ctx->fractional_scale_manager = wl_registry_bind(
+        registry, name, &wp_fractional_scale_manager_v1_interface, 1);
   }
 }
 
@@ -538,6 +542,29 @@ void frame_done(void *data, struct wl_callback *wl_callback,
 
   if (sfc->dirty) {
     samure_context_render_layer_surface(ctx, sfc, geo);
+  }
+}
+
+void fractional_scale_preferred_scale(
+    void *data, struct wp_fractional_scale_v1 *wp_fractional_scale_v1,
+    uint32_t scale) {
+  DEBUG_PRINTF("fractional_scale_preferred_scale scale=%u\n", scale);
+
+  struct samure_callback_data *d = (struct samure_callback_data *)data;
+  struct samure_context *ctx = d->ctx;
+  struct samure_layer_surface *sfc = (struct samure_layer_surface *)d->data;
+
+  const double new_scale = ((double)scale) / 120.0;
+
+  if (new_scale != sfc->scale) {
+    sfc->scale = new_scale;
+
+    NEW_EVENT();
+
+    LAST_EVENT.type = SAMURE_EVENT_LAYER_SURFACE_CONFIGURE;
+    LAST_EVENT.surface = sfc;
+    LAST_EVENT.width = sfc->w;
+    LAST_EVENT.height = sfc->h;
   }
 }
 

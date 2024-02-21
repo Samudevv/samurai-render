@@ -251,6 +251,8 @@ void samure_destroy_context(struct samure_context *ctx) {
     samure_destroy_cursor_engine(ctx->cursor_engine);
   if (ctx->screencopy_manager)
     zwlr_screencopy_manager_v1_destroy(ctx->screencopy_manager);
+  if (ctx->fractional_scale_manager)
+    wp_fractional_scale_manager_v1_destroy(ctx->fractional_scale_manager);
 
   if (ctx->display)
     wl_display_disconnect(ctx->display);
