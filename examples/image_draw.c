@@ -76,7 +76,8 @@ static void render_callback(struct samure_context *ctx,
   cairo_set_source_rgba(cairo, 1.0, 0.0, 0.0, 1.0);
 
   if (d->pressed) {
-    cairo_arc(cairo, RENDER_X(d->x), RENDER_Y(d->y), 10.0, 0.0, M_PI * 2.0);
+    cairo_arc(cairo, RENDER_X(d->x), RENDER_Y(d->y), RENDER_SCALE(10.0), 0.0,
+              M_PI * 2.0);
     cairo_fill(cairo);
   }
 }
@@ -129,11 +130,12 @@ int main(int args, char *argv[]) {
                              samure_create_layer_surface(
                                  ctx, ctx->outputs[i], SAMURE_LAYER_TOP,
                                  SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 1));
-      if (bg_img_w == ctx->outputs[i]->geo.w &&
-          bg_img_h == ctx->outputs[i]->geo.h) {
+      if (bg_img_w == GLOBAL_TO_LOCAL_SCALE(bgs[i], bgs[i]->w) &&
+          bg_img_h == GLOBAL_TO_LOCAL_SCALE(bgs[i], bgs[i]->h)) {
         struct samure_cairo_surface *c = samure_get_cairo_surface(bgs[i]);
         memcpy(c->buffer->data, cairo_image_surface_get_data(bg_img),
-               ctx->outputs[i]->geo.w * ctx->outputs[i]->geo.h * 4);
+               GLOBAL_TO_LOCAL_SCALE(bgs[i], bgs[i]->w) *
+                   GLOBAL_TO_LOCAL_SCALE(bgs[i], bgs[i]->h) * 4);
         ctx->backend->render_end(ctx, bgs[i]);
       } else {
         fprintf(stderr, "Background image is of wrong resolution: %dx%d\n",
