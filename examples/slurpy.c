@@ -95,10 +95,10 @@ static void on_render(struct samure_context *ctx,
   cairo_paint(cr);
   if (d->state == STATE_CHANGE) {
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 0.0);
-    cairo_rectangle(cr, OUT_X(d->start.x), OUT_Y(d->start.y),
+    cairo_rectangle(cr, RENDER_X(d->start.x), RENDER_Y(d->start.y),
                     d->end.x - d->start.x, d->end.y - d->start.y);
     cairo_fill(cr);
-    cairo_rectangle(cr, OUT_X(d->start.x), OUT_Y(d->start.y),
+    cairo_rectangle(cr, RENDER_X(d->start.x), RENDER_Y(d->start.y),
                     d->end.x - d->start.x, d->end.y - d->start.y);
     cairo_set_source_rgba(cr, 0.0, 0.0, 0.0, 1.0);
     cairo_stroke(cr);

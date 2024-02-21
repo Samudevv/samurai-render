@@ -55,8 +55,8 @@ static void render_callback(struct samure_context *ctx,
       (struct samure_cairo_surface *)sfc->backend_data;
   struct cairo_data *d = (struct cairo_data *)data;
 
-  const double qx = OUT_X(d->qx);
-  const double qy = OUT_Y(d->qy);
+  const double qx = RENDER_X(d->qx);
+  const double qy = RENDER_Y(d->qy);
 
   cairo_t *cairo = c->cairo;
 

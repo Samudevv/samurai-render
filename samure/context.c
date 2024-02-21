@@ -346,10 +346,8 @@ void samure_context_set_input_regions(struct samure_context *ctx,
           continue;
         }
 
-        output_rects[num_output_rects - 1].x =
-            OUT_X2(ctx->outputs[j]->geo, r[i].x);
-        output_rects[num_output_rects - 1].y =
-            OUT_Y2(ctx->outputs[j]->geo, r[i].y);
+        output_rects[num_output_rects - 1].x = r[i].x + ctx->outputs[j]->geo.x;
+        output_rects[num_output_rects - 1].y = r[i].y + ctx->outputs[j]->geo.y;
         output_rects[num_output_rects - 1].w = r[i].w;
         output_rects[num_output_rects - 1].h = r[i].h;
       }

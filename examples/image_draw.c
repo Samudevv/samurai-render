@@ -76,7 +76,7 @@ static void render_callback(struct samure_context *ctx,
   cairo_set_source_rgba(cairo, 1.0, 0.0, 0.0, 1.0);
 
   if (d->pressed) {
-    cairo_arc(cairo, OUT_X(d->x), OUT_Y(d->y), 10.0, 0.0, M_PI * 2.0);
+    cairo_arc(cairo, RENDER_X(d->x), RENDER_Y(d->y), 10.0, 0.0, M_PI * 2.0);
     cairo_fill(cairo);
   }
 }

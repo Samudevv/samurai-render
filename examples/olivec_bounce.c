@@ -148,7 +148,8 @@ static void render_callback(struct samure_context *ctx,
 
   olivec_fill(os->canvas, 0x00000000);
   if (samure_circle_in_output(output_geo, d->qx, d->qy, 100)) {
-    olivec_circle(os->canvas, OUT_X(d->qx), OUT_Y(d->qy), 100, 0xFF00FF00);
+    olivec_circle(os->canvas, RENDER_X(d->qx), RENDER_Y(d->qy), 100,
+                  0xFF00FF00);
 
     char buffer[1024];
     snprintf(buffer, 1024, "%.3f", 1.0 / sfc->frame_delta_time);

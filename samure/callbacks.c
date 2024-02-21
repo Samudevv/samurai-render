@@ -165,6 +165,10 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   LAST_EVENT.y = wl_fixed_to_double(surface_y);
   LAST_EVENT.output = output;
   LAST_EVENT.surface = layer_surface;
+
+  DEBUG_PRINTF("pointer_enter serial=%u output=%s surface_x=%f surface_y=%f\n",
+               serial, output->name, wl_fixed_to_double(surface_x),
+               wl_fixed_to_double(surface_y));
 }
 
 void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
@@ -189,11 +193,12 @@ void pointer_motion(void *data, struct wl_pointer *pointer, uint32_t time,
                     wl_fixed_t surface_x, wl_fixed_t surface_y) {
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
+  struct samure_seat *seat = d->data;
 
   NEW_EVENT();
 
   LAST_EVENT.type = SAMURE_EVENT_POINTER_MOTION;
-  LAST_EVENT.seat = (struct samure_seat *)d->data;
+  LAST_EVENT.seat = seat;
   LAST_EVENT.x = wl_fixed_to_double(surface_x);
   LAST_EVENT.y = wl_fixed_to_double(surface_y);
 }

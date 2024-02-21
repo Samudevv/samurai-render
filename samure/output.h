@@ -33,10 +33,18 @@
 #include "wayland/xdg-output.h"
 #include <wayland-client.h>
 
-#define OUT_X2(geo, val) (val - geo.x)
-#define OUT_X(val) OUT_X2(output_geo, val)
-#define OUT_Y2(geo, val) (val - geo.y)
-#define OUT_Y(val) OUT_Y2(output_geo, val)
+#define GLOBAL_TO_LOCAL(output_geo, sfc, member, var)                          \
+  (((double)var - (double)output_geo.member) *                                 \
+   (double)(sfc->preferred_buffer_scale))
+#define GLOBAL_TO_LOCAL_X(output_geo, sfc, global_x)                           \
+  GLOBAL_TO_LOCAL(output_geo, sfc, x, global_x)
+#define GLOBAL_TO_LOCAL_Y(output_geo, sfc, global_y)                           \
+  GLOBAL_TO_LOCAL(output_geo, sfc, y, global_y)
+#define GLOBAL_TO_LOCAL_SCALE(sfc, global)                                     \
+  ((double)global * (double)sfc->preferred_buffer_scale)
+#define RENDER_X(x) GLOBAL_TO_LOCAL_X(output_geo, sfc, x)
+#define RENDER_Y(y) GLOBAL_TO_LOCAL_Y(output_geo, sfc, y)
+#define RENDER_SCALE(var) GLOBAL_TO_LOCAL_SCALE(sfc, var)
 
 struct samure_context;
 
