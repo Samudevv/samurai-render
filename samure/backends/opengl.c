@@ -195,8 +195,12 @@ samure_error samure_backend_opengl_associate_layer_surface(
 
   memset(s, 0, sizeof(struct samure_opengl_surface));
 
-  s->egl_window = wl_egl_window_create(sfc->surface, sfc->w == 0 ? 1 : sfc->w,
-                                       sfc->h == 0 ? 1 : sfc->h);
+  const uint32_t scaled_width = sfc->w * sfc->preferred_buffer_scale;
+  const uint32_t scaled_height = sfc->h * sfc->preferred_buffer_scale;
+
+  s->egl_window =
+      wl_egl_window_create(sfc->surface, scaled_width == 0 ? 1 : scaled_width,
+                           scaled_height == 0 ? 1 : scaled_height);
   if (!s->egl_window) {
     free(s);
     return SAMURE_ERROR_OPENGL_WL_EGL_WINDOW_INIT;
@@ -230,10 +234,13 @@ void samure_backend_opengl_on_layer_surface_configure(
     return;
   }
 
+  const int32_t scaled_width = width * layer_surface->preferred_buffer_scale;
+  const int32_t scaled_height = height * layer_surface->preferred_buffer_scale;
+
   struct samure_opengl_surface *s =
       (struct samure_opengl_surface *)layer_surface->backend_data;
 
-  wl_egl_window_resize(s->egl_window, width, height, 0, 0);
+  wl_egl_window_resize(s->egl_window, scaled_width, scaled_height, 0, 0);
 }
 
 void samure_backend_opengl_unassociate_layer_surface(

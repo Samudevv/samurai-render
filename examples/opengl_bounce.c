@@ -59,18 +59,19 @@ static void render_callback(struct samure_context *ctx,
   if (samure_square_in_output(output_geo, d->qx - 100, d->qy - 100, 200)) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0.0f, sfc->w, sfc->h, 0.0f, 0.0f, 1.0f);
+    glOrtho(0.0f, RENDER_SCALE(sfc->w), RENDER_SCALE(sfc->h), 0.0f, 0.0f, 1.0f);
     glDisable(GL_DEPTH_TEST);
 
     const double qx = RENDER_X(d->qx);
     const double qy = RENDER_Y(d->qy);
+    const double s = RENDER_SCALE(100.0);
 
     glBegin(GL_QUADS);
     glColor3f(0.0f, 1.0f, 0.0f);
-    glVertex2f(qx - 100.0f, qy - 100.0f);
-    glVertex2f(qx - 100.0f, qy + 100.0f);
-    glVertex2f(qx + 100.0f, qy + 100.0f);
-    glVertex2f(qx + 100.0f, qy - 100.0f);
+    glVertex2f(qx - s, qy - s);
+    glVertex2f(qx - s, qy + s);
+    glVertex2f(qx + s, qy + s);
+    glVertex2f(qx + s, qy - s);
     glEnd();
   }
 }
