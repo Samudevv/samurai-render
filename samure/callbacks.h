@@ -63,6 +63,20 @@ extern void pointer_button(void *data, struct wl_pointer *pointer,
 extern void pointer_axis(void *data, struct wl_pointer *wl_pointer,
                          uint32_t time, uint32_t axis, wl_fixed_t value);
 
+extern void surface_enter(void *data, struct wl_surface *surface,
+                          struct wl_output *output);
+
+extern void surface_leave(void *data, struct wl_surface *surface,
+                          struct wl_output *output);
+
+extern void surface_preferred_buffer_scale(void *data,
+                                           struct wl_surface *surface,
+                                           int32_t factor);
+
+extern void surface_preferred_buffer_transform(void *data,
+                                               struct wl_surface *surface,
+                                               uint32_t transform);
+
 extern void layer_surface_configure(void *data,
                                     struct zwlr_layer_surface_v1 *layer_surface,
                                     uint32_t serial, uint32_t width,
@@ -204,6 +218,13 @@ static struct wl_keyboard_listener keyboard_listener = {
     .key = keyboard_key,
     .modifiers = keyboard_modifiers,
     .repeat_info = keyboard_repeat_info,
+};
+
+static struct wl_surface_listener surface_listener = {
+    .enter = surface_enter,
+    .leave = surface_leave,
+    .preferred_buffer_scale = surface_preferred_buffer_scale,
+    .preferred_buffer_transform = surface_preferred_buffer_transform,
 };
 
 static struct zwlr_layer_surface_v1_listener layer_surface_listener = {
