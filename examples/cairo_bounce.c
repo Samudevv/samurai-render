@@ -57,6 +57,7 @@ static void render_callback(struct samure_context *ctx,
 
   const double qx = RENDER_X(d->qx);
   const double qy = RENDER_Y(d->qy);
+  const double s = RENDER_SCALE(100);
 
   cairo_t *cairo = c->cairo;
 
@@ -64,18 +65,18 @@ static void render_callback(struct samure_context *ctx,
   cairo_set_source_rgba(cairo, 0.0, 0.0, 0.0, 0.0);
   cairo_paint(cairo);
 
-  if (samure_circle_in_output(output_geo, d->qx, d->qy, 100)) {
+  if (samure_circle_in_output(output_geo, d->qx, d->qy, s)) {
     cairo_set_source_rgba(cairo, 0.0, 1.0, 0.0, 1.0);
-    cairo_arc(cairo, qx, qy, 100, 0, M_PI * 2.0);
+    cairo_arc(cairo, qx, qy, s, 0, M_PI * 2.0);
     cairo_fill(cairo);
     cairo_set_source_rgba(cairo, 0.0, 0.0, 1.0, 1.0);
-    cairo_arc(cairo, qx, qy, 100, 0, M_PI * 2.0);
+    cairo_arc(cairo, qx, qy, s, 0, M_PI * 2.0);
     cairo_stroke(cairo);
   }
 
   cairo_select_font_face(cairo, "sans-serif", CAIRO_FONT_SLANT_NORMAL,
                          CAIRO_FONT_WEIGHT_NORMAL);
-  cairo_set_font_size(cairo, 25.0);
+  cairo_set_font_size(cairo, RENDER_SCALE(25.0));
   cairo_set_source_rgba(cairo, 1.0, 1.0, 0.0, 1.0);
 
   char buffer[1024];
