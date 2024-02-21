@@ -28,6 +28,7 @@
 #include "callbacks.h"
 #include "context.h"
 #include "wayland/fractional-scale.h"
+#include "wayland/viewporter.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,13 +97,23 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
         s->fractional_scale, &fractional_scale_listener, s->callback_data);
   }
 
+  if (ctx->viewporter) {
+    s->viewport = wp_viewporter_get_viewport(ctx->viewporter, s->surface);
+    if (!s->viewport) {
+      SAMURE_LAYER_SURFACE_DESTROY_ERROR(SAMURE_ERROR_VIEWPORT_INIT);
+    }
+  }
+
   wl_surface_add_listener(s->surface, &surface_listener, s->callback_data);
   wl_surface_commit(s->surface);
   wl_display_roundtrip(ctx->display);
 
   if (!s->fractional_scale) {
     s->scale = (double)s->preferred_buffer_scale;
-    wl_surface_set_buffer_scale(s->surface, (int32_t)s->scale);
+    if (!s->viewport) {
+      DEBUG_PRINTF("surface_set_buffer_scale scale=%d\n", (int32_t)s->scale);
+      wl_surface_set_buffer_scale(s->surface, (int32_t)s->scale);
+    }
   }
 
   if (backend_association && ctx->backend &&
@@ -130,6 +141,8 @@ void samure_destroy_layer_surface(struct samure_context *ctx,
     wp_fractional_scale_v1_destroy(sfc->fractional_scale);
   if (sfc->surface)
     wl_surface_destroy(sfc->surface);
+  if (sfc->viewport)
+    wp_viewport_destroy(sfc->viewport);
   if (sfc->callback_data)
     free(sfc->callback_data);
   free(sfc);
@@ -139,6 +152,13 @@ void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
                                       struct samure_shared_buffer *buf) {
   wl_surface_attach(sfc->surface, buf->buffer, 0, 0);
   wl_surface_damage_buffer(sfc->surface, 0, 0, buf->width, buf->height);
+  if (sfc->viewport) {
+    const int32_t scaled_width = RENDER_SCALE(sfc->w);
+    const int32_t scaled_height = RENDER_SCALE(sfc->h);
+    wp_viewport_set_destination(sfc->viewport, sfc->w, sfc->h);
+    wp_viewport_set_source(sfc->viewport, 0, 0, wl_fixed_from_int(scaled_width),
+                           wl_fixed_from_int(scaled_height));
+  }
   wl_surface_commit(sfc->surface);
 }
 

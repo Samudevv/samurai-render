@@ -253,6 +253,8 @@ void samure_destroy_context(struct samure_context *ctx) {
     zwlr_screencopy_manager_v1_destroy(ctx->screencopy_manager);
   if (ctx->fractional_scale_manager)
     wp_fractional_scale_manager_v1_destroy(ctx->fractional_scale_manager);
+  if (ctx->viewporter)
+    wp_viewporter_destroy(ctx->viewporter);
 
   if (ctx->display)
     wl_display_disconnect(ctx->display);

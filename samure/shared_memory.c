@@ -39,6 +39,8 @@ SAMURE_DEFINE_RESULT_UNWRAP(shared_buffer);
 SAMURE_RESULT(shared_buffer)
 samure_create_shared_buffer(struct wl_shm *shm, uint32_t format, int32_t width,
                             int32_t height) {
+  DEBUG_PRINTF("create_shared_buffer width=%d height=%d\n", width, height);
+
   if (!shm) {
     SAMURE_RETURN_ERROR(shared_buffer, SAMURE_ERROR_NO_SHM);
   }

@@ -43,11 +43,13 @@ struct samure_context;
 struct samure_output;
 struct zwlr_layer_surface_v1;
 struct wp_fractional_scale_v1;
+struct wp_viewport;
 
 struct samure_layer_surface {
   struct wl_surface *surface;
   struct zwlr_layer_surface_v1 *layer_surface;
   struct wp_fractional_scale_v1 *fractional_scale;
+  struct wp_viewport *viewport;
   void *backend_data;
   uint32_t w;
   uint32_t h;

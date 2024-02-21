@@ -116,6 +116,9 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
              0) {
     ctx->fractional_scale_manager = wl_registry_bind(
         registry, name, &wp_fractional_scale_manager_v1_interface, 1);
+  } else if (strcmp(interface, wp_viewporter_interface.name) == 0) {
+    ctx->viewporter =
+        wl_registry_bind(registry, name, &wp_viewporter_interface, 1);
   }
 }
 
@@ -548,8 +551,6 @@ void frame_done(void *data, struct wl_callback *wl_callback,
 void fractional_scale_preferred_scale(
     void *data, struct wp_fractional_scale_v1 *wp_fractional_scale_v1,
     uint32_t scale) {
-  DEBUG_PRINTF("fractional_scale_preferred_scale scale=%u\n", scale);
-
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
   struct samure_layer_surface *sfc = (struct samure_layer_surface *)d->data;

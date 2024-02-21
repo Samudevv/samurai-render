@@ -29,6 +29,7 @@
 #include "wayland/cursor-shape.h"
 #include "wayland/layer-shell.h"
 #include "wayland/screencopy.h"
+#include "wayland/viewporter.h"
 #include "wayland/xdg-output.h"
 #include <wayland-client.h>
 
@@ -105,6 +106,7 @@ struct samure_context {
   struct zxdg_output_manager_v1 *output_manager;
   struct zwlr_screencopy_manager_v1 *screencopy_manager;
   struct wp_fractional_scale_manager_v1 *fractional_scale_manager;
+  struct wp_viewporter *viewporter;
   struct samure_cursor_engine *cursor_engine;
 
   struct samure_seat **seats;
