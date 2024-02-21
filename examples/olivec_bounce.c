@@ -58,12 +58,17 @@ olivec_backend_associate_layer_surface(struct samure_context *ctx,
                                        struct samure_layer_surface *sfc) {
   struct olivec_surface *os = malloc(sizeof(struct olivec_surface));
 
+  const uint32_t scaled_width = sfc->w * sfc->preferred_buffer_scale;
+  const uint32_t scaled_height = sfc->h * sfc->preferred_buffer_scale;
+
   os->buffer = SAMURE_UNWRAP(
-      shared_buffer, samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
-                                                 sfc->w == 0 ? 1 : sfc->w,
-                                                 sfc->h == 0 ? 1 : sfc->h));
-  if (sfc->w != 0 && sfc->h != 0) {
-    os->canvas = olivec_canvas(os->buffer->data, sfc->w, sfc->h, sfc->w);
+      shared_buffer,
+      samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
+                                  scaled_width == 0 ? 1 : scaled_width,
+                                  scaled_height == 0 ? 1 : scaled_height));
+  if (scaled_width != 0 && scaled_height != 0) {
+    os->canvas = olivec_canvas(os->buffer->data, scaled_width, scaled_height,
+                               scaled_width);
   }
 
   sfc->backend_data = os;
@@ -77,10 +82,14 @@ static void olivec_backend_on_layer_surface_configure(
     return;
   }
 
+  const int32_t scaled_width = width * layer_surface->preferred_buffer_scale;
+  const int32_t scaled_height = height * layer_surface->preferred_buffer_scale;
+
   struct olivec_surface *os =
       (struct olivec_surface *)layer_surface->backend_data;
 
-  if (os->buffer->width == width && os->buffer->height == height) {
+  if (os->buffer->width == scaled_width &&
+      os->buffer->height == scaled_height) {
     return;
   }
 
@@ -89,10 +98,11 @@ static void olivec_backend_on_layer_surface_configure(
   }
 
   SAMURE_RESULT(shared_buffer)
-  b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT, width,
-                                     height);
+  b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
+                                     scaled_width, scaled_height);
   os->buffer = SAMURE_UNWRAP(shared_buffer, b_rs);
-  os->canvas = olivec_canvas(os->buffer->data, width, height, width);
+  os->canvas = olivec_canvas(os->buffer->data, scaled_width, scaled_height,
+                             scaled_width);
 }
 
 static void
@@ -147,14 +157,15 @@ static void render_callback(struct samure_context *ctx,
   struct blank_data *d = (struct blank_data *)data;
 
   olivec_fill(os->canvas, 0x00000000);
-  if (samure_circle_in_output(output_geo, d->qx, d->qy, 100)) {
-    olivec_circle(os->canvas, RENDER_X(d->qx), RENDER_Y(d->qy), 100,
-                  0xFF00FF00);
+  if (samure_circle_in_output(output_geo, d->qx, d->qy, RENDER_SCALE(100))) {
+    olivec_circle(os->canvas, RENDER_X(d->qx), RENDER_Y(d->qy),
+                  RENDER_SCALE(100), 0xFF00FF00);
 
     char buffer[1024];
     snprintf(buffer, 1024, "%.3f", 1.0 / sfc->frame_delta_time);
 
-    olivec_text(os->canvas, buffer, 5, 5, olivec_default_font, 5, 0xFFAAAAAA);
+    olivec_text(os->canvas, buffer, 5, 5, olivec_default_font, RENDER_SCALE(5),
+                0xFFAAAAAA);
   }
 }
 
