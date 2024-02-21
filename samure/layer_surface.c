@@ -47,6 +47,8 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
                             int backend_association) {
   SAMURE_RESULT_ALLOC(layer_surface, s);
 
+  s->preferred_buffer_scale = 1;
+
   if (o) {
     s->w = o->geo.w;
     s->h = o->geo.h;
@@ -81,8 +83,11 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
       wl_region_destroy(reg);
     }
   }
+  wl_surface_add_listener(s->surface, &surface_listener, s->callback_data);
   wl_surface_commit(s->surface);
   wl_display_roundtrip(ctx->display);
+
+  wl_surface_set_buffer_scale(s->surface, s->preferred_buffer_scale);
 
   if (backend_association && ctx->backend &&
       ctx->backend->associate_layer_surface) {
@@ -115,7 +120,7 @@ void samure_destroy_layer_surface(struct samure_context *ctx,
 void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
                                       struct samure_shared_buffer *buf) {
   wl_surface_attach(sfc->surface, buf->buffer, 0, 0);
-  wl_surface_damage(sfc->surface, 0, 0, buf->width, buf->height);
+  wl_surface_damage_buffer(sfc->surface, 0, 0, buf->width, buf->height);
   wl_surface_commit(sfc->surface);
 }
 

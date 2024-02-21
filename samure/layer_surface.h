@@ -49,6 +49,7 @@ struct samure_layer_surface {
   void *backend_data;
   uint32_t w;
   uint32_t h;
+  int32_t preferred_buffer_scale;
 
   struct samure_callback_data *callback_data;
   int not_ready;

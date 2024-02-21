@@ -68,10 +68,13 @@ samure_backend_raw_associate_layer_surface(struct samure_context *ctx,
   }
   memset(r, 0, sizeof(struct samure_raw_surface));
 
+  const uint32_t scaled_width = sfc->w * sfc->preferred_buffer_scale;
+  const uint32_t scaled_height = sfc->h * sfc->preferred_buffer_scale;
+
   SAMURE_RESULT(shared_buffer)
   b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
-                                     sfc->w == 0 ? 1 : sfc->w,
-                                     sfc->h == 0 ? 1 : sfc->h);
+                                     scaled_width == 0 ? 1 : scaled_width,
+                                     scaled_height == 0 ? 1 : scaled_height);
   if (SAMURE_HAS_ERROR(b_rs)) {
     free(r);
     return SAMURE_ERROR_SHARED_BUFFER_INIT | b_rs.error;
@@ -92,10 +95,13 @@ void samure_backend_raw_on_layer_surface_configure(
     return;
   }
 
+  const int32_t scaled_width = width * layer_surface->preferred_buffer_scale;
+  const int32_t scaled_height = height * layer_surface->preferred_buffer_scale;
+
   struct samure_raw_surface *r =
       (struct samure_raw_surface *)layer_surface->backend_data;
 
-  if (r->buffer->width == width && r->buffer->height == height) {
+  if (r->buffer->width == scaled_width && r->buffer->height == scaled_height) {
     return;
   }
 
@@ -104,8 +110,8 @@ void samure_backend_raw_on_layer_surface_configure(
   }
 
   SAMURE_RESULT(shared_buffer)
-  b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT, width,
-                                     height);
+  b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
+                                     scaled_width, scaled_height);
   if (SAMURE_HAS_ERROR(b_rs)) {
     r->buffer = NULL;
   } else {

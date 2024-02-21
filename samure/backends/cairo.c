@@ -69,10 +69,17 @@ samure_backend_cairo_associate_layer_surface(struct samure_context *ctx,
   }
   memset(c, 0, sizeof(struct samure_cairo_surface));
 
+  const uint32_t scaled_width = sfc->w * sfc->preferred_buffer_scale;
+  const uint32_t scaled_height = sfc->h * sfc->preferred_buffer_scale;
+
+  DEBUG_PRINTF("backend_cairo associate width=%u height=%u scaled_width=%u "
+               "scaled_height=%d\n",
+               sfc->w, sfc->h, scaled_width, scaled_height);
+
   SAMURE_RESULT(shared_buffer)
   b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
-                                     sfc->w == 0 ? 1 : sfc->w,
-                                     sfc->h == 0 ? 1 : sfc->h);
+                                     scaled_width == 0 ? 1 : scaled_width,
+                                     scaled_height == 0 ? 1 : scaled_height);
   if (SAMURE_HAS_ERROR(b_rs)) {
     free(c);
     return SAMURE_ERROR_SHARED_BUFFER_INIT | b_rs.error;
@@ -80,7 +87,7 @@ samure_backend_cairo_associate_layer_surface(struct samure_context *ctx,
 
   c->buffer = SAMURE_UNWRAP(shared_buffer, b_rs);
 
-  if (sfc->w != 0 && sfc->h != 0) {
+  if (scaled_width != 0 && scaled_height != 0) {
     const samure_error err = _samure_cairo_surface_create_cairo(c);
     if (SAMURE_IS_ERROR(err)) {
       samure_destroy_shared_buffer(c->buffer);
@@ -102,10 +109,13 @@ void samure_backend_cairo_on_layer_surface_configure(
     return;
   }
 
+  const int32_t scaled_width = width * layer_surface->preferred_buffer_scale;
+  const int32_t scaled_height = height * layer_surface->preferred_buffer_scale;
+
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)layer_surface->backend_data;
 
-  if (c->buffer->width == width && c->buffer->height == height) {
+  if (c->buffer->width == scaled_width && c->buffer->height == scaled_height) {
     return;
   }
 
@@ -121,9 +131,13 @@ void samure_backend_cairo_on_layer_surface_configure(
     c->cairo = NULL;
   }
 
+  DEBUG_PRINTF("backend_cairo configure width=%d height=%d scaled_width=%d "
+               "scaled_height=%d\n",
+               width, height, scaled_width, scaled_height);
+
   SAMURE_RESULT(shared_buffer)
-  b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT, width,
-                                     height);
+  b_rs = samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
+                                     scaled_width, scaled_height);
   if (SAMURE_HAS_ERROR(b_rs)) {
     c->buffer = NULL;
   } else {
