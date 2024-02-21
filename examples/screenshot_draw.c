@@ -107,7 +107,7 @@ int main(int args, char *argv[]) {
 
     struct samure_shared_buffer *screenshot = SAMURE_UNWRAP(
         shared_buffer, samure_output_screenshot(ctx, ctx->outputs[i], 0));
-    // samure_layer_surface_draw_buffer(bgs[i], screenshot);
+    samure_layer_surface_draw_buffer(bgs[i], screenshot);
     samure_destroy_shared_buffer(screenshot);
   }
 
