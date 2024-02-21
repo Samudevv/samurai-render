@@ -48,6 +48,7 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
   SAMURE_RESULT_ALLOC(layer_surface, s);
 
   s->preferred_buffer_scale = 1;
+  s->scale = 1.0;
 
   if (o) {
     s->w = o->geo.w;
@@ -87,7 +88,9 @@ samure_create_layer_surface(struct samure_context *ctx, struct samure_output *o,
   wl_surface_commit(s->surface);
   wl_display_roundtrip(ctx->display);
 
-  wl_surface_set_buffer_scale(s->surface, s->preferred_buffer_scale);
+  s->scale = (double)s->preferred_buffer_scale;
+
+  wl_surface_set_buffer_scale(s->surface, (int32_t)s->scale);
 
   if (backend_association && ctx->backend &&
       ctx->backend->associate_layer_surface) {
@@ -135,4 +138,25 @@ void samure_layer_surface_request_frame(struct samure_context *ctx,
   wl_callback_add_listener(cb, &frame_listener,
                            samure_create_frame_data(ctx, geo, sfc));
   sfc->not_ready = 1;
+}
+
+SAMURE_RESULT(shared_buffer)
+samure_create_shared_buffer_for_layer_surface(
+    struct samure_context *ctx, struct samure_layer_surface *sfc,
+    struct samure_shared_buffer *old_buffer) {
+  const uint32_t scaled_width = RENDER_SCALE(sfc->w);
+  const uint32_t scaled_height = RENDER_SCALE(sfc->h);
+
+  if (old_buffer) {
+    if (old_buffer->width == scaled_width &&
+        old_buffer->height == scaled_height) {
+      SAMURE_RETURN_RESULT(shared_buffer, old_buffer);
+    }
+
+    samure_destroy_shared_buffer(old_buffer);
+  }
+
+  return samure_create_shared_buffer(ctx->shm, SAMURE_BUFFER_FORMAT,
+                                     scaled_width == 0 ? 1 : scaled_width,
+                                     scaled_height == 0 ? 1 : scaled_height);
 }

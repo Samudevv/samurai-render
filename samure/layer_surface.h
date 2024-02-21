@@ -59,6 +59,7 @@ struct samure_layer_surface {
   double frame_start_time; // Absolute time of the last frame (for internal use)
   double frame_delta_time; // The actual time that passes between each call to
                            // samure_context_render_layer_surface in seconds
+  double scale;
 };
 
 SAMURE_DEFINE_RESULT(layer_surface);
@@ -79,3 +80,8 @@ extern void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
 extern void samure_layer_surface_request_frame(struct samure_context *ctx,
                                                struct samure_layer_surface *sfc,
                                                struct samure_rect geo);
+
+extern SAMURE_RESULT(shared_buffer)
+    samure_create_shared_buffer_for_layer_surface(
+        struct samure_context *ctx, struct samure_layer_surface *sfc,
+        struct samure_shared_buffer *old_buffer);
