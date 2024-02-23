@@ -56,7 +56,9 @@ static void render_callback(struct samure_context *ctx,
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  if (samure_square_in_output(output_geo, d->qx - 100, d->qy - 100, 200)) {
+  const double s = RENDER_SCALE(100.0);
+
+  if (samure_square_in_output(output_geo, d->qx - s, d->qy - s, 2.0 * s)) {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0.0f, RENDER_SCALE(sfc->w), RENDER_SCALE(sfc->h), 0.0f, 0.0f, 1.0f);
@@ -64,7 +66,6 @@ static void render_callback(struct samure_context *ctx,
 
     const double qx = RENDER_X(d->qx);
     const double qy = RENDER_Y(d->qy);
-    const double s = RENDER_SCALE(100.0);
 
     glBegin(GL_QUADS);
     glColor3f(0.0f, 1.0f, 0.0f);

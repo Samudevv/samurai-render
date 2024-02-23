@@ -153,11 +153,9 @@ void samure_layer_surface_draw_buffer(struct samure_layer_surface *sfc,
   wl_surface_attach(sfc->surface, buf->buffer, 0, 0);
   wl_surface_damage_buffer(sfc->surface, 0, 0, buf->width, buf->height);
   if (sfc->viewport) {
-    const int32_t scaled_width = RENDER_SCALE(sfc->w);
-    const int32_t scaled_height = RENDER_SCALE(sfc->h);
     wp_viewport_set_destination(sfc->viewport, sfc->w, sfc->h);
-    wp_viewport_set_source(sfc->viewport, 0, 0, wl_fixed_from_int(scaled_width),
-                           wl_fixed_from_int(scaled_height));
+    wp_viewport_set_source(sfc->viewport, 0, 0, wl_fixed_from_int(buf->width),
+                           wl_fixed_from_int(buf->height));
   }
   wl_surface_commit(sfc->surface);
 }
