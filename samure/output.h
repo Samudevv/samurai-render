@@ -54,8 +54,6 @@ struct samure_output {
 
   struct samure_rect geo;
   char *name;
-  int32_t scale;
-  int32_t refresh_rate;
 };
 
 enum samure_screenshot_state {

@@ -81,6 +81,7 @@ samure_create_context(struct samure_context_config *config) {
   if (reg_d.num_outputs == 0)            { error_code |= SAMURE_ERROR_NO_OUTPUTS;              }
   if (ctx->layer_shell == NULL)          { error_code |= SAMURE_ERROR_NO_LAYER_SHELL;          }
   if (ctx->compositor == NULL)           { error_code |= SAMURE_ERROR_NO_COMPOSITOR;           }
+  if (ctx->output_manager == NULL)       { error_code |= SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER;   }
   // clang-format on
 
   if (SAMURE_IS_ERROR(error_code)) {
@@ -163,14 +164,9 @@ samure_create_context(struct samure_context_config *config) {
   free(reg_d.outputs);
 
   if (ctx->config.max_update_frequency == 0) {
-    // Use double the maximum output refresh rate as update frequency by default
-    int32_t max_refresh_rate = ctx->outputs[0]->refresh_rate;
-    for (size_t i = 1; i < ctx->num_outputs; i++) {
-      if (ctx->outputs[i]->refresh_rate > max_refresh_rate) {
-        max_refresh_rate = ctx->outputs[i]->refresh_rate;
-      }
-    }
-    ctx->config.max_update_frequency = 2 * max_refresh_rate;
+    // Assume that monitors have 60Hz refresh rate and use double of that as
+    // update frequency
+    ctx->config.max_update_frequency = 120;
   }
 
   ctx->frame_timer = samure_init_frame_timer(ctx->config.max_update_frequency);

@@ -330,16 +330,11 @@ void output_geometry(void *data, struct wl_output *wl_output, int32_t x,
 void output_done(void *data, struct wl_output *wl_output) {
   struct samure_output *o = (struct samure_output *)data;
   DEBUG_PRINTF("output_done output=%s\n", o->name);
-  if (!o->xdg_output && o->scale != 0) {
-    o->geo.w /= o->scale;
-    o->geo.h /= o->scale;
-  }
 }
 
 void output_scale(void *data, struct wl_output *wl_output, int32_t factor) {
   DEBUG_PRINTF("output_scale factor=%d\n", factor);
   struct samure_output *o = (struct samure_output *)data;
-  o->scale = factor;
 }
 
 void output_name(void *data, struct wl_output *wl_output, const char *name) {
@@ -370,7 +365,6 @@ void output_mode(void *data, struct wl_output *wl_output, uint32_t flags,
     o->geo.w = width;
     o->geo.h = height;
   }
-  o->refresh_rate = refresh;
 }
 
 void xdg_output_logical_position(void *data,
