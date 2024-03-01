@@ -129,6 +129,7 @@
 #define SAMURE_ERROR_CURSOR_THEME ((samure_error)1 << 33)
 #define SAMURE_ERROR_FRACTIONAL_SCALE_INIT ((samure_error)1 << 34)
 #define SAMURE_ERROR_VIEWPORT_INIT ((samure_error)1 << 35)
+#define SAMURE_ERROR_PROTOCOL_VERSION ((samure_error)1 << 36)
 
 #define SAMURE_NUM_ERRORS 34
 
@@ -180,6 +181,9 @@ static const char *samure_strerror(samure_error error_code) {
   case SAMURE_ERROR_SURFACE_INIT:              return "surface initialization failed";
   case SAMURE_ERROR_OUTPUT_INIT:               return "output initialization failed";
   case SAMURE_ERROR_CURSOR_THEME:              return "failed to load cursor theme";
+  case SAMURE_ERROR_FRACTIONAL_SCALE_INIT:     return "fractional scale initialization failed";
+  case SAMURE_ERROR_VIEWPORT_INIT:             return "viewport initialization failed";
+  case SAMURE_ERROR_PROTOCOL_VERSION:          return "required protocol version not matched";
   default:                                     return "unknown error";
   }
   // clang-format on

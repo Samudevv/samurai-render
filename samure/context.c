@@ -82,6 +82,7 @@ samure_create_context(struct samure_context_config *config) {
   if (ctx->layer_shell == NULL)          { error_code |= SAMURE_ERROR_NO_LAYER_SHELL;          }
   if (ctx->compositor == NULL)           { error_code |= SAMURE_ERROR_NO_COMPOSITOR;           }
   if (ctx->output_manager == NULL)       { error_code |= SAMURE_ERROR_NO_XDG_OUTPUT_MANAGER;   }
+  if (SAMURE_IS_ERROR(reg_d.error))      { error_code |= reg_d.error;                          }
   // clang-format on
 
   if (SAMURE_IS_ERROR(error_code)) {

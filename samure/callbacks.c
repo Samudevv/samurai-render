@@ -82,6 +82,15 @@
     }                                                                          \
   }
 
+#define ASSERT_VERSION(v)                                                      \
+  if (version < v) {                                                           \
+    fprintf(stderr, "\033[31m%s\033[0m: version %u < %u\n", interface,         \
+            version, v);                                                       \
+    reg_d->error |= SAMURE_ERROR_PROTOCOL_VERSION;                             \
+    return;                                                                    \
+  }                                                                            \
+  const uint32_t ver = v
+
 void registry_global(void *data, struct wl_registry *registry, uint32_t name,
                      const char *interface, uint32_t version) {
   DEBUG_PRINTF("registry_global name=%u interface=%s version=%u\n", name,
@@ -92,10 +101,14 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
   struct samure_registry_data *reg_d = (struct samure_registry_data *)d->data;
 
   if (strcmp(interface, wl_shm_interface.name) == 0) {
-    ctx->shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
+    ASSERT_VERSION(1);
+
+    ctx->shm = wl_registry_bind(registry, name, &wl_shm_interface, ver);
   } else if (strcmp(interface, wl_seat_interface.name) == 0) {
+    ASSERT_VERSION(1);
+
     struct wl_seat *seat =
-        wl_registry_bind(registry, name, &wl_seat_interface, 1);
+        wl_registry_bind(registry, name, &wl_seat_interface, ver);
 
     reg_d->num_seats++;
     reg_d->seats =
@@ -106,14 +119,20 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
     }
     reg_d->seats[reg_d->num_seats - 1] = seat;
   } else if (strcmp(interface, wl_compositor_interface.name) == 0) {
+    ASSERT_VERSION(6);
+
     ctx->compositor =
-        wl_registry_bind(registry, name, &wl_compositor_interface, 6);
+        wl_registry_bind(registry, name, &wl_compositor_interface, ver);
   } else if (strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0) {
+    ASSERT_VERSION(1);
+
     ctx->layer_shell =
-        wl_registry_bind(registry, name, &zwlr_layer_shell_v1_interface, 1);
+        wl_registry_bind(registry, name, &zwlr_layer_shell_v1_interface, ver);
   } else if (strcmp(interface, wl_output_interface.name) == 0) {
+    ASSERT_VERSION(3);
+
     struct wl_output *output =
-        wl_registry_bind(registry, name, &wl_output_interface, 3);
+        wl_registry_bind(registry, name, &wl_output_interface, ver);
 
     reg_d->num_outputs++;
     reg_d->outputs = realloc(reg_d->outputs,
@@ -124,23 +143,33 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
     }
     reg_d->outputs[reg_d->num_outputs - 1] = output;
   } else if (strcmp(interface, zxdg_output_manager_v1_interface.name) == 0) {
-    ctx->output_manager =
-        wl_registry_bind(registry, name, &zxdg_output_manager_v1_interface, 2);
+    ASSERT_VERSION(2);
+
+    ctx->output_manager = wl_registry_bind(
+        registry, name, &zxdg_output_manager_v1_interface, ver);
   } else if (strcmp(interface, wp_cursor_shape_manager_v1_interface.name) ==
              0) {
+    ASSERT_VERSION(1);
+
     reg_d->cursor_manager = wl_registry_bind(
-        registry, name, &wp_cursor_shape_manager_v1_interface, 1);
+        registry, name, &wp_cursor_shape_manager_v1_interface, ver);
   } else if (strcmp(interface, zwlr_screencopy_manager_v1_interface.name) ==
              0) {
+    ASSERT_VERSION(3);
+
     ctx->screencopy_manager = wl_registry_bind(
-        registry, name, &zwlr_screencopy_manager_v1_interface, 3);
+        registry, name, &zwlr_screencopy_manager_v1_interface, ver);
   } else if (strcmp(interface, wp_fractional_scale_manager_v1_interface.name) ==
              0) {
+    ASSERT_VERSION(1);
+
     ctx->fractional_scale_manager = wl_registry_bind(
-        registry, name, &wp_fractional_scale_manager_v1_interface, 1);
+        registry, name, &wp_fractional_scale_manager_v1_interface, ver);
   } else if (strcmp(interface, wp_viewporter_interface.name) == 0) {
+    ASSERT_VERSION(1);
+
     ctx->viewporter =
-        wl_registry_bind(registry, name, &wp_viewporter_interface, 1);
+        wl_registry_bind(registry, name, &wp_viewporter_interface, ver);
   }
 }
 

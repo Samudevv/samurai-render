@@ -136,6 +136,7 @@ struct samure_registry_data {
   struct wl_output **outputs;
   size_t num_outputs;
   struct wp_cursor_shape_manager_v1 *cursor_manager;
+  samure_error error;
 };
 
 SAMURE_DEFINE_RESULT(context);
