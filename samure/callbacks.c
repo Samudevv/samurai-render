@@ -93,8 +93,9 @@
 
 void registry_global(void *data, struct wl_registry *registry, uint32_t name,
                      const char *interface, uint32_t version) {
-  DEBUG_PRINTF("registry_global name=%u interface=%s version=%u\n", name,
-               interface, version);
+  DEBUG_PRINTF("\033[34mregistry_global\033[0m name=%u "
+               "interface=\033[36m%s\033[0m version=\033[36m%u\033[0m\n",
+               name, interface, version);
 
   struct samure_callback_data *d = (struct samure_callback_data *)data;
   struct samure_context *ctx = d->ctx;
@@ -224,7 +225,8 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   LAST_EVENT.output = output;
   LAST_EVENT.surface = layer_surface;
 
-  DEBUG_PRINTF("pointer_enter serial=%u output=%s surface_x=%f surface_y=%f\n",
+  DEBUG_PRINTF("\033[34mpointer_enter\033[0m serial=%u output=%s surface_x=%f "
+               "surface_y=%f\n",
                serial, output->name, wl_fixed_to_double(surface_x),
                wl_fixed_to_double(surface_y));
 }
@@ -292,8 +294,9 @@ void surface_preferred_buffer_scale(void *data, struct wl_surface *surface,
 
   OUTPUT_FOR_SURFACE();
 
-  DEBUG_PRINTF("surface_preferred_buffer_scale output=%s factor=%d\n",
-               output ? output->name : "null", factor);
+  DEBUG_PRINTF(
+      "\033[34msurface_preferred_buffer_scale\033[0m output=%s factor=%d\n",
+      output ? output->name : "null", factor);
 
   s->preferred_buffer_scale = factor;
 }
@@ -306,7 +309,8 @@ void surface_preferred_buffer_transform(void *data, struct wl_surface *surface,
 
   OUTPUT_FOR_SURFACE();
 
-  DEBUG_PRINTF("surface_preferred_buffer_transform output=%s transform=%u\n",
+  DEBUG_PRINTF("\033[34msurface_preferred_buffer_transform\033[0m output=%s "
+               "transform=%u\n",
                output ? output->name : "null", transform);
 }
 
@@ -317,9 +321,9 @@ void layer_surface_configure(void *data, struct zwlr_layer_surface_v1 *surface,
 
   OUTPUT_FOR_LAYER_SURFACE();
 
-  DEBUG_PRINTF(
-      "layer_surface_configure output=%s serial=%u width=%u height=%u\n",
-      output ? output->name : "null", serial, width, height);
+  DEBUG_PRINTF("\033[34mlayer_surface_configure\033[0m output=%s serial=%u "
+               "width=%u height=%u\n",
+               output ? output->name : "null", serial, width, height);
 
   zwlr_layer_surface_v1_ack_configure(surface, serial);
 
@@ -337,7 +341,7 @@ void layer_surface_closed(void *data, struct zwlr_layer_surface_v1 *surface) {
 
   OUTPUT_FOR_LAYER_SURFACE();
 
-  DEBUG_PRINTF("layer_surface_closed output=%s\n",
+  DEBUG_PRINTF("\033[34mlayer_surface_closed\033[0m output=%s\n",
                output ? output->name : "null");
 }
 
@@ -400,8 +404,9 @@ void xdg_output_logical_position(void *data,
                                  struct zxdg_output_v1 *zxdg_output_v1,
                                  int32_t x, int32_t y) {
   struct samure_output *o = data;
-  DEBUG_PRINTF("xdg_output_logical_position output=%s x=%d y=%d\n",
-               o->name ? o->name : "null", x, y);
+  DEBUG_PRINTF(
+      "\033[34mxdg_output_logical_position\033[0m output=%s x=%d y=%d\n",
+      o->name ? o->name : "null", x, y);
   o->geo.x = x;
   o->geo.y = y;
 }
@@ -409,20 +414,22 @@ void xdg_output_logical_position(void *data,
 void xdg_output_logical_size(void *data, struct zxdg_output_v1 *zxdg_output_v1,
                              int32_t width, int32_t height) {
   struct samure_output *o = data;
-  DEBUG_PRINTF("xdg_output_logical_size output=%s width=%d height=%d\n",
-               o->name ? o->name : "null", width, height);
+  DEBUG_PRINTF(
+      "\033[34mxdg_output_logical_size\033[0m output=%s width=%d height=%d\n",
+      o->name ? o->name : "null", width, height);
   o->geo.w = width;
   o->geo.h = height;
 }
 
 void xdg_output_done(void *data, struct zxdg_output_v1 *zxdg_output_v1) {
   struct samure_output *o = data;
-  DEBUG_PRINTF("xdg_output_done output=%s\n", o->name ? o->name : "null");
+  DEBUG_PRINTF("\033[34mxdg_output_done\033[0m output=%s\n",
+               o->name ? o->name : "null");
 }
 
 void xdg_output_name(void *data, struct zxdg_output_v1 *zxdg_output_v1,
                      const char *name) {
-  DEBUG_PRINTF("xdg_output_name name=%s\n", name);
+  DEBUG_PRINTF("\033[34mxdg_output_name\033[0m name=%s\n", name);
   struct samure_output *o = data;
   o->name = strdup(name);
 }
@@ -430,8 +437,9 @@ void xdg_output_name(void *data, struct zxdg_output_v1 *zxdg_output_v1,
 void xdg_output_description(void *data, struct zxdg_output_v1 *zxdg_output_v1,
                             const char *description) {
   struct samure_output *o = (struct samure_output *)data;
-  DEBUG_PRINTF("xdg_output_description output=%s description=%s\n",
-               o->name ? o->name : "null", description);
+  DEBUG_PRINTF(
+      "\033[34mxdg_output_description\033[0m output=%s description=%s\n",
+      o->name ? o->name : "null", description);
 }
 
 void keyboard_keymap(void *data, struct wl_keyboard *wl_keyboard,
@@ -497,9 +505,9 @@ void keyboard_repeat_info(void *data, struct wl_keyboard *wl_keyboard,
 void screencopy_frame_buffer(
     void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
     uint32_t format, uint32_t width, uint32_t height, uint32_t stride) {
-  DEBUG_PRINTF(
-      "screencopy_frame_buffer format=%u width=%u height=%u stride=%u\n",
-      format, width, height, stride);
+  DEBUG_PRINTF("\033[34mscreencopy_frame_buffer\033[0m format=%u width=%u "
+               "height=%u stride=%u\n",
+               format, width, height, stride);
 
   struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
 
@@ -510,14 +518,15 @@ void screencopy_frame_buffer(
 void screencopy_frame_flags(
     void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
     uint32_t flags) {
-  DEBUG_PRINTF("screencopy_frame_flags flags=%u\n", flags);
+  DEBUG_PRINTF("\033[34mscreencopy_frame_flags\033[0m flags=%u\n", flags);
 }
 
 void screencopy_frame_ready(
     void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
     uint32_t tv_sec_hi, uint32_t tv_sec_lo, uint32_t tv_nsec) {
   const uint64_t tv_sec = (((uint64_t)tv_sec_hi) << 32) + (uint64_t)tv_sec_lo;
-  DEBUG_PRINTF("screencopy_frame_ready tv_sec_hi=%u tv_sec_lo=%u tv_sec=%lu "
+  DEBUG_PRINTF("\033[34mscreencopy_frame_ready\033[0m tv_sec_hi=%u "
+               "tv_sec_lo=%u tv_sec=%lu "
                "tv_nsec=%u\n",
                tv_sec_hi, tv_sec_lo, tv_sec, tv_nsec);
   struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
@@ -526,7 +535,7 @@ void screencopy_frame_ready(
 
 void screencopy_frame_failed(
     void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1) {
-  DEBUG_PRINT("screencopy_frame_failed\n");
+  DEBUG_PRINT("\033[34mscreencopy_frame_failed\033[0m\n");
   struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
   d->state = SAMURE_SCREENSHOT_FAILED;
 }
@@ -534,20 +543,22 @@ void screencopy_frame_failed(
 void screencopy_frame_damage(
     void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
     uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
-  DEBUG_PRINTF("screencopy_frame_damage x=%u y=%u width=%u height=%u\n", x, y,
-               width, height);
+  DEBUG_PRINTF(
+      "\033[34mscreencopy_frame_damage\033[0m x=%u y=%u width=%u height=%u\n",
+      x, y, width, height);
 }
 
 void screencopy_frame_linux_dmabuf(
     void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1,
     uint32_t format, uint32_t width, uint32_t height) {
-  DEBUG_PRINTF("screencopy_frame_linux_dmabuf format=%u width=%u height=%u\n",
+  DEBUG_PRINTF("\033[34mscreencopy_frame_linux_dmabuf\033[0m format=%u "
+               "width=%u height=%u\n",
                format, width, height);
 }
 
 void screencopy_frame_buffer_done(
     void *data, struct zwlr_screencopy_frame_v1 *zwlr_screencopy_frame_v1) {
-  DEBUG_PRINT("screencopy_frame_done\n");
+  DEBUG_PRINT("\033[34mscreencopy_frame_done\033[0m\n");
   struct samure_screenshot_data *d = (struct samure_screenshot_data *)data;
   d->state = SAMURE_SCREENSHOT_DONE;
 }
@@ -643,9 +654,9 @@ void fractional_scale_preferred_scale(
 
   if (new_scale != sfc->scale) {
     OUTPUT_FOR_LAYER_SURFACE();
-    DEBUG_PRINTF(
-        "fractional_scale_preferred_scale output=%s scale=%u new_scale=%.2f\n",
-        output ? output->name : "null", scale, new_scale);
+    DEBUG_PRINTF("\033[34mfractional_scale_preferred_scale\033[0m output=%s "
+                 "scale=%u new_scale=%.2f\n",
+                 output ? output->name : "null", scale, new_scale);
 
     sfc->scale = new_scale;
 
