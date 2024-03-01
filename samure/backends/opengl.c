@@ -46,9 +46,10 @@ struct samure_opengl_config *samure_default_opengl_config() {
   cfg->blue_size = 8;
   cfg->alpha_size = 8;
   cfg->major_version = 1;
-  cfg->profile_mask = EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT;
+  cfg->profile_mask = EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT;
   cfg->color_space = EGL_GL_COLORSPACE_LINEAR;
   cfg->render_buffer = EGL_BACK_BUFFER;
+  cfg->debug = EGL_FALSE;
 
   return cfg;
 }
@@ -125,6 +126,8 @@ samure_init_backend_opengl(struct samure_context *ctx,
     SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONFIG);
   }
 
+  DEBUG_PRINTF("EGL found %d configs\n", num_config);
+
   if (eglBindAPI(EGL_OPENGL_API) != EGL_TRUE) {
     SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_BIND_API);
   }
@@ -174,12 +177,12 @@ void samure_backend_opengl_render_start(
       (struct samure_backend_opengl *)ctx->backend, layer_surface);
 }
 
-void samure_backend_opengl_render_end(
-    struct samure_context *ctx, struct samure_layer_surface *layer_surface) {
+void samure_backend_opengl_render_end(struct samure_context *ctx,
+                                      struct samure_layer_surface *sfc) {
   struct samure_backend_opengl *gl =
       (struct samure_backend_opengl *)ctx->backend;
   struct samure_opengl_surface *s =
-      (struct samure_opengl_surface *)layer_surface->backend_data;
+      (struct samure_opengl_surface *)sfc->backend_data;
   eglSwapBuffers(gl->display, s->surface);
 }
 
