@@ -91,6 +91,18 @@
   }                                                                            \
   const uint32_t ver = v
 
+#define ASSERT_MIN_MAX_VERSION(min_v, max_v)                                   \
+  uint32_t ver;                                                                \
+  if (version >= max_v) {                                                      \
+    ver = max_v;                                                               \
+  } else if (version < min_v) {                                                \
+    fprintf(stderr, "\033[31m%s\033[0m: version %u < %u < %u\n", interface,    \
+            version, min_v, max_v);                                            \
+    reg_d->error |= SAMURE_ERROR_PROTOCOL_VERSION;                             \
+    return;                                                                    \
+  }                                                                            \
+  ver = min_v
+
 void registry_global(void *data, struct wl_registry *registry, uint32_t name,
                      const char *interface, uint32_t version) {
   DEBUG_PRINTF("\033[34mregistry_global\033[0m name=%u "
@@ -120,7 +132,7 @@ void registry_global(void *data, struct wl_registry *registry, uint32_t name,
     }
     reg_d->seats[reg_d->num_seats - 1] = seat;
   } else if (strcmp(interface, wl_compositor_interface.name) == 0) {
-    ASSERT_VERSION(6);
+    ASSERT_MIN_MAX_VERSION(4, 6);
 
     ctx->compositor =
         wl_registry_bind(registry, name, &wl_compositor_interface, ver);
