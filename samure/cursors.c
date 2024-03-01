@@ -28,6 +28,19 @@
 #include "context.h"
 #include "seat.h"
 
+struct samure_cursor {
+  struct samure_seat *seat;
+  struct wl_cursor_theme *theme;
+  struct wl_cursor *cursor;
+  struct wl_surface *surface;
+  struct wl_cursor_image *current_cursor_image;
+  struct wp_viewport *viewport;
+  unsigned int current_image_index;
+  double current_time;
+  uint32_t current_shape;
+  double current_scale;
+};
+
 static const char *samure_cursor_shape_name(uint32_t shape) {
   // clang-format off
   switch (shape) {
@@ -69,30 +82,45 @@ static const char *samure_cursor_shape_name(uint32_t shape) {
   // clang-format on
 }
 
+struct wl_cursor_theme *
+samure_load_cursor_theme(struct wl_shm *shm,
+                         struct wp_cursor_shape_manager_v1 *manager,
+                         double scale) {
+  const char *cursor_theme = getenv("XCURSOR_THEME");
+  if (!cursor_theme) {
+    cursor_theme = getenv("GTK_THEME");
+  }
+
+  DEBUG_PRINTF("Loading cursor_theme=%s\n",
+               cursor_theme ? cursor_theme : "null");
+
+  const char *cursor_size_str = getenv("XCURSOR_SIZE");
+  int cursor_size = 0;
+  if (cursor_size_str) {
+    cursor_size = atoi(cursor_size_str);
+  }
+  if (cursor_size == 0) {
+    cursor_size = SAMURE_DEFAULT_CURSOR_SIZE;
+  }
+  cursor_size = (double)cursor_size * scale;
+
+  DEBUG_PRINTF("With cursor_size=%d\n", cursor_size);
+
+  return wl_cursor_theme_load(cursor_theme, cursor_size, shm);
+}
+
 struct samure_cursor samure_init_cursor(struct samure_seat *seat,
-                                        struct wl_cursor_theme *theme,
-                                        struct wl_compositor *compositor) {
+                                        struct wl_compositor *compositor,
+                                        struct wp_viewporter *viewporter,
+                                        uint8_t client_side) {
   struct samure_cursor c = {0};
+  c.current_scale = 1.0;
   c.seat = seat;
   c.current_shape = WP_CURSOR_SHAPE_DEVICE_V1_SHAPE_DEFAULT;
-  if (theme) {
+  if (client_side) {
     c.surface = wl_compositor_create_surface(compositor);
-    c.cursor = wl_cursor_theme_get_cursor(
-        theme, samure_cursor_shape_name(c.current_shape));
-    if (c.cursor) {
-      c.current_cursor_image = c.cursor->images[0];
-      // TODO: Handle output scale
-      if (c.surface) {
-        wl_surface_attach(c.surface,
-                          wl_cursor_image_get_buffer(c.current_cursor_image), 0,
-                          0);
-        if (seat->pointer) {
-          wl_pointer_set_cursor(seat->pointer, seat->last_pointer_enter,
-                                c.surface, c.current_cursor_image->hotspot_x,
-                                c.current_cursor_image->hotspot_y);
-        }
-        wl_surface_commit(c.surface);
-      }
+    if (viewporter) {
+      c.viewport = wp_viewporter_get_viewport(viewporter, c.surface);
     }
   }
 
@@ -100,14 +128,57 @@ struct samure_cursor samure_init_cursor(struct samure_seat *seat,
 }
 
 void samure_destroy_cursor(struct samure_cursor cursor) {
+  if (cursor.viewport) {
+    wp_viewport_destroy(cursor.viewport);
+  }
   if (cursor.surface) {
     wl_surface_destroy(cursor.surface);
   }
+  if (cursor.theme) {
+    wl_cursor_theme_destroy(cursor.theme);
+  }
+}
+
+void samure_cursor_load_images_from_theme(struct samure_cursor *c,
+                                          const char *shape_name) {
+  if (!c->theme) {
+    return;
+  }
+
+  c->cursor = wl_cursor_theme_get_cursor(c->theme, shape_name);
+  if (c->cursor) {
+    if (c->cursor->image_count > c->current_image_index) {
+      c->current_cursor_image = c->cursor->images[c->current_image_index];
+    } else {
+      c->current_cursor_image = NULL;
+    }
+  }
+}
+
+void samure_cursor_commit_current_image(struct samure_cursor *c) {
+  wl_surface_attach(c->surface,
+                    wl_cursor_image_get_buffer(c->current_cursor_image), 0, 0);
+  wl_surface_damage_buffer(c->surface, 0, 0, c->current_cursor_image->width,
+                           c->current_cursor_image->height);
+  if (c->viewport) {
+    wp_viewport_set_destination(
+        c->viewport, (double)c->current_cursor_image->width / c->current_scale,
+        (double)c->current_cursor_image->height / c->current_scale);
+    wp_viewport_set_source(c->viewport, 0, 0,
+                           wl_fixed_from_int(c->current_cursor_image->width),
+                           wl_fixed_from_int(c->current_cursor_image->height));
+  }
+  if (c->seat->pointer) {
+    wl_pointer_set_cursor(
+        c->seat->pointer, c->seat->last_pointer_enter, c->surface,
+        (double)c->current_cursor_image->hotspot_x / c->current_scale,
+        (double)c->current_cursor_image->hotspot_y / c->current_scale);
+  }
+  wl_surface_commit(c->surface);
 }
 
 void samure_cursor_set_shape(struct samure_cursor_engine *engine,
-                             struct samure_cursor *c,
-                             struct wl_cursor_theme *theme, uint32_t shape) {
+                             struct samure_cursor *c, uint32_t shape) {
   c->current_shape = shape;
 
   if (engine->manager) {
@@ -126,26 +197,12 @@ void samure_cursor_set_shape(struct samure_cursor_engine *engine,
     return;
   }
 
-  c->cursor = wl_cursor_theme_get_cursor(theme, name);
   c->current_time = 0.0;
   c->current_image_index = 0;
-  if (c->cursor) {
-    const uint32_t old_width = c->current_cursor_image->width;
-    const uint32_t old_height = c->current_cursor_image->height;
-    c->current_cursor_image = c->cursor->images[0];
-    if (c->surface) {
-      // TODO: handle output scale
-      wl_surface_attach(c->surface,
-                        wl_cursor_image_get_buffer(c->current_cursor_image), 0,
-                        0);
-      if (c->seat->pointer) {
-        wl_pointer_set_cursor(c->seat->pointer, c->seat->last_pointer_enter,
-                              c->surface, c->current_cursor_image->hotspot_x,
-                              c->current_cursor_image->hotspot_y);
-      }
-      wl_surface_damage(c->surface, 0, 0, old_width, old_height);
-      wl_surface_commit(c->surface);
-    }
+
+  samure_cursor_load_images_from_theme(c, name);
+  if (c->cursor && c->surface) {
+    samure_cursor_commit_current_image(c);
   }
 }
 
@@ -157,28 +214,6 @@ samure_create_cursor_engine(struct samure_context *ctx,
   SAMURE_RESULT_ALLOC(cursor_engine, c);
   c->manager = manager;
 
-  if (!c->manager) {
-    const char *cursor_theme = getenv("XCURSOR_THEME");
-    if (!cursor_theme) {
-      cursor_theme = getenv("GTK_THEME");
-    }
-
-    const char *cursor_size_str = getenv("XCURSOR_SIZE");
-    int cursor_size = 0;
-    if (cursor_size_str) {
-      cursor_size = atoi(cursor_size_str);
-    }
-    if (cursor_size == 0) {
-      cursor_size = SAMURE_DEFAULT_CURSOR_SIZE;
-    }
-
-    // TODO: Respect output scale
-    c->theme = wl_cursor_theme_load(cursor_theme, cursor_size, ctx->shm);
-    if (!c->theme) {
-      SAMURE_DESTROY_ERROR(cursor_engine, c, SAMURE_ERROR_CURSOR_THEME);
-    }
-  }
-
   c->num_cursors = ctx->num_seats;
   c->cursors = malloc(c->num_cursors * sizeof(struct samure_cursor));
   if (!c->cursors) {
@@ -186,8 +221,8 @@ samure_create_cursor_engine(struct samure_context *ctx,
   }
 
   for (size_t i = 0; i < c->num_cursors; i++) {
-    c->cursors[i] =
-        samure_init_cursor(ctx->seats[i], c->theme, ctx->compositor);
+    c->cursors[i] = samure_init_cursor(ctx->seats[i], ctx->compositor,
+                                       ctx->viewporter, !manager);
   }
 
   SAMURE_RETURN_RESULT(cursor_engine, c);
@@ -203,9 +238,6 @@ void samure_destroy_cursor_engine(struct samure_cursor_engine *engine) {
   if (engine->cursors) {
     free(engine->cursors);
   }
-  if (engine->theme) {
-    wl_cursor_theme_destroy(engine->theme);
-  }
   free(engine);
 }
 
@@ -214,40 +246,53 @@ void samure_cursor_engine_set_shape(struct samure_cursor_engine *engine,
   if (seat->pointer) {
     for (size_t i = 0; i < engine->num_cursors; i++) {
       if (engine->cursors[i].seat == seat) {
-        samure_cursor_set_shape(engine, &engine->cursors[i], engine->theme,
-                                shape);
+        samure_cursor_set_shape(engine, &engine->cursors[i], shape);
       }
     }
   }
 }
 
-void samure_cursor_engine_pointer_enter(struct samure_cursor_engine *engine,
+void samure_cursor_engine_pointer_enter(struct samure_context *ctx,
+                                        struct samure_cursor_engine *engine,
                                         struct samure_seat *seat) {
   if (!seat->pointer) {
     return;
   }
 
   for (size_t i = 0; i < engine->num_cursors; i++) {
+    struct samure_cursor *c = &engine->cursors[i];
+    if (c->seat != seat) {
+      continue;
+    }
+
     if (engine->manager) {
       struct wp_cursor_shape_device_v1 *device =
           wp_cursor_shape_manager_v1_get_pointer(engine->manager,
                                                  seat->pointer);
       wp_cursor_shape_device_v1_set_shape(device, seat->last_pointer_enter,
-                                          engine->cursors[i].current_shape);
+                                          c->current_shape);
       wp_cursor_shape_device_v1_destroy(device);
     } else {
-      if (engine->cursors[i].cursor) {
-        struct samure_cursor *c = &engine->cursors[i];
-        if (c->surface) {
-          // TODO: handle output scale
-          wl_surface_attach(c->surface,
-                            wl_cursor_image_get_buffer(c->current_cursor_image),
-                            0, 0);
-          wl_pointer_set_cursor(c->seat->pointer, c->seat->last_pointer_enter,
-                                c->surface, c->current_cursor_image->hotspot_x,
-                                c->current_cursor_image->hotspot_y);
-          wl_surface_commit(c->surface);
+      double scale = seat->pointer_focus.surface->scale;
+      if (!c->viewport) {
+        scale = 1.0;
+      }
+
+      if (!c->theme || c->current_scale != scale) {
+        c->current_scale = scale;
+        if (c->theme) {
+          wl_cursor_theme_destroy(c->theme);
         }
+
+        c->theme = samure_load_cursor_theme(ctx->shm, engine->manager, scale);
+        if (c->theme) {
+          samure_cursor_load_images_from_theme(
+              c, samure_cursor_shape_name(c->current_shape));
+        }
+      }
+
+      if (c->cursor && c->surface) {
+        samure_cursor_commit_current_image(c);
       }
     }
   }
@@ -265,22 +310,10 @@ void samure_cursor_engine_update(struct samure_cursor_engine *engine,
         if (c->current_image_index == c->cursor->image_count) {
           c->current_image_index = 0;
         }
-        const uint32_t old_width = c->current_cursor_image->width;
-        const uint32_t old_height = c->current_cursor_image->height;
         c->current_cursor_image = c->cursor->images[c->current_image_index];
+
         if (c->surface) {
-          wl_surface_attach(c->surface,
-                            wl_cursor_image_get_buffer(c->current_cursor_image),
-                            0, 0);
-          if (c->seat->pointer) {
-            // TODO: handle output scale
-            wl_pointer_set_cursor(c->seat->pointer, c->seat->last_pointer_enter,
-                                  c->surface,
-                                  c->current_cursor_image->hotspot_x,
-                                  c->current_cursor_image->hotspot_y);
-          }
-          wl_surface_damage(c->surface, 0, 0, old_width, old_height);
-          wl_surface_commit(c->surface);
+          samure_cursor_commit_current_image(c);
         }
       }
     }

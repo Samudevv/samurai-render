@@ -208,13 +208,19 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   struct samure_context *ctx = d->ctx;
 
   seat->last_pointer_enter = serial;
-  if (ctx->cursor_engine) {
-    samure_cursor_engine_pointer_enter(ctx->cursor_engine, seat);
-  }
 
   OUTPUT_FOR_SURFACE();
   seat->pointer_focus.output = output;
   seat->pointer_focus.surface = layer_surface;
+
+  DEBUG_PRINTF("\033[34mpointer_enter\033[0m serial=%u output=%s surface_x=%f "
+               "surface_y=%f\n",
+               serial, output ? output->name : "null",
+               wl_fixed_to_double(surface_x), wl_fixed_to_double(surface_y));
+
+  if (ctx->cursor_engine) {
+    samure_cursor_engine_pointer_enter(ctx, ctx->cursor_engine, seat);
+  }
 
   NEW_EVENT();
 
@@ -224,11 +230,6 @@ void pointer_enter(void *data, struct wl_pointer *pointer, uint32_t serial,
   LAST_EVENT.y = wl_fixed_to_double(surface_y);
   LAST_EVENT.output = output;
   LAST_EVENT.surface = layer_surface;
-
-  DEBUG_PRINTF("\033[34mpointer_enter\033[0m serial=%u output=%s surface_x=%f "
-               "surface_y=%f\n",
-               serial, output->name, wl_fixed_to_double(surface_x),
-               wl_fixed_to_double(surface_y));
 }
 
 void pointer_leave(void *data, struct wl_pointer *pointer, uint32_t serial,
