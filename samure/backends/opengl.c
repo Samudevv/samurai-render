@@ -107,7 +107,7 @@ samure_init_backend_opengl(struct samure_context *ctx,
       EGL_NONE,       EGL_NONE,
   };
 
-  const EGLint context_attributes[] = {
+  EGLint context_attributes[] = {
     EGL_CONTEXT_MAJOR_VERSION,       cfg->major_version,
     EGL_CONTEXT_MINOR_VERSION,       cfg->minor_version,
     EGL_CONTEXT_OPENGL_PROFILE_MASK, cfg->profile_mask,
@@ -133,8 +133,16 @@ samure_init_backend_opengl(struct samure_context *ctx,
     SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_BIND_API);
   }
 
-  gl->context =
-      eglCreateContext(gl->display, config, EGL_NO_CONTEXT, context_attributes);
+  for (size_t attrib = 6;; attrib -= 2) {
+    gl->context = eglCreateContext(gl->display, config, EGL_NO_CONTEXT,
+                                   context_attributes);
+    if (gl->context || attrib > 6) {
+      break;
+    }
+
+    context_attributes[attrib + 0] = EGL_NONE;
+    context_attributes[attrib + 1] = EGL_NONE;
+  }
   if (gl->context == EGL_NO_CONTEXT) {
     SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONTEXT_INIT);
   }
