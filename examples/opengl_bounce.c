@@ -35,15 +35,22 @@
 struct opengl_data {
   double qx, qy;
   double dx, dy;
+  double px, py;
 };
 
 static void event_callback(struct samure_context *ctx, struct samure_event *e,
                            void *data) {
+  struct opengl_data *d = (struct opengl_data *)data;
+
   switch (e->type) {
   case SAMURE_EVENT_POINTER_BUTTON:
     if (e->button == BTN_LEFT && e->state == WL_POINTER_BUTTON_STATE_RELEASED) {
       ctx->running = 0;
     }
+    break;
+  case SAMURE_EVENT_POINTER_MOTION:
+    d->px = e->x + e->seat->pointer_focus.output->geo.x;
+    d->py = e->y + e->seat->pointer_focus.output->geo.y;
     break;
   }
 }
@@ -57,13 +64,14 @@ static void render_callback(struct samure_context *ctx,
   glClear(GL_COLOR_BUFFER_BIT);
 
   const double s = RENDER_SCALE(100.0);
+  const double ps = RENDER_SCALE(10.0);
+
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0.0f, RENDER_SCALE(sfc->w), RENDER_SCALE(sfc->h), 0.0f, 0.0f, 1.0f);
+  glDisable(GL_DEPTH_TEST);
 
   if (samure_square_in_output(output_geo, d->qx - s, d->qy - s, 2.0 * s)) {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0.0f, RENDER_SCALE(sfc->w), RENDER_SCALE(sfc->h), 0.0f, 0.0f, 1.0f);
-    glDisable(GL_DEPTH_TEST);
-
     const double qx = RENDER_X(d->qx);
     const double qy = RENDER_Y(d->qy);
 
@@ -73,6 +81,19 @@ static void render_callback(struct samure_context *ctx,
     glVertex2f(qx - s, qy + s);
     glVertex2f(qx + s, qy + s);
     glVertex2f(qx + s, qy - s);
+    glEnd();
+  }
+
+  if (samure_point_in_output(output_geo, d->px, d->py)) {
+    const double px = RENDER_X(d->px);
+    const double py = RENDER_Y(d->py);
+
+    glBegin(GL_QUADS);
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glVertex2f(px - ps, py - ps);
+    glVertex2f(px - ps, py + ps);
+    glVertex2f(px + ps, py + ps);
+    glVertex2f(px + ps, py - ps);
     glEnd();
   }
 }
