@@ -183,6 +183,15 @@ void samure_backend_opengl_render_end(struct samure_context *ctx,
       (struct samure_backend_opengl *)ctx->backend;
   struct samure_opengl_surface *s =
       (struct samure_opengl_surface *)sfc->backend_data;
+
+  if (sfc->viewport) {
+    wp_viewport_set_destination(sfc->viewport, sfc->w, sfc->h);
+    wp_viewport_set_source(
+        sfc->viewport, 0, 0,
+        wl_fixed_from_double(GLOBAL_TO_LOCAL_SCALE(sfc, sfc->w)),
+        wl_fixed_from_double(GLOBAL_TO_LOCAL_SCALE(sfc, sfc->h)));
+  }
+
   eglSwapBuffers(gl->display, s->surface);
 }
 
