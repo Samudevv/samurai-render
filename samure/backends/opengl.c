@@ -26,6 +26,7 @@
 
 #include "opengl.h"
 #include "../context.h"
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -188,8 +189,8 @@ void samure_backend_opengl_render_end(struct samure_context *ctx,
     wp_viewport_set_destination(sfc->viewport, sfc->w, sfc->h);
     wp_viewport_set_source(
         sfc->viewport, 0, 0,
-        wl_fixed_from_double(GLOBAL_TO_LOCAL_SCALE(sfc, sfc->w)),
-        wl_fixed_from_double(GLOBAL_TO_LOCAL_SCALE(sfc, sfc->h)));
+        wl_fixed_from_double(ceil(GLOBAL_TO_LOCAL_SCALE(sfc, sfc->w))),
+        wl_fixed_from_double(ceil(GLOBAL_TO_LOCAL_SCALE(sfc, sfc->h))));
   }
 
   eglSwapBuffers(gl->display, s->surface);
@@ -207,8 +208,8 @@ samure_error samure_backend_opengl_associate_layer_surface(
 
   memset(s, 0, sizeof(struct samure_opengl_surface));
 
-  const uint32_t scaled_width = RENDER_SCALE(sfc->w);
-  const uint32_t scaled_height = RENDER_SCALE(sfc->h);
+  const uint32_t scaled_width = ceil(RENDER_SCALE(sfc->w));
+  const uint32_t scaled_height = ceil(RENDER_SCALE(sfc->h));
 
   s->egl_window =
       wl_egl_window_create(sfc->surface, scaled_width == 0 ? 1 : scaled_width,
@@ -246,8 +247,10 @@ void samure_backend_opengl_on_layer_surface_configure(
     return;
   }
 
-  const int32_t scaled_width = GLOBAL_TO_LOCAL_SCALE(layer_surface, width);
-  const int32_t scaled_height = GLOBAL_TO_LOCAL_SCALE(layer_surface, height);
+  const int32_t scaled_width =
+      ceil(GLOBAL_TO_LOCAL_SCALE(layer_surface, width));
+  const int32_t scaled_height =
+      ceil(GLOBAL_TO_LOCAL_SCALE(layer_surface, height));
 
   struct samure_opengl_surface *s =
       (struct samure_opengl_surface *)layer_surface->backend_data;
