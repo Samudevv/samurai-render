@@ -57,12 +57,12 @@ struct samure_backend_opengl {
 #define SAMURE_BACKEND_OPENGL_DESTROY_ERROR(error_code)                        \
   {                                                                            \
     ctx->backend = (struct samure_backend *)gl;                                \
-    samure_destroy_backend_opengl(ctx);                                        \
+    opengl_destroy(ctx);                                                       \
     ctx->backend = NULL;                                                       \
     SAMURE_RETURN_ERROR(backend, error_code);                                  \
   }
 
-void samure_destroy_backend_opengl(struct samure_context *ctx) {
+void opengl_destroy(struct samure_context *ctx) {
   struct samure_backend_opengl *gl =
       (struct samure_backend_opengl *)ctx->backend;
 
@@ -77,13 +77,25 @@ void samure_destroy_backend_opengl(struct samure_context *ctx) {
   ctx->backend = NULL;
 }
 
-void samure_backend_opengl_render_start(
-    struct samure_context *ctx, struct samure_layer_surface *layer_surface) {
-  samure_backend_opengl_make_context_current(ctx->backend, layer_surface);
+void make_context_current(struct samure_backend *_gl,
+                          struct samure_layer_surface *layer_surface) {
+  struct samure_backend_opengl *gl = (struct samure_backend_opengl *)_gl;
+  if (layer_surface) {
+    struct samure_opengl_surface *s =
+        (struct samure_opengl_surface *)layer_surface->backend_data;
+    eglMakeCurrent(gl->display, s->surface, s->surface, gl->context);
+  } else {
+    eglMakeCurrent(gl->display, EGL_NO_SURFACE, EGL_NO_SURFACE, gl->context);
+  }
 }
 
-void samure_backend_opengl_render_end(struct samure_context *ctx,
-                                      struct samure_layer_surface *sfc) {
+void opengl_render_start(struct samure_context *ctx,
+                         struct samure_layer_surface *layer_surface) {
+  make_context_current(ctx->backend, layer_surface);
+}
+
+void opengl_render_end(struct samure_context *ctx,
+                       struct samure_layer_surface *sfc) {
   struct samure_backend_opengl *gl =
       (struct samure_backend_opengl *)ctx->backend;
   struct samure_opengl_surface *s =
@@ -100,8 +112,8 @@ void samure_backend_opengl_render_end(struct samure_context *ctx,
   eglSwapBuffers(gl->display, s->surface);
 }
 
-samure_error samure_backend_opengl_associate_layer_surface(
-    struct samure_context *ctx, struct samure_layer_surface *sfc) {
+samure_error opengl_associate_layer_surface(struct samure_context *ctx,
+                                            struct samure_layer_surface *sfc) {
   struct samure_backend_opengl *gl =
       (struct samure_backend_opengl *)ctx->backend;
   struct samure_opengl_surface *s =
@@ -144,7 +156,7 @@ samure_error samure_backend_opengl_associate_layer_surface(
   return SAMURE_ERROR_NONE;
 }
 
-void samure_backend_opengl_on_layer_surface_configure(
+void opengl_on_layer_surface_configure(
     struct samure_context *ctx, struct samure_layer_surface *layer_surface,
     int32_t width, int32_t height) {
   if (layer_surface->backend_data) {
@@ -162,7 +174,7 @@ void samure_backend_opengl_on_layer_surface_configure(
   wl_egl_window_resize(s->egl_window, scaled_width, scaled_height, 0, 0);
 }
 
-void samure_backend_opengl_unassociate_layer_surface(
+void opengl_unassociate_layer_surface(
     struct samure_context *ctx, struct samure_layer_surface *layer_surface) {
   if (!layer_surface->backend_data) {
     return;
@@ -274,29 +286,14 @@ init(struct samure_context *ctx) {
   gl->config = config;
   gl->cfg = cfg;
 
-  gl->base.destroy = samure_destroy_backend_opengl;
-  gl->base.render_start = samure_backend_opengl_render_start;
-  gl->base.render_end = samure_backend_opengl_render_end;
-  gl->base.associate_layer_surface =
-      samure_backend_opengl_associate_layer_surface;
-  gl->base.on_layer_surface_configure =
-      samure_backend_opengl_on_layer_surface_configure;
-  gl->base.unassociate_layer_surface =
-      samure_backend_opengl_unassociate_layer_surface;
+  gl->base.destroy = opengl_destroy;
+  gl->base.render_start = opengl_render_start;
+  gl->base.render_end = opengl_render_end;
+  gl->base.associate_layer_surface = opengl_associate_layer_surface;
+  gl->base.on_layer_surface_configure = opengl_on_layer_surface_configure;
+  gl->base.unassociate_layer_surface = opengl_unassociate_layer_surface;
 
   ctx->config.not_request_frame = 1;
 
   SAMURE_RETURN_RESULT(backend, (struct samure_backend *)gl);
-}
-
-void samure_backend_opengl_make_context_current(
-    struct samure_backend *_gl, struct samure_layer_surface *layer_surface) {
-  struct samure_backend_opengl *gl = (struct samure_backend_opengl *)_gl;
-  if (layer_surface) {
-    struct samure_opengl_surface *s =
-        (struct samure_opengl_surface *)layer_surface->backend_data;
-    eglMakeCurrent(gl->display, s->surface, s->surface, gl->context);
-  } else {
-    eglMakeCurrent(gl->display, EGL_NO_SURFACE, EGL_NO_SURFACE, gl->context);
-  }
 }

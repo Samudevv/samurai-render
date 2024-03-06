@@ -218,13 +218,6 @@ void samure_destroy_context(struct samure_context *ctx) {
   if (ctx->display)
     wl_display_flush(ctx->display);
 
-  if (ctx->backend && ctx->backend->destroy) {
-    ctx->backend->destroy(ctx);
-  }
-  if (ctx->backend_lib_handle) {
-    dlclose(ctx->backend_lib_handle);
-  }
-
   for (size_t i = 0; i < ctx->num_seats; i++) {
     samure_destroy_seat(ctx->seats[i]);
   }
@@ -234,6 +227,13 @@ void samure_destroy_context(struct samure_context *ctx) {
     samure_destroy_output(ctx, ctx->outputs[i]);
   }
   free(ctx->outputs);
+
+  if (ctx->backend && ctx->backend->destroy) {
+    ctx->backend->destroy(ctx);
+  }
+  if (ctx->backend_lib_handle) {
+    dlclose(ctx->backend_lib_handle);
+  }
 
   if (ctx->shm)
     wl_shm_destroy(ctx->shm);
