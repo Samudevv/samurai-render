@@ -83,6 +83,19 @@ if get_config("backend_cairo") then
             "samure/backends/cairo.h"
         )
         add_files("samure/backends/cairo.c")
+    target_end()
+end
+
+if get_config("backend_opengl") then
+    target("samurai-render-backend-opengl")
+        set_kind("shared")
+        add_packages("wayland", "wayland-egl", "EGL", "libglvnd")
+        add_headerfiles(
+            "samure/*.h",
+            "samure/backends/opengl.h"
+        )
+        add_files("samure/backends/opengl.c")
+    target_end()
 end
 
 target("samurai-render")
@@ -92,10 +105,6 @@ target("samurai-render")
         "backend_cairo",
         "backend_opengl"
     )
-    if get_config("backend_opengl") then
-        add_links("EGL", "wayland-egl")
-        add_packages("libglvnd")
-    end
     add_headerfiles(
         "samure/*.h",
         "samure/wayland/*.h",
@@ -107,9 +116,7 @@ target("samurai-render")
         "samure/backends/*.c"
     )
     remove_files("samure/backends/cairo.c")
-    if not get_config("backend_opengl") then
-        remove_files("samure/backends/opengl.c")
-    end
+    remove_files("samure/backends/opengl.c")
 target_end()
 
 if get_config("build_examples") then

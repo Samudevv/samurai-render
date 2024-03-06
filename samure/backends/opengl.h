@@ -26,21 +26,10 @@
 
 #pragma once
 #include <EGL/egl.h>
-#include <wayland-client.h>
-#include <wayland-egl.h>
 
-#include "../backend.h"
-#include "../error_handling.h"
-
-#define EGL_PLATFORM_WAYLAND_KHR 0x31D8
-
-typedef EGLDisplay (*eglGetPlatformDisplayEXT_t)(EGLenum, EGLNativeDisplayType,
-                                                 const EGLint *);
-typedef EGLSurface (*eglCreatePlatformWindowSurfaceEXT_t)(EGLDisplay, EGLConfig,
-                                                          EGLNativeWindowType,
-                                                          const EGLint *);
-extern eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT;
-extern eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT;
+struct wl_egl_window;
+struct samure_layer_surface;
+struct samure_backend;
 
 // public
 struct samure_opengl_config {
@@ -67,28 +56,10 @@ struct samure_opengl_surface {
   struct wl_egl_window *egl_window;
 };
 
-struct samure_backend_opengl {
-  struct samure_backend base;
-
-  EGLDisplay display;
-  EGLContext context;
-  EGLConfig config;
-  struct samure_opengl_config *cfg;
-};
-
-SAMURE_DEFINE_RESULT(backend_opengl);
-
-// public
-extern SAMURE_RESULT(backend_opengl)
-    samure_init_backend_opengl(struct samure_context *ctx,
-                               struct samure_opengl_config *cfg);
-// public
-extern void samure_destroy_backend_opengl(struct samure_context *ctx);
 // public
 extern struct samure_opengl_surface *
 samure_get_opengl_surface(struct samure_layer_surface *layer_surface);
 
 // public
 extern void samure_backend_opengl_make_context_current(
-    struct samure_backend_opengl *gl,
-    struct samure_layer_surface *layer_surface);
+    struct samure_backend *gl, struct samure_layer_surface *layer_surface);

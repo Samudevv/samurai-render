@@ -30,37 +30,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wayland-egl.h>
+
+#define EGL_PLATFORM_WAYLAND_KHR 0x31D8
+
+typedef EGLDisplay (*eglGetPlatformDisplayEXT_t)(EGLenum, EGLNativeDisplayType,
+                                                 const EGLint *);
+typedef EGLSurface (*eglCreatePlatformWindowSurfaceEXT_t)(EGLDisplay, EGLConfig,
+                                                          EGLNativeWindowType,
+                                                          const EGLint *);
+extern eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT;
+extern eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT;
 
 eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT = NULL;
 eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT = NULL;
 
-SAMURE_DEFINE_RESULT_UNWRAP(backend_opengl);
+struct samure_backend_opengl {
+  struct samure_backend base;
 
-struct samure_opengl_config *samure_default_opengl_config() {
-  struct samure_opengl_config *cfg =
-      malloc(sizeof(struct samure_opengl_config));
-  assert(cfg != NULL);
-  memset(cfg, 0, sizeof(struct samure_opengl_config));
-
-  cfg->red_size = 8;
-  cfg->green_size = 8;
-  cfg->blue_size = 8;
-  cfg->alpha_size = 8;
-  cfg->major_version = 1;
-  cfg->profile_mask = EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT;
-  cfg->color_space = EGL_GL_COLORSPACE_LINEAR;
-  cfg->render_buffer = EGL_BACK_BUFFER;
-  cfg->debug = EGL_FALSE;
-
-  return cfg;
-}
+  EGLDisplay display;
+  EGLContext context;
+  EGLConfig config;
+  struct samure_opengl_config *cfg;
+};
 
 #define SAMURE_BACKEND_OPENGL_DESTROY_ERROR(error_code)                        \
   {                                                                            \
     ctx->backend = (struct samure_backend *)gl;                                \
     samure_destroy_backend_opengl(ctx);                                        \
     ctx->backend = NULL;                                                       \
-    SAMURE_RETURN_ERROR(backend_opengl, error_code);                           \
+    SAMURE_RETURN_ERROR(backend, error_code);                                  \
   }
 
 void samure_destroy_backend_opengl(struct samure_context *ctx) {
@@ -80,8 +79,7 @@ void samure_destroy_backend_opengl(struct samure_context *ctx) {
 
 void samure_backend_opengl_render_start(
     struct samure_context *ctx, struct samure_layer_surface *layer_surface) {
-  samure_backend_opengl_make_context_current(
-      (struct samure_backend_opengl *)ctx->backend, layer_surface);
+  samure_backend_opengl_make_context_current(ctx->backend, layer_surface);
 }
 
 void samure_backend_opengl_render_end(struct samure_context *ctx,
@@ -183,14 +181,20 @@ void samure_backend_opengl_unassociate_layer_surface(
   layer_surface->backend_data = NULL;
 }
 
-SAMURE_RESULT(backend_opengl)
-samure_init_backend_opengl(struct samure_context *ctx,
-                           struct samure_opengl_config *cfg) {
+SAMURE_RESULT(backend)
+init(struct samure_context *ctx) {
+  struct samure_opengl_config *cfg = ctx->config.gl;
+
   if (cfg == NULL) {
     cfg = samure_default_opengl_config();
   }
 
-  SAMURE_RESULT_ALLOC(backend_opengl, gl);
+  struct samure_backend_opengl *gl =
+      malloc(sizeof(struct samure_backend_opengl));
+  if (!gl) {
+    SAMURE_RETURN_ERROR(backend, SAMURE_ERROR_MEMORY);
+  }
+  memset(gl, 0, sizeof(struct samure_backend_opengl));
 
   eglGetPlatformDisplayEXT =
       (eglGetPlatformDisplayEXT_t)eglGetProcAddress("eglGetPlatformDisplayEXT");
@@ -282,17 +286,12 @@ samure_init_backend_opengl(struct samure_context *ctx,
 
   ctx->config.not_request_frame = 1;
 
-  SAMURE_RETURN_RESULT(backend_opengl, gl);
-}
-
-extern struct samure_opengl_surface *
-samure_get_opengl_surface(struct samure_layer_surface *layer_surface) {
-  return (struct samure_opengl_surface *)layer_surface->backend_data;
+  SAMURE_RETURN_RESULT(backend, (struct samure_backend *)gl);
 }
 
 void samure_backend_opengl_make_context_current(
-    struct samure_backend_opengl *gl,
-    struct samure_layer_surface *layer_surface) {
+    struct samure_backend *_gl, struct samure_layer_surface *layer_surface) {
+  struct samure_backend_opengl *gl = (struct samure_backend_opengl *)_gl;
   if (layer_surface) {
     struct samure_opengl_surface *s =
         (struct samure_opengl_surface *)layer_surface->backend_data;

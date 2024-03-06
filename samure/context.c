@@ -115,18 +115,15 @@ samure_create_context(struct samure_context_config *config) {
 
   switch (ctx->config.backend) {
   case SAMURE_BACKEND_OPENGL: {
-#ifdef BACKEND_OPENGL
-    SAMURE_RESULT(backend_opengl)
-    o_rs = samure_init_backend_opengl(ctx, ctx->config.gl);
+    SAMURE_RESULT(backend)
+    o_rs = samure_create_backend_from_lib(
+        ctx, "libsamurai-render-backend-opengl.so", "libEGL.so");
     ctx->config.gl = NULL;
     if (SAMURE_HAS_ERROR(o_rs)) {
       SAMURE_DESTROY_ERROR(context, ctx,
                            SAMURE_ERROR_BACKEND_INIT | o_rs.error);
     }
-    ctx->backend = &SAMURE_UNWRAP(backend_opengl, o_rs)->base;
-#else
-    SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_NO_BACKEND_SUPPORT);
-#endif
+    ctx->backend = SAMURE_UNWRAP(backend, o_rs);
   } break;
   case SAMURE_BACKEND_CAIRO: {
     SAMURE_RESULT(backend)

@@ -26,6 +26,7 @@
 
 #include "backend.h"
 #include "backends/cairo.h"
+#include "backends/opengl.h"
 #include "context.h"
 #include <dlfcn.h>
 
@@ -105,4 +106,28 @@ extern SAMURE_RESULT(backend)
 struct samure_cairo_surface *
 samure_get_cairo_surface(struct samure_layer_surface *layer_surface) {
   return (struct samure_cairo_surface *)layer_surface->backend_data;
+}
+
+struct samure_opengl_config *samure_default_opengl_config() {
+  struct samure_opengl_config *cfg =
+      malloc(sizeof(struct samure_opengl_config));
+  assert(cfg != NULL);
+  memset(cfg, 0, sizeof(struct samure_opengl_config));
+
+  cfg->red_size = 8;
+  cfg->green_size = 8;
+  cfg->blue_size = 8;
+  cfg->alpha_size = 8;
+  cfg->major_version = 1;
+  cfg->profile_mask = EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT;
+  cfg->color_space = EGL_GL_COLORSPACE_LINEAR;
+  cfg->render_buffer = EGL_BACK_BUFFER;
+  cfg->debug = EGL_FALSE;
+
+  return cfg;
+}
+
+extern struct samure_opengl_surface *
+samure_get_opengl_surface(struct samure_layer_surface *layer_surface) {
+  return (struct samure_opengl_surface *)layer_surface->backend_data;
 }
