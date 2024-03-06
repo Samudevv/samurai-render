@@ -25,6 +25,13 @@
  ************************************************************************************/
 
 #include "backend.h"
+#include "context.h"
+#include <dlfcn.h>
+
+#define SAMURE_DLSYM(func_name) void *func_name = dlsym(lib, #func_name)
+
+// public
+typedef SAMURE_RESULT(backend) (*backend_init_t)(struct samure_context *ctx);
 
 SAMURE_DEFINE_RESULT_UNWRAP(backend);
 
@@ -44,4 +51,43 @@ extern SAMURE_RESULT(backend) samure_create_backend(
   b->unassociate_layer_surface = unassociate_layer_surface;
 
   SAMURE_RETURN_RESULT(backend, b);
+}
+
+extern SAMURE_RESULT(backend)
+    samure_create_backend_from_lib(struct samure_context *ctx,
+                                   const char *lib_name,
+                                   const char *depend_lib_name) {
+  if (depend_lib_name) {
+    // Check if dependlib exists
+    void *depend_lib = dlopen(depend_lib_name, RTLD_LAZY);
+    if (!depend_lib) {
+      SAMURE_RETURN_ERROR(backend, SAMURE_ERROR_NO_DEPEND_LIB);
+    }
+    dlclose(depend_lib);
+  }
+
+  // Open lib
+  void *lib = dlopen(lib_name, RTLD_NOW);
+  if (!lib) {
+    SAMURE_RETURN_ERROR(backend, SAMURE_ERROR_NO_LIB);
+  }
+  ctx->backend_lib_handle = lib;
+
+  SAMURE_DLSYM(init);
+
+  if (init) {
+    backend_init_t init_func = init;
+    return init_func(ctx);
+  }
+
+  SAMURE_DLSYM(on_layer_surface_configure);
+  SAMURE_DLSYM(render_start);
+  SAMURE_DLSYM(render_end);
+  SAMURE_DLSYM(destroy);
+  SAMURE_DLSYM(associate_layer_surface);
+  SAMURE_DLSYM(unassociate_layer_surface);
+
+  return samure_create_backend(on_layer_surface_configure, render_start,
+                               render_end, destroy, associate_layer_surface,
+                               unassociate_layer_surface);
 }

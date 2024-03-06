@@ -131,8 +131,10 @@
 #define SAMURE_ERROR_FRACTIONAL_SCALE_INIT ((samure_error)1 << 34)
 #define SAMURE_ERROR_VIEWPORT_INIT ((samure_error)1 << 35)
 #define SAMURE_ERROR_PROTOCOL_VERSION ((samure_error)1 << 36)
+#define SAMURE_ERROR_NO_DEPEND_LIB ((samure_error)1 << 37)
+#define SAMURE_ERROR_NO_LIB ((samure_error)1 << 38)
 
-#define SAMURE_NUM_ERRORS 37
+#define SAMURE_NUM_ERRORS 39
 
 #ifndef NDEBUG
 #define DEBUG_PRINTF(format, ...)                                              \
@@ -188,6 +190,8 @@ static const char *samure_strerror(samure_error error_code) {
   case SAMURE_ERROR_FRACTIONAL_SCALE_INIT:     return "fractional scale initialization failed";
   case SAMURE_ERROR_VIEWPORT_INIT:             return "viewport initialization failed";
   case SAMURE_ERROR_PROTOCOL_VERSION:          return "required protocol version not matched";
+  case SAMURE_ERROR_NO_DEPEND_LIB:             return "dependent library failed to load";
+  case SAMURE_ERROR_NO_LIB:                    return "library failed to load";
   default:                                     return "unknown error";
   }
   // clang-format on

@@ -71,3 +71,9 @@ extern SAMURE_RESULT(backend) samure_create_backend(
     samure_destroy_t destroy,
     samure_associate_layer_surface_t associate_layer_surface,
     samure_unassociate_layer_surface_t unassociate_layer_surface);
+
+// public
+extern SAMURE_RESULT(backend)
+    samure_create_backend_from_lib(struct samure_context *ctx,
+                                   const char *lib_name,
+                                   const char *depend_lib_name);

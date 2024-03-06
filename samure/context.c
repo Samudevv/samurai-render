@@ -26,6 +26,7 @@
 
 #include "context.h"
 #include "callbacks.h"
+#include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -224,6 +225,9 @@ void samure_destroy_context(struct samure_context *ctx) {
 
   if (ctx->backend && ctx->backend->destroy) {
     ctx->backend->destroy(ctx);
+  }
+  if (ctx->backend_lib_handle) {
+    dlclose(ctx->backend_lib_handle);
   }
 
   for (size_t i = 0; i < ctx->num_seats; i++) {

@@ -137,6 +137,7 @@ struct samure_context {
   struct samure_app app;
 
   struct samure_frame_timer frame_timer;
+  void *backend_lib_handle;
 };
 
 struct samure_registry_data {
