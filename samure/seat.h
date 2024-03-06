@@ -33,11 +33,13 @@ struct samure_context;
 struct samure_output;
 struct samure_layer_surface;
 
+// public
 struct samure_focus {
   struct samure_output *output;
   struct samure_layer_surface *surface;
 };
 
+// public
 struct samure_seat {
   struct wl_seat *seat;
   struct wl_pointer *pointer;

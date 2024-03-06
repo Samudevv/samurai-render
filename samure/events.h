@@ -28,6 +28,7 @@
 
 #include <stdint.h>
 
+// public
 enum samure_event_type {
   SAMURE_EVENT_LAYER_SURFACE_CONFIGURE,
   SAMURE_EVENT_POINTER_BUTTON,
@@ -46,6 +47,7 @@ struct samure_seat;
 struct samure_output;
 struct samure_layer_surface;
 
+// public
 struct samure_event {
   int type;
   struct samure_seat *seat;

@@ -32,6 +32,7 @@
 
 #define SAMURE_BUFFER_FORMAT WL_SHM_FORMAT_ARGB8888
 
+// public
 struct samure_shared_buffer {
   struct wl_buffer *buffer;
   void *data;
@@ -43,9 +44,12 @@ struct samure_shared_buffer {
 
 SAMURE_DEFINE_RESULT(shared_buffer);
 
+// public
 extern SAMURE_RESULT(shared_buffer)
     samure_create_shared_buffer(struct wl_shm *shm, uint32_t format,
                                 int32_t width, int32_t height);
+// public
 extern void samure_destroy_shared_buffer(struct samure_shared_buffer *b);
+// public
 extern samure_error samure_shared_buffer_copy(struct samure_shared_buffer *dst,
                                               struct samure_shared_buffer *src);

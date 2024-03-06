@@ -42,6 +42,7 @@ typedef EGLSurface (*eglCreatePlatformWindowSurfaceEXT_t)(EGLDisplay, EGLConfig,
 extern eglGetPlatformDisplayEXT_t eglGetPlatformDisplayEXT;
 extern eglCreatePlatformWindowSurfaceEXT_t eglCreatePlatformWindowSurfaceEXT;
 
+// public
 struct samure_opengl_config {
   int red_size;
   int green_size;
@@ -57,8 +58,10 @@ struct samure_opengl_config {
   int render_buffer;
 };
 
+// public
 extern struct samure_opengl_config *samure_default_opengl_config();
 
+// public
 struct samure_opengl_surface {
   EGLSurface surface;
   struct wl_egl_window *egl_window;
@@ -75,28 +78,17 @@ struct samure_backend_opengl {
 
 SAMURE_DEFINE_RESULT(backend_opengl);
 
+// public
 extern SAMURE_RESULT(backend_opengl)
     samure_init_backend_opengl(struct samure_context *ctx,
                                struct samure_opengl_config *cfg);
+// public
 extern void samure_destroy_backend_opengl(struct samure_context *ctx);
-extern void
-samure_backend_opengl_render_start(struct samure_context *ctx,
-                                   struct samure_layer_surface *layer_surface);
-extern void
-samure_backend_opengl_render_end(struct samure_context *ctx,
-                                 struct samure_layer_surface *layer_surface);
-extern samure_error samure_backend_opengl_associate_layer_surface(
-    struct samure_context *ctx, struct samure_layer_surface *layer_surface);
-extern void samure_backend_opengl_on_layer_surface_configure(
-    struct samure_context *ctx, struct samure_layer_surface *layer_surface,
-    int32_t width, int32_t height);
-extern void samure_backend_opengl_unassociate_layer_surface(
-    struct samure_context *ctx, struct samure_layer_surface *layer_surface);
-extern struct samure_backend_opengl *
-samure_get_backend_opengl(struct samure_context *ctx);
+// public
 extern struct samure_opengl_surface *
 samure_get_opengl_surface(struct samure_layer_surface *layer_surface);
 
+// public
 extern void samure_backend_opengl_make_context_current(
     struct samure_backend_opengl *gl,
     struct samure_layer_surface *layer_surface);

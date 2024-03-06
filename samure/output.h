@@ -33,6 +33,7 @@
 #include "wayland/xdg-output.h"
 #include <wayland-client.h>
 
+// public
 #define GLOBAL_TO_LOCAL_SCALE(sfc, global) ((double)(global)*sfc->scale)
 #define GLOBAL_TO_LOCAL(output_geo, sfc, member, var)                          \
   GLOBAL_TO_LOCAL_SCALE(sfc, ((double)(var) - (double)output_geo.member))
@@ -46,6 +47,7 @@
 
 struct samure_context;
 
+// public
 struct samure_output {
   struct wl_output *output;
   struct zxdg_output_v1 *xdg_output;
@@ -77,22 +79,27 @@ extern SAMURE_RESULT(output)
 extern void samure_destroy_output(struct samure_context *ctx,
                                   struct samure_output *output);
 
+// public
 extern void samure_output_set_pointer_interaction(struct samure_context *ctx,
                                                   struct samure_output *output,
                                                   int enable);
 
+// public
 extern void samure_output_set_input_regions(struct samure_context *ctx,
                                             struct samure_output *output,
                                             struct samure_rect *rects,
                                             size_t num_rects);
 
+// public
 extern void samure_output_set_keyboard_interaction(struct samure_output *output,
                                                    int enable);
 
+// public
 extern void
 samure_output_attach_layer_surface(struct samure_output *output,
                                    struct samure_layer_surface *layer_surface);
 
+// public
 extern SAMURE_RESULT(shared_buffer)
     samure_output_screenshot(struct samure_context *ctx,
                              struct samure_output *output, int capture_cursor);

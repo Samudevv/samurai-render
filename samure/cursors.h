@@ -60,5 +60,6 @@ samure_cursor_engine_pointer_enter(struct samure_context *ctx,
                                    struct samure_cursor_engine *engine,
                                    struct samure_seat *seat);
 
+// public
 extern void samure_cursor_engine_update(struct samure_cursor_engine *engine,
                                         double delta_time);

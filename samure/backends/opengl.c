@@ -63,108 +63,6 @@ struct samure_opengl_config *samure_default_opengl_config() {
     SAMURE_RETURN_ERROR(backend_opengl, error_code);                           \
   }
 
-SAMURE_RESULT(backend_opengl)
-samure_init_backend_opengl(struct samure_context *ctx,
-                           struct samure_opengl_config *cfg) {
-  if (cfg == NULL) {
-    cfg = samure_default_opengl_config();
-  }
-
-  SAMURE_RESULT_ALLOC(backend_opengl, gl);
-
-  eglGetPlatformDisplayEXT =
-      (eglGetPlatformDisplayEXT_t)eglGetProcAddress("eglGetPlatformDisplayEXT");
-  if (!eglGetPlatformDisplayEXT) {
-    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_LOAD_PROC);
-  }
-
-  eglCreatePlatformWindowSurfaceEXT =
-      (eglCreatePlatformWindowSurfaceEXT_t)eglGetProcAddress(
-          "eglCreatePlatformWindowSurfaceEXT");
-  if (!eglCreatePlatformWindowSurfaceEXT) {
-    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_LOAD_PROC);
-  }
-
-  gl->display =
-      eglGetPlatformDisplayEXT(EGL_PLATFORM_WAYLAND_KHR, ctx->display, NULL);
-  if (gl->display == EGL_NO_DISPLAY) {
-    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_DISPLAY_CONNECT);
-  }
-
-  if (eglInitialize(gl->display, NULL, NULL) != EGL_TRUE) {
-    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_INITIALIZE);
-  }
-
-  // clang-format off
-  const EGLint config_attributes[] = {
-      EGL_RED_SIZE,   cfg->red_size,
-      EGL_BLUE_SIZE,  cfg->blue_size,
-      EGL_GREEN_SIZE, cfg->green_size,
-      EGL_ALPHA_SIZE, cfg->alpha_size,
-      EGL_DEPTH_SIZE, cfg->depth_size,
-      EGL_SAMPLES,    cfg->samples,
-      EGL_CONFORMANT, EGL_OPENGL_BIT,
-      EGL_NONE,       EGL_NONE,
-  };
-
-  EGLint context_attributes[] = {
-    EGL_CONTEXT_MAJOR_VERSION,       cfg->major_version,
-    EGL_CONTEXT_MINOR_VERSION,       cfg->minor_version,
-    EGL_CONTEXT_OPENGL_PROFILE_MASK, cfg->profile_mask,
-    EGL_CONTEXT_OPENGL_DEBUG,        cfg->debug,
-    EGL_NONE,                        EGL_NONE,
-  };
-
-  // clang-format on
-
-  EGLint num_config;
-  EGLConfig config;
-  if (eglChooseConfig(gl->display, config_attributes, &config, 1,
-                      &num_config) != EGL_TRUE) {
-    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONFIG);
-  }
-  if (num_config == 0) {
-    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONFIG);
-  }
-
-  DEBUG_PRINTF("EGL found %d configs\n", num_config);
-
-  if (eglBindAPI(EGL_OPENGL_API) != EGL_TRUE) {
-    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_BIND_API);
-  }
-
-  for (size_t attrib = 6;; attrib -= 2) {
-    gl->context = eglCreateContext(gl->display, config, EGL_NO_CONTEXT,
-                                   context_attributes);
-    if (gl->context || attrib > 6) {
-      break;
-    }
-
-    context_attributes[attrib + 0] = EGL_NONE;
-    context_attributes[attrib + 1] = EGL_NONE;
-  }
-  if (gl->context == EGL_NO_CONTEXT) {
-    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONTEXT_INIT);
-  }
-
-  gl->config = config;
-  gl->cfg = cfg;
-
-  gl->base.destroy = samure_destroy_backend_opengl;
-  gl->base.render_start = samure_backend_opengl_render_start;
-  gl->base.render_end = samure_backend_opengl_render_end;
-  gl->base.associate_layer_surface =
-      samure_backend_opengl_associate_layer_surface;
-  gl->base.on_layer_surface_configure =
-      samure_backend_opengl_on_layer_surface_configure;
-  gl->base.unassociate_layer_surface =
-      samure_backend_opengl_unassociate_layer_surface;
-
-  ctx->config.not_request_frame = 1;
-
-  SAMURE_RETURN_RESULT(backend_opengl, gl);
-}
-
 void samure_destroy_backend_opengl(struct samure_context *ctx) {
   struct samure_backend_opengl *gl =
       (struct samure_backend_opengl *)ctx->backend;
@@ -285,9 +183,106 @@ void samure_backend_opengl_unassociate_layer_surface(
   layer_surface->backend_data = NULL;
 }
 
-struct samure_backend_opengl *
-samure_get_backend_opengl(struct samure_context *ctx) {
-  return (struct samure_backend_opengl *)ctx->backend;
+SAMURE_RESULT(backend_opengl)
+samure_init_backend_opengl(struct samure_context *ctx,
+                           struct samure_opengl_config *cfg) {
+  if (cfg == NULL) {
+    cfg = samure_default_opengl_config();
+  }
+
+  SAMURE_RESULT_ALLOC(backend_opengl, gl);
+
+  eglGetPlatformDisplayEXT =
+      (eglGetPlatformDisplayEXT_t)eglGetProcAddress("eglGetPlatformDisplayEXT");
+  if (!eglGetPlatformDisplayEXT) {
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_LOAD_PROC);
+  }
+
+  eglCreatePlatformWindowSurfaceEXT =
+      (eglCreatePlatformWindowSurfaceEXT_t)eglGetProcAddress(
+          "eglCreatePlatformWindowSurfaceEXT");
+  if (!eglCreatePlatformWindowSurfaceEXT) {
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_LOAD_PROC);
+  }
+
+  gl->display =
+      eglGetPlatformDisplayEXT(EGL_PLATFORM_WAYLAND_KHR, ctx->display, NULL);
+  if (gl->display == EGL_NO_DISPLAY) {
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_DISPLAY_CONNECT);
+  }
+
+  if (eglInitialize(gl->display, NULL, NULL) != EGL_TRUE) {
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_INITIALIZE);
+  }
+
+  // clang-format off
+  const EGLint config_attributes[] = {
+      EGL_RED_SIZE,   cfg->red_size,
+      EGL_BLUE_SIZE,  cfg->blue_size,
+      EGL_GREEN_SIZE, cfg->green_size,
+      EGL_ALPHA_SIZE, cfg->alpha_size,
+      EGL_DEPTH_SIZE, cfg->depth_size,
+      EGL_SAMPLES,    cfg->samples,
+      EGL_CONFORMANT, EGL_OPENGL_BIT,
+      EGL_NONE,       EGL_NONE,
+  };
+
+  EGLint context_attributes[] = {
+    EGL_CONTEXT_MAJOR_VERSION,       cfg->major_version,
+    EGL_CONTEXT_MINOR_VERSION,       cfg->minor_version,
+    EGL_CONTEXT_OPENGL_PROFILE_MASK, cfg->profile_mask,
+    EGL_CONTEXT_OPENGL_DEBUG,        cfg->debug,
+    EGL_NONE,                        EGL_NONE,
+  };
+
+  // clang-format on
+
+  EGLint num_config;
+  EGLConfig config;
+  if (eglChooseConfig(gl->display, config_attributes, &config, 1,
+                      &num_config) != EGL_TRUE) {
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONFIG);
+  }
+  if (num_config == 0) {
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONFIG);
+  }
+
+  DEBUG_PRINTF("EGL found %d configs\n", num_config);
+
+  if (eglBindAPI(EGL_OPENGL_API) != EGL_TRUE) {
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_BIND_API);
+  }
+
+  for (size_t attrib = 6;; attrib -= 2) {
+    gl->context = eglCreateContext(gl->display, config, EGL_NO_CONTEXT,
+                                   context_attributes);
+    if (gl->context || attrib > 6) {
+      break;
+    }
+
+    context_attributes[attrib + 0] = EGL_NONE;
+    context_attributes[attrib + 1] = EGL_NONE;
+  }
+  if (gl->context == EGL_NO_CONTEXT) {
+    SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_CONTEXT_INIT);
+  }
+
+  gl->config = config;
+  gl->cfg = cfg;
+
+  gl->base.destroy = samure_destroy_backend_opengl;
+  gl->base.render_start = samure_backend_opengl_render_start;
+  gl->base.render_end = samure_backend_opengl_render_end;
+  gl->base.associate_layer_surface =
+      samure_backend_opengl_associate_layer_surface;
+  gl->base.on_layer_surface_configure =
+      samure_backend_opengl_on_layer_surface_configure;
+  gl->base.unassociate_layer_surface =
+      samure_backend_opengl_unassociate_layer_surface;
+
+  ctx->config.not_request_frame = 1;
+
+  SAMURE_RETURN_RESULT(backend_opengl, gl);
 }
 
 extern struct samure_opengl_surface *

@@ -32,26 +32,6 @@
 
 SAMURE_DEFINE_RESULT_UNWRAP(backend_raw);
 
-SAMURE_RESULT(backend_raw)
-samure_init_backend_raw(struct samure_context *ctx) {
-  SAMURE_RESULT_ALLOC(backend_raw, r);
-
-  r->base.render_end = samure_backend_raw_render_end;
-  r->base.destroy = samure_destroy_backend_raw;
-  r->base.associate_layer_surface = samure_backend_raw_associate_layer_surface;
-  r->base.on_layer_surface_configure =
-      samure_backend_raw_on_layer_surface_configure;
-  r->base.unassociate_layer_surface =
-      samure_backend_raw_unassociate_layer_surface;
-
-  SAMURE_RETURN_RESULT(backend_raw, r);
-}
-
-void samure_destroy_backend_raw(struct samure_context *ctx) {
-  free(ctx->backend);
-  ctx->backend = NULL;
-}
-
 void samure_backend_raw_render_end(struct samure_context *ctx,
                                    struct samure_layer_surface *layer_surface) {
   struct samure_raw_surface *r =
@@ -116,8 +96,24 @@ void samure_backend_raw_unassociate_layer_surface(
   sfc->backend_data = NULL;
 }
 
-struct samure_backend_raw *samure_get_backend_raw(struct samure_context *ctx) {
-  return (struct samure_backend_raw *)ctx->backend;
+SAMURE_RESULT(backend_raw)
+samure_init_backend_raw(struct samure_context *ctx) {
+  SAMURE_RESULT_ALLOC(backend_raw, r);
+
+  r->base.render_end = samure_backend_raw_render_end;
+  r->base.destroy = samure_destroy_backend_raw;
+  r->base.associate_layer_surface = samure_backend_raw_associate_layer_surface;
+  r->base.on_layer_surface_configure =
+      samure_backend_raw_on_layer_surface_configure;
+  r->base.unassociate_layer_surface =
+      samure_backend_raw_unassociate_layer_surface;
+
+  SAMURE_RETURN_RESULT(backend_raw, r);
+}
+
+void samure_destroy_backend_raw(struct samure_context *ctx) {
+  free(ctx->backend);
+  ctx->backend = NULL;
 }
 
 struct samure_raw_surface *

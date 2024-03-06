@@ -32,20 +32,24 @@
 
 SAMURE_DEFINE_RESULT_UNWRAP(backend_cairo);
 
-SAMURE_RESULT(backend_cairo)
-samure_init_backend_cairo(struct samure_context *ctx) {
-  SAMURE_RESULT_ALLOC(backend_cairo, c);
+samure_error
+_samure_cairo_surface_create_cairo(struct samure_cairo_surface *c) {
+  c->cairo_surface = cairo_image_surface_create_for_data(
+      (unsigned char *)c->buffer->data, CAIRO_FORMAT_ARGB32, c->buffer->width,
+      c->buffer->height,
+      cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, c->buffer->width));
+  if (cairo_surface_status(c->cairo_surface) != CAIRO_STATUS_SUCCESS) {
+    cairo_surface_destroy(c->cairo_surface);
+    return SAMURE_ERROR_CAIRO_SURFACE_INIT;
+  }
+  c->cairo = cairo_create(c->cairo_surface);
+  if (cairo_status(c->cairo) != CAIRO_STATUS_SUCCESS) {
+    cairo_surface_destroy(c->cairo_surface);
+    cairo_destroy(c->cairo);
+    return SAMURE_ERROR_CAIRO_INIT;
+  }
 
-  c->base.destroy = samure_destroy_backend_cairo;
-  c->base.render_end = samure_backend_cairo_render_end;
-  c->base.associate_layer_surface =
-      samure_backend_cairo_associate_layer_surface;
-  c->base.on_layer_surface_configure =
-      samure_backend_cairo_on_layer_surface_configure;
-  c->base.unassociate_layer_surface =
-      samure_backend_cairo_unassociate_layer_surface;
-
-  SAMURE_RETURN_RESULT(backend_cairo, c);
+  return SAMURE_ERROR_NONE;
 }
 
 void samure_destroy_backend_cairo(struct samure_context *ctx) {
@@ -149,32 +153,23 @@ void samure_backend_cairo_unassociate_layer_surface(
   layer_surface->backend_data = NULL;
 }
 
-struct samure_backend_cairo *
-samure_get_backend_cairo(struct samure_context *ctx) {
-  return (struct samure_backend_cairo *)ctx->backend;
+SAMURE_RESULT(backend_cairo)
+samure_init_backend_cairo(struct samure_context *ctx) {
+  SAMURE_RESULT_ALLOC(backend_cairo, c);
+
+  c->base.destroy = samure_destroy_backend_cairo;
+  c->base.render_end = samure_backend_cairo_render_end;
+  c->base.associate_layer_surface =
+      samure_backend_cairo_associate_layer_surface;
+  c->base.on_layer_surface_configure =
+      samure_backend_cairo_on_layer_surface_configure;
+  c->base.unassociate_layer_surface =
+      samure_backend_cairo_unassociate_layer_surface;
+
+  SAMURE_RETURN_RESULT(backend_cairo, c);
 }
 
 struct samure_cairo_surface *
 samure_get_cairo_surface(struct samure_layer_surface *layer_surface) {
   return (struct samure_cairo_surface *)layer_surface->backend_data;
-}
-
-samure_error
-_samure_cairo_surface_create_cairo(struct samure_cairo_surface *c) {
-  c->cairo_surface = cairo_image_surface_create_for_data(
-      (unsigned char *)c->buffer->data, CAIRO_FORMAT_ARGB32, c->buffer->width,
-      c->buffer->height,
-      cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, c->buffer->width));
-  if (cairo_surface_status(c->cairo_surface) != CAIRO_STATUS_SUCCESS) {
-    cairo_surface_destroy(c->cairo_surface);
-    return SAMURE_ERROR_CAIRO_SURFACE_INIT;
-  }
-  c->cairo = cairo_create(c->cairo_surface);
-  if (cairo_status(c->cairo) != CAIRO_STATUS_SUCCESS) {
-    cairo_surface_destroy(c->cairo_surface);
-    cairo_destroy(c->cairo);
-    return SAMURE_ERROR_CAIRO_INIT;
-  }
-
-  return SAMURE_ERROR_NONE;
 }

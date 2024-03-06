@@ -32,6 +32,7 @@
 #define SAMURE_NUM_MEASURES 11
 #define SAMURE_NUM_TAKEAWAYS 2
 
+// public
 struct samure_frame_timer {
   uint32_t max_update_frequency;
   uint32_t update_frequency;

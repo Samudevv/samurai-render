@@ -46,6 +46,7 @@
 struct samure_context;
 struct samure_opengl_config;
 
+// public
 enum samure_backend_type {
   SAMURE_BACKEND_RAW,
   SAMURE_BACKEND_OPENGL,
@@ -53,27 +54,33 @@ enum samure_backend_type {
   SAMURE_BACKEND_NONE,
 };
 
+// public
 enum samure_render_state {
   SAMURE_RENDER_STATE_ALWAYS,
   SAMURE_RENDER_STATE_NONE,
   SAMURE_RENDER_STATE_ONCE,
 };
 
+// public
 typedef void (*samure_event_callback)(struct samure_context *ctx,
                                       struct samure_event *event,
                                       void *user_data);
+// public
 typedef void (*samure_render_callback)(
     struct samure_context *ctx, struct samure_layer_surface *layer_surface,
     struct samure_rect output_geo, void *user_data);
+// public
 typedef void (*samure_update_callback)(struct samure_context *ctx,
                                        double delta_time, void *user_data);
 
+// public
 struct samure_app {
   samure_event_callback on_event;
   samure_render_callback on_render;
   samure_update_callback on_update;
 };
 
+// public
 struct samure_context_config {
   enum samure_backend_type backend;
   int pointer_interaction;
@@ -92,12 +99,14 @@ struct samure_context_config {
   void *user_data;
 };
 
+// public
 extern struct samure_context_config
 samure_create_context_config(samure_event_callback event_callback,
                              samure_render_callback render_callback,
                              samure_update_callback update_callback,
                              void *user_data);
 
+// public
 struct samure_context {
   struct wl_display *display;
   struct wl_shm *shm;
@@ -141,43 +150,58 @@ struct samure_registry_data {
 
 SAMURE_DEFINE_RESULT(context);
 
+// public
 extern SAMURE_RESULT(context)
     samure_create_context(struct samure_context_config *config);
+// public
 extern SAMURE_RESULT(context)
     samure_create_context_with_backend(struct samure_context_config *config,
                                        struct samure_backend *backend);
+// public
 extern void samure_destroy_context(struct samure_context *ctx);
+// public
 extern void samure_context_run(struct samure_context *ctx);
+// public
 extern struct samure_rect
 samure_context_get_output_rect(struct samure_context *ctx);
+// public
 extern void samure_context_set_pointer_interaction(struct samure_context *ctx,
                                                    int enable);
+// public
 extern void samure_context_set_input_regions(struct samure_context *ctx,
                                              struct samure_rect *rects,
                                              size_t num_rects);
 
+// public
 extern void samure_context_set_keyboard_interaction(struct samure_context *ctx,
                                                     int enable);
 
+// public
 extern void samure_context_process_events(struct samure_context *ctx);
 
+// public
 extern void
 samure_context_render_layer_surface(struct samure_context *ctx,
                                     struct samure_layer_surface *sfc,
                                     struct samure_rect geo);
 
+// public
 extern void samure_context_render_output(struct samure_context *ctx,
                                          struct samure_output *output);
 
+// public
 extern void samure_context_update(struct samure_context *ctx,
                                   double delta_time);
 
+// public
 extern samure_error
 samure_context_create_output_layer_surfaces(struct samure_context *ctx);
 
+// public
 extern void samure_context_set_pointer_shape(struct samure_context *ctx,
                                              uint32_t shape);
 
+// public
 extern void
 samure_context_set_render_state(struct samure_context *ctx,
                                 enum samure_render_state render_state);

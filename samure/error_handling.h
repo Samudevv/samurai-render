@@ -92,6 +92,7 @@
 
 #define SAMURE_ASSERT(err) assert(err == SAMURE_ERROR_NONE)
 
+// public
 #define SAMURE_ERROR_NONE 0
 #define SAMURE_ERROR_FAILED (1 << 0)
 #define SAMURE_ERROR_NOT_IMPLEMENTED (1 << 1)
@@ -131,7 +132,7 @@
 #define SAMURE_ERROR_VIEWPORT_INIT ((samure_error)1 << 35)
 #define SAMURE_ERROR_PROTOCOL_VERSION ((samure_error)1 << 36)
 
-#define SAMURE_NUM_ERRORS 34
+#define SAMURE_NUM_ERRORS 37
 
 #ifndef NDEBUG
 #define DEBUG_PRINTF(format, ...)                                              \
@@ -142,8 +143,10 @@
 #define DEBUG_PRINT(format)
 #endif
 
+// public
 typedef uint64_t samure_error;
 
+// public
 static const char *samure_strerror(samure_error error_code) {
   // clang-format off
   switch (error_code) {
@@ -190,6 +193,7 @@ static const char *samure_strerror(samure_error error_code) {
   // clang-format on
 }
 
+// public
 static char *samure_build_error_string(samure_error error_code) {
   if (error_code == SAMURE_ERROR_NONE) {
     return strdup(samure_strerror(SAMURE_ERROR_NONE));
@@ -221,6 +225,7 @@ static char *samure_build_error_string(samure_error error_code) {
   return error_string;
 }
 
+// public
 static int samure_perror(const char *msg, samure_error error_code) {
   char *error_string = samure_build_error_string(error_code);
   const int rv = fprintf(stderr, "%s: %s\n", msg, error_string);
