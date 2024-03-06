@@ -30,8 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-SAMURE_DEFINE_RESULT_UNWRAP(backend_cairo);
-
 samure_error
 _samure_cairo_surface_create_cairo(struct samure_cairo_surface *c) {
   c->cairo_surface = cairo_image_surface_create_for_data(
@@ -52,21 +50,19 @@ _samure_cairo_surface_create_cairo(struct samure_cairo_surface *c) {
   return SAMURE_ERROR_NONE;
 }
 
-void samure_destroy_backend_cairo(struct samure_context *ctx) {
+void destroy(struct samure_context *ctx) {
   free(ctx->backend);
   ctx->backend = NULL;
 }
 
-void samure_backend_cairo_render_end(struct samure_context *ctx,
-                                     struct samure_layer_surface *s) {
+void render_end(struct samure_context *ctx, struct samure_layer_surface *s) {
   struct samure_cairo_surface *c =
       (struct samure_cairo_surface *)s->backend_data;
   samure_layer_surface_draw_buffer(s, c->buffer);
 }
 
-samure_error
-samure_backend_cairo_associate_layer_surface(struct samure_context *ctx,
-                                             struct samure_layer_surface *sfc) {
+samure_error associate_layer_surface(struct samure_context *ctx,
+                                     struct samure_layer_surface *sfc) {
   struct samure_cairo_surface *c = malloc(sizeof(struct samure_cairo_surface));
   if (!c) {
     return SAMURE_ERROR_MEMORY;
@@ -92,14 +88,14 @@ samure_backend_cairo_associate_layer_surface(struct samure_context *ctx,
   }
 
   sfc->backend_data = c;
-  samure_backend_cairo_render_end(ctx, sfc);
+  render_end(ctx, sfc);
 
   return SAMURE_ERROR_NONE;
 }
 
-void samure_backend_cairo_on_layer_surface_configure(
-    struct samure_context *ctx, struct samure_layer_surface *layer_surface,
-    int32_t width, int32_t height) {
+void on_layer_surface_configure(struct samure_context *ctx,
+                                struct samure_layer_surface *layer_surface,
+                                int32_t width, int32_t height) {
   if (!layer_surface->backend_data) {
     return;
   }
@@ -134,8 +130,8 @@ void samure_backend_cairo_on_layer_surface_configure(
   }
 }
 
-void samure_backend_cairo_unassociate_layer_surface(
-    struct samure_context *ctx, struct samure_layer_surface *layer_surface) {
+void unassociate_layer_surface(struct samure_context *ctx,
+                               struct samure_layer_surface *layer_surface) {
   if (!layer_surface->backend_data) {
     return;
   }
@@ -151,25 +147,4 @@ void samure_backend_cairo_unassociate_layer_surface(
     samure_destroy_shared_buffer(c->buffer);
   free(c);
   layer_surface->backend_data = NULL;
-}
-
-SAMURE_RESULT(backend_cairo)
-samure_init_backend_cairo(struct samure_context *ctx) {
-  SAMURE_RESULT_ALLOC(backend_cairo, c);
-
-  c->base.destroy = samure_destroy_backend_cairo;
-  c->base.render_end = samure_backend_cairo_render_end;
-  c->base.associate_layer_surface =
-      samure_backend_cairo_associate_layer_surface;
-  c->base.on_layer_surface_configure =
-      samure_backend_cairo_on_layer_surface_configure;
-  c->base.unassociate_layer_surface =
-      samure_backend_cairo_unassociate_layer_surface;
-
-  SAMURE_RETURN_RESULT(backend_cairo, c);
-}
-
-struct samure_cairo_surface *
-samure_get_cairo_surface(struct samure_layer_surface *layer_surface) {
-  return (struct samure_cairo_surface *)layer_surface->backend_data;
 }

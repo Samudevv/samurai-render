@@ -120,8 +120,10 @@ int main(void) {
   cfg.backend = SAMURE_BACKEND_CAIRO;
   cfg.pointer_interaction = 1;
 
-  struct samure_context *ctx =
-      SAMURE_UNWRAP(context, samure_create_context(&cfg));
+  SAMURE_RESULT(context) ctx_rs = samure_create_context(&cfg);
+  SAMURE_RETURN_AND_PRINT_ON_ERROR(ctx_rs, "failed to create context", 1);
+
+  struct samure_context *ctx = ctx_rs.result;
 
   const struct samure_rect r = samure_context_get_output_rect(ctx);
 

@@ -40,17 +40,6 @@ struct samure_cairo_surface {
   cairo_t *cairo;
 };
 
-struct samure_backend_cairo {
-  struct samure_backend base;
-};
-
-SAMURE_DEFINE_RESULT(backend_cairo);
-
-// public
-extern SAMURE_RESULT(backend_cairo)
-    samure_init_backend_cairo(struct samure_context *ctx);
-// public
-extern void samure_destroy_backend_cairo(struct samure_context *ctx);
 // public
 extern struct samure_cairo_surface *
 samure_get_cairo_surface(struct samure_layer_surface *layer_surface);

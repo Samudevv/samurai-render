@@ -25,10 +25,17 @@
  ************************************************************************************/
 
 #include "backend.h"
+#include "backends/cairo.h"
 #include "context.h"
 #include <dlfcn.h>
 
-#define SAMURE_DLSYM(func_name) void *func_name = dlsym(lib, #func_name)
+#define SAMURE_DLSYM(func_name)                                                \
+  void *func_name = dlsym(lib, #func_name);                                    \
+  if (func_name) {                                                             \
+    DEBUG_PRINTF("Loaded symbol %s\n", #func_name);                            \
+  } else {                                                                     \
+    DEBUG_PRINTF("Failed to load symbol %s\n", #func_name);                    \
+  }
 
 // public
 typedef SAMURE_RESULT(backend) (*backend_init_t)(struct samure_context *ctx);
@@ -57,6 +64,9 @@ extern SAMURE_RESULT(backend)
     samure_create_backend_from_lib(struct samure_context *ctx,
                                    const char *lib_name,
                                    const char *depend_lib_name) {
+  DEBUG_PRINTF("Creating Backend from %s with depend %s\n", lib_name,
+               depend_lib_name ? depend_lib_name : "no depend");
+
   if (depend_lib_name) {
     // Check if dependlib exists
     void *depend_lib = dlopen(depend_lib_name, RTLD_LAZY);
@@ -90,4 +100,9 @@ extern SAMURE_RESULT(backend)
   return samure_create_backend(on_layer_surface_configure, render_start,
                                render_end, destroy, associate_layer_surface,
                                unassociate_layer_surface);
+}
+
+struct samure_cairo_surface *
+samure_get_cairo_surface(struct samure_layer_surface *layer_surface) {
+  return (struct samure_cairo_surface *)layer_surface->backend_data;
 }

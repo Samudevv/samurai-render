@@ -73,6 +73,18 @@ target("wayland-protocols")
 target_end()
 
 add_rules("mode.debug", "mode.release")
+if get_config("backend_cairo") then
+    target("samurai-render-backend-cairo")
+        -- todo: also allow static linking
+        set_kind("shared")
+        add_packages("wayland", "cairo")
+        add_headerfiles(
+            "samure/*.h",
+            "samure/backends/cairo.h"
+        )
+        add_files("samure/backends/cairo.c")
+end
+
 target("samurai-render")
     set_kind("$(kind)")
     add_packages("wayland")
@@ -80,9 +92,6 @@ target("samurai-render")
         "backend_cairo",
         "backend_opengl"
     )
-    if get_config("backend_cairo") then
-        add_packages("cairo")
-    end
     if get_config("backend_opengl") then
         add_links("EGL", "wayland-egl")
         add_packages("libglvnd")
@@ -97,9 +106,7 @@ target("samurai-render")
         "samure/wayland/*.c",
         "samure/backends/*.c"
     )
-    if not get_config("backend_cairo") then
-        remove_files("samure/backends/cairo.c")
-    end
+    remove_files("samure/backends/cairo.c")
     if not get_config("backend_opengl") then
         remove_files("samure/backends/opengl.c")
     end

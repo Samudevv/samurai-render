@@ -129,16 +129,14 @@ samure_create_context(struct samure_context_config *config) {
 #endif
   } break;
   case SAMURE_BACKEND_CAIRO: {
-#ifdef BACKEND_CAIRO
-    SAMURE_RESULT(backend_cairo) c_rs = samure_init_backend_cairo(ctx);
+    SAMURE_RESULT(backend)
+    c_rs = samure_create_backend_from_lib(
+        ctx, "libsamurai-render-backend-cairo.so", "libcairo.so");
     if (SAMURE_HAS_ERROR(c_rs)) {
       SAMURE_DESTROY_ERROR(context, ctx,
                            SAMURE_ERROR_BACKEND_INIT | c_rs.error);
     }
-    ctx->backend = &SAMURE_UNWRAP(backend_cairo, c_rs)->base;
-#else
-    SAMURE_DESTROY_ERROR(context, ctx, SAMURE_ERROR_NO_BACKEND_SUPPORT);
-#endif
+    ctx->backend = SAMURE_UNWRAP(backend, c_rs);
   } break;
   case SAMURE_BACKEND_NONE:
     break;
