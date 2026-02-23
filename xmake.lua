@@ -100,6 +100,7 @@ end
 
 target("samurai-render")
     set_kind("$(kind)")
+    add_rules("utils.install.pkgconfig_importfiles")
     add_packages("wayland")
     add_options(
         "backend_cairo",
@@ -189,6 +190,7 @@ if get_config("build_examples") then
     if get_config("backend_opengl") then
         target("opengl_bounce")
             set_kind("binary")
+            add_syslinks("GL")
             add_packages("wayland", "libglvnd")
             add_options(
                 "backend_cairo",
