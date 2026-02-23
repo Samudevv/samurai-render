@@ -66,10 +66,31 @@ rule("wayland-protocol")
     end)
 rule_end()
 
+function afterinstall(target)
+    local includedir = path.join(target:installdir(), "include")
+    os.mkdir(path.join(includedir, "samure"))
+    os.mkdir(path.join(includedir, "samure", "backends"))
+    os.mkdir(path.join(includedir, "samure", "wayland"))
+
+    for _, includefile in ipairs(os.files(path.join(includedir, "*.h"))) do
+        os.rm(includefile)
+    end
+    for _, includefile in ipairs(os.files(path.join(target:scriptdir(), "samure", "*.h"))) do
+        os.cp(includefile, path.join(includedir, "samure/"))
+    end
+    for _, includefile in ipairs(os.files(path.join(target:scriptdir(), "samure", "backends", "*.h"))) do
+        os.cp(includefile, path.join(includedir, "samure", "backends/"))
+    end
+    for _, includefile in ipairs(os.files(path.join(target:scriptdir(), "samure", "wayland", "*.h"))) do
+        os.cp(includefile, path.join(includedir, "samure", "wayland/"))
+    end
+end
+
 target("wayland-protocols")
     set_kind("object")
     add_rules("wayland-protocol")
     add_files("samure/wayland/*.protocol")
+    after_install(afterinstall)
 target_end()
 
 add_rules("mode.debug", "mode.release")
@@ -83,6 +104,7 @@ if get_config("backend_cairo") then
             "samure/backends/cairo.h"
         )
         add_files("samure/backends/cairo.c")
+        after_install(afterinstall)
     target_end()
 end
 
@@ -95,6 +117,7 @@ if get_config("backend_opengl") then
             "samure/backends/opengl.h"
         )
         add_files("samure/backends/opengl.c")
+        after_install(afterinstall)
     target_end()
 end
 
@@ -118,6 +141,7 @@ target("samurai-render")
     )
     remove_files("samure/backends/cairo.c")
     remove_files("samure/backends/opengl.c")
+    after_install(afterinstall)
 target_end()
 
 if get_config("build_examples") then
