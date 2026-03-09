@@ -72,6 +72,10 @@ extern SAMURE_RESULT(backend)
     // Check if dependlib exists
     void *depend_lib = dlopen(depend_lib_name, RTLD_LAZY);
     if (!depend_lib) {
+      const char* err = dlerror();
+      if(err != NULL) {
+        DEBUG_PRINTF("\"%s\" dlerror: %s\n", depend_lib_name, err);
+      }
       SAMURE_RETURN_ERROR(backend, SAMURE_ERROR_NO_DEPEND_LIB);
     }
     dlclose(depend_lib);
@@ -80,6 +84,10 @@ extern SAMURE_RESULT(backend)
   // Open lib
   void *lib = dlopen(lib_name, RTLD_NOW);
   if (!lib) {
+      const char* err = dlerror();
+      if(err != NULL) {
+        DEBUG_PRINTF("\"%s\" dlerror: %s\n", lib_name, err);
+      }
     SAMURE_RETURN_ERROR(backend, SAMURE_ERROR_NO_LIB);
   }
   ctx->backend_lib_handle = lib;

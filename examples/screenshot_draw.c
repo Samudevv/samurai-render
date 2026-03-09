@@ -91,8 +91,12 @@ int main(int args, char *argv[]) {
   context_config.pointer_interaction = 1;
   context_config.keyboard_interaction = 1;
 
-  struct samure_context *ctx =
-      SAMURE_UNWRAP(context, samure_create_context(&context_config));
+  SAMURE_RESULT(context) ctx_rs = samure_create_context(&context_config);
+  if (ctx_rs.error != SAMURE_ERROR_NONE) {
+    samure_perror("failed to create context", ctx_rs.error);
+    return 1;
+  }
+  struct samure_context *ctx = ctx_rs.result;
 
   puts("Successfully initialized samurai-render context");
 
@@ -105,10 +109,14 @@ int main(int args, char *argv[]) {
         samure_create_layer_surface(ctx, ctx->outputs[i], SAMURE_LAYER_TOP,
                                     SAMURE_LAYER_SURFACE_ANCHOR_FILL, 0, 0, 0));
 
-    struct samure_shared_buffer *screenshot = SAMURE_UNWRAP(
-        shared_buffer, samure_output_screenshot(ctx, ctx->outputs[i], 0));
-    samure_layer_surface_draw_buffer(bgs[i], screenshot);
-    samure_destroy_shared_buffer(screenshot);
+    SAMURE_RESULT(shared_buffer) screenshot_rs = samure_output_screenshot(ctx, ctx->outputs[i], 0);
+    if (screenshot_rs.error != SAMURE_ERROR_NONE) {
+      samure_perror("failed to take screenshot", screenshot_rs.error);
+    } else {
+      struct samure_shared_buffer *screenshot = screenshot_rs.result;
+      samure_layer_surface_draw_buffer(bgs[i], screenshot);
+      samure_destroy_shared_buffer(screenshot);
+    }
   }
 
   samure_context_set_render_state(ctx, SAMURE_RENDER_STATE_ONCE);

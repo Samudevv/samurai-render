@@ -180,5 +180,7 @@ extern SAMURE_RESULT(shared_buffer)
     SAMURE_DESTROY_ERROR(shared_buffer, buffer, SAMURE_ERROR_FAILED);
   }
 
+  zwlr_screencopy_frame_v1_destroy(frame);
+
   SAMURE_RETURN_RESULT(shared_buffer, buffer);
 }
