@@ -45,6 +45,7 @@ struct samure_opengl_config {
   int debug;
   int color_space;
   int render_buffer;
+  int api;
 };
 
 // public

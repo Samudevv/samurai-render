@@ -231,6 +231,24 @@ init(struct samure_context *ctx) {
     SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_INITIALIZE);
   }
 
+  EGLint conformancy = EGL_OPENGL_BIT;
+  if (cfg->api != EGL_OPENGL_API) {
+    switch (cfg->api) {
+    case EGL_OPENGL_ES_API:
+      if (cfg->major_version == 3 || cfg->major_version == 2) {
+        conformancy = EGL_OPENGL_ES2_BIT;
+      } else if (cfg->major_version == 1) {
+        conformancy = EGL_OPENGL_ES_BIT;
+      } else {
+        conformancy = EGL_OPENGL_ES_BIT | EGL_OPENGL_ES2_BIT;
+      }
+      break;
+    case EGL_OPENVG_API:
+      conformancy = EGL_OPENVG_BIT;
+      break;
+    }
+  }
+
   // clang-format off
   const EGLint config_attributes[] = {
       EGL_RED_SIZE,   cfg->red_size,
@@ -239,7 +257,7 @@ init(struct samure_context *ctx) {
       EGL_ALPHA_SIZE, cfg->alpha_size,
       EGL_DEPTH_SIZE, cfg->depth_size,
       EGL_SAMPLES,    cfg->samples,
-      EGL_CONFORMANT, EGL_OPENGL_BIT,
+      EGL_CONFORMANT, conformancy,
       EGL_NONE,       EGL_NONE,
   };
 
@@ -265,7 +283,7 @@ init(struct samure_context *ctx) {
 
   DEBUG_PRINTF("EGL found %d configs\n", num_config);
 
-  if (eglBindAPI(EGL_OPENGL_API) != EGL_TRUE) {
+  if (eglBindAPI(cfg->api) != EGL_TRUE) {
     SAMURE_BACKEND_OPENGL_DESTROY_ERROR(SAMURE_ERROR_OPENGL_BIND_API);
   }
 

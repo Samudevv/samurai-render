@@ -24,6 +24,7 @@
  * distribution.
  ************************************************************************************/
 
+#include <EGL/egl.h>
 #include <GL/gl.h>
 #include <linux/input-event-codes.h>
 #include <stdio.h>
@@ -142,6 +143,9 @@ int main(void) {
   cfg.backend = SAMURE_BACKEND_OPENGL;
   cfg.pointer_interaction = 1;
   cfg.gl = samure_default_opengl_config();
+  cfg.gl->major_version = 1;
+  cfg.gl->minor_version = 0;
+  cfg.gl->api = EGL_OPENGL_ES_API;
 
   struct samure_context *ctx =
       SAMURE_UNWRAP(context, samure_create_context(&cfg));

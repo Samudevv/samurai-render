@@ -131,6 +131,7 @@ struct samure_opengl_config *samure_default_opengl_config() {
   cfg->color_space = EGL_GL_COLORSPACE_LINEAR;
   cfg->render_buffer = EGL_BACK_BUFFER;
   cfg->debug = EGL_FALSE;
+  cfg->api = EGL_OPENGL_API;
 
   return cfg;
 }
