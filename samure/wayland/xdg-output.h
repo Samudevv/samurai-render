@@ -269,7 +269,6 @@ struct zxdg_output_v1_listener {
 	 * For objects version 3 onwards, this event is deprecated.
 	 * Compositors are not required to send it anymore and must send
 	 * wl_output.done instead.
-	 * @deprecated Deprecated since version 3
 	 */
 	void (*done)(void *data,
 		     struct zxdg_output_v1 *zxdg_output_v1);
