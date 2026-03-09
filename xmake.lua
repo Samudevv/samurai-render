@@ -14,15 +14,13 @@ option("backend_opengl")
     add_defines("BACKEND_OPENGL")
 option_end()
 
-add_requires("wayland")
+add_requires("wayland-client", "wayland-cursor")
 
 if get_config("backend_cairo") then
     add_requires("cairo")
 end
 if get_config("backend_opengl") then
-    add_requires("libglvnd")
-    add_requires("egl")
-    add_requires("wayland-egl")
+    add_requires("libglvnd", "egl", "wayland-egl")
 end
 
 rule("wayland-protocol")
@@ -101,7 +99,7 @@ if get_config("backend_cairo") then
     target("samurai-render-backend-cairo")
         -- todo: also allow static linking
         set_kind("shared")
-        add_packages("wayland", "cairo")
+        add_packages("cairo")
         add_headerfiles(
             "samure/*.h",
             "samure/backends/cairo.h"
@@ -114,7 +112,7 @@ end
 if get_config("backend_opengl") then
     target("samurai-render-backend-opengl")
         set_kind("shared")
-        add_packages("wayland", "wayland-egl", "egl", "libglvnd")
+        add_packages("wayland-egl", "egl", "libglvnd")
         add_headerfiles(
             "samure/*.h",
             "samure/backends/opengl.h"
@@ -127,7 +125,7 @@ end
 target("samurai-render")
     set_kind("$(kind)")
     add_rules("utils.install.pkgconfig_importfiles")
-    add_packages("wayland")
+    add_packages("wayland-client", "wayland-cursor")
     add_options(
         "backend_cairo",
         "backend_opengl"
@@ -151,7 +149,7 @@ if get_config("build_examples") then
     add_requires("olive.c")
     target("olivec_bounce")
         set_kind("binary")
-        add_packages("wayland", "olive.c")
+        add_packages("olive.c")
         add_options(
             "backend_cairo",
             "backend_opengl"
@@ -161,7 +159,6 @@ if get_config("build_examples") then
         add_files("examples/olivec_bounce.c")
     target("blank")
         set_kind("binary")
-        add_packages("wayland")
         add_options(
             "backend_cairo",
             "backend_opengl"
@@ -172,7 +169,7 @@ if get_config("build_examples") then
     if get_config("backend_cairo") then
         target("cairo_bounce")
             set_kind("binary")
-            add_packages("wayland", "cairo")
+            add_packages("cairo")
             add_options(
                 "backend_cairo",
                 "backend_opengl"
@@ -183,7 +180,7 @@ if get_config("build_examples") then
 
         target("slurpy")
             set_kind("binary")
-            add_packages("wayland", "cairo")
+            add_packages("cairo")
             add_options(
                 "backend_cairo",
                 "backend_opengl"
@@ -194,7 +191,7 @@ if get_config("build_examples") then
 
         target("image_draw")
             set_kind("binary")
-            add_packages("wayland", "cairo")
+            add_packages("cairo")
             add_options(
                 "backend_cairo",
                 "backend_opengl"
@@ -205,7 +202,7 @@ if get_config("build_examples") then
 
         target("screenshot_draw")
             set_kind("binary")
-            add_packages("wayland", "cairo")
+            add_packages("cairo")
             add_options(
                 "backend_cairo",
                 "backend_opengl"
@@ -218,7 +215,7 @@ if get_config("build_examples") then
         target("opengl_bounce")
             set_kind("binary")
             add_syslinks("GL")
-            add_packages("wayland", "libglvnd")
+            add_packages("libglvnd")
             add_options(
                 "backend_cairo",
                 "backend_opengl"

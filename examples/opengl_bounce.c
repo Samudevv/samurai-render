@@ -145,10 +145,14 @@ int main(void) {
   cfg.gl = samure_default_opengl_config();
   cfg.gl->major_version = 1;
   cfg.gl->minor_version = 0;
-  cfg.gl->api = EGL_OPENGL_ES_API;
+  cfg.gl->api = EGL_OPENGL_API;
 
-  struct samure_context *ctx =
-      SAMURE_UNWRAP(context, samure_create_context(&cfg));
+  SAMURE_RESULT(context) ctx_rs = samure_create_context(&cfg);
+  if(ctx_rs.error != SAMURE_ERROR_NONE) {
+    samure_perror("failed to create context", ctx_rs.error);
+    return 1;
+  }
+  struct samure_context *ctx = ctx_rs.result;
 
   ctx->backend->render_start(ctx, ctx->outputs[0]->sfc[0]);
 
