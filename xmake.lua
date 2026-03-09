@@ -21,6 +21,8 @@ if get_config("backend_cairo") then
 end
 if get_config("backend_opengl") then
     add_requires("libglvnd")
+    add_requires("egl")
+    add_requires("wayland-egl")
 end
 
 rule("wayland-protocol")
@@ -112,7 +114,7 @@ end
 if get_config("backend_opengl") then
     target("samurai-render-backend-opengl")
         set_kind("shared")
-        add_packages("wayland", "wayland-egl", "EGL", "libglvnd")
+        add_packages("wayland", "wayland-egl", "egl", "libglvnd")
         add_headerfiles(
             "samure/*.h",
             "samure/backends/opengl.h"

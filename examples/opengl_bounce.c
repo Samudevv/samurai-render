@@ -60,6 +60,8 @@ static void render_callback(struct samure_context *ctx,
                             struct samure_rect output_geo, void *data) {
   struct opengl_data *d = (struct opengl_data *)data;
 
+  glViewport(0, 0, sfc->w, sfc->h);
+
   glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
@@ -70,6 +72,17 @@ static void render_callback(struct samure_context *ctx,
   glLoadIdentity();
   glOrtho(0.0f, RENDER_SCALE(sfc->w), RENDER_SCALE(sfc->h), 0.0f, 0.0f, 1.0f);
   glDisable(GL_DEPTH_TEST);
+
+  const float mw = output_geo.w / 2;
+  const float mh = output_geo.h / 2;
+
+  glBegin(GL_QUADS);
+  glColor3f(1.0f, 1.0f, 0.0f);
+  glVertex2f(mw - s, mh - s);
+  glVertex2f(mw - s, mh + s);
+  glVertex2f(mw + s, mh + s);
+  glVertex2f(mw + s, mh - s);
+  glEnd();
 
   if (samure_square_in_output(output_geo, d->qx - s, d->qy - s, 2.0 * s)) {
     const double qx = RENDER_X(d->qx);
