@@ -1,5 +1,5 @@
 set_project("samurai-render")
-set_version("26.02.0", {soname = "0"})
+set_version("26.03.0", {soname = "0"})
 
 option("build_examples")
     set_default(false)
